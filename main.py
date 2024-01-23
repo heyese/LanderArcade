@@ -17,16 +17,13 @@ class Lander(arcade.Sprite):
         super().__init__(filename="images/lander.png", scale=0.2 * SCALING)
         self.shield = Shield(self)
         self.engine = Engine(self)
-        self.fuel = 500
 
     def on_update(self, delta_time: float = 1 / 60):
         if self.engine.activated:
-            self.change_x = self.change_x - math.sin(self.radians)
-            self.change_y = self.change_y + math.cos(self.radians)
-            self.center_x += self.change_x
-            self.center_y += self.change_y
-        if not self.engine.activated:
-            self.velocity = [0, 0]
+            self.change_x = self.change_x - .1 * math.sin(self.radians)
+            self.change_y = self.change_y + .1 * math.cos(self.radians)
+        self.center_x += self.change_x
+        self.center_y += self.change_y
 
 
 class Engine(arcade.Sprite):
@@ -37,7 +34,7 @@ class Engine(arcade.Sprite):
         self.texture = self.textures[0]
         self.lander = lander
         self.visible = False
-        self.fuel: int = 100
+        self.fuel: int = 10
         self.activated = False
 
     def activate(self):
@@ -114,7 +111,7 @@ class GameView(arcade.View):
         self.lander.center_y = self.window.height / 2
         self.lander.center_x = self.window.width / 2
 
-        self.all_sprites.extend([self.lander.shield, self.lander, self.lander.engine])
+        self.all_sprites.extend([self.lander, self.lander.engine, self.lander.shield])
 
     def on_update(self, delta_time: float):
         self.all_sprites.on_update()
