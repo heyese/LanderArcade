@@ -4,7 +4,7 @@ from world import World
 #  Views for instructions, game over, etc. https://api.arcade.academy/en/stable/tutorials/views/index.html
 #  Camera for GUI overlay: https://api.arcade.academy/en/stable/examples/sprite_move_scrolling.html#sprite-move-scrolling
 #  Scene - useful for ordering when sprites get drawn
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT, BACKGROUND_COLOR
+from constants import WORLD_WIDTH, WORLD_HEIGHT, BACKGROUND_COLOR
 
 
 class GameView(arcade.View):
@@ -32,22 +32,44 @@ class GameView(arcade.View):
         self.world = World()
         self.scene = arcade.Scene()
 
+        # The world's terrain spritelist - these are the rectangles making up the ground, which I need to be able
+        # to detect if I've hit
+        self.scene.add_sprite_list("Terrain", use_spatial_hash=True, sprite_list=self.world.terrain)
+
         # Setup the player
-        self.scene.add_sprite_list("Lander")
         self.lander = Lander(world=self.world)
         self.lander.center_y = self.window.height / 2
         self.lander.center_x = self.window.width / 2
+
+        # The lander spritelist - ship, engine and shield
+        self.scene.add_sprite_list("Lander")
         for i in (self.lander, self.lander.engine, self.lander.shield):
             self.scene.add_sprite("Lander", i)
 
     def on_update(self, delta_time: float):
         self.scene.on_update()
+        # Check to see if Lander has collided with the ground
+        ground_collision = arcade.check_for_collision_with_lists(
+            self.lander,
+            [self.scene["Terrain"]],
+        )
+        if ground_collision:
+            if "Lander" in self.scene.name_mapping:
+                self.scene.remove_sprite_list_by_name("Lander")
 
     def on_mouse_press(self, x, y, button, modifiers):
         if button == arcade.MOUSE_BUTTON_RIGHT:
             self.lander.shield.activate()
         if button == arcade.MOUSE_BUTTON_LEFT:
             self.lander.engine.activate()
+
+    def on_key_press(self, symbol, modifiers):
+        if modifiers & arcade.key.MOD_SHIFT:
+            self.lander.engine.boost(True)
+
+    def on_key_release(self, symbol, modifiers):
+        if not modifiers & arcade.key.MOD_SHIFT:
+            self.lander.engine.boost(False)
 
     def on_mouse_release(self, x, y, button, modifiers):
         if button == arcade.MOUSE_BUTTON_RIGHT:
@@ -80,7 +102,7 @@ class ResizableWindow(arcade.Window):
 
 
 if __name__ == "__main__":
-    window = ResizableWindow(title="Lander Arcade", width=SCREEN_WIDTH, height=SCREEN_HEIGHT, resizable=True)
+    window = ResizableWindow(title="Lander Arcade", width=WORLD_WIDTH, height=WORLD_HEIGHT, resizable=True)
     game_view = GameView()
     game_view.setup()
     window.show_view(game_view)
