@@ -66,6 +66,9 @@ class GameView(arcade.View):
     def on_key_press(self, symbol, modifiers):
         if modifiers & arcade.key.MOD_SHIFT:
             self.lander.engine.boost(True)
+        if symbol == arcade.key.R:
+            # Restart
+            self.setup()
 
     def on_key_release(self, symbol, modifiers):
         if not modifiers & arcade.key.MOD_SHIFT:
