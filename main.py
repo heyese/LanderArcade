@@ -58,6 +58,8 @@ class GameView(arcade.View):
                 self.scene.remove_sprite_list_by_name("Lander")
 
     def on_mouse_press(self, x, y, button, modifiers):
+        self.lander.face_point((x, y))
+        self.lander.engine.angle = self.lander.angle
         if button == arcade.MOUSE_BUTTON_RIGHT:
             self.lander.shield.activate()
         if button == arcade.MOUSE_BUTTON_LEFT:
@@ -75,6 +77,8 @@ class GameView(arcade.View):
             self.lander.engine.boost(False)
 
     def on_mouse_release(self, x, y, button, modifiers):
+        self.lander.face_point((x, y))
+        self.lander.engine.angle = self.lander.angle
         if button == arcade.MOUSE_BUTTON_RIGHT:
             self.lander.shield.deactivate()
         if button == arcade.MOUSE_BUTTON_LEFT:
@@ -83,7 +87,7 @@ class GameView(arcade.View):
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int) -> None:
         # angle Lander at the mouse
         self.lander.face_point((x, y))
-        self.lander.engine.face_point((x, y))
+        self.lander.engine.angle = self.lander.angle
 
     def on_draw(self):
         """Draw all game objects"""
