@@ -1,5 +1,3 @@
-import math
-
 import arcade
 import random
 from typing import Union, Tuple

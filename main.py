@@ -1,6 +1,7 @@
 import arcade
 from lander import Lander
 from world import World
+from landing_pad import LandingPad
 #  Views for instructions, game over, etc. https://api.arcade.academy/en/stable/tutorials/views/index.html
 #  Camera for GUI overlay: https://api.arcade.academy/en/stable/examples/sprite_move_scrolling.html#sprite-move-scrolling
 #  Scene - useful for ordering when sprites get drawn
@@ -12,13 +13,13 @@ class GameView(arcade.View):
     def __init__(self):
         """Initialize the game"""
         super().__init__()
-        self.all_sprites = arcade.SpriteList()
 
         self.game_camera = arcade.Camera()
         self.overlay_camera = arcade.Camera()
         self.scene = None
         self.lander = None
         self.world = None
+        self.landing_pad = None
 
     def setup(self):
         """Get the game ready to play"""
@@ -30,14 +31,15 @@ class GameView(arcade.View):
         # https://api.arcade.academy/en/stable/examples/gradients.html#gradients
 
         self.world = World()
+        self.lander = Lander(world=self.world)
+        self.landing_pad = LandingPad(lander=self.lander, world=self.world)
         self.scene = arcade.Scene()
 
         # The world's terrain spritelist - these are the rectangles making up the ground, which I need to be able
         # to detect if I've hit
         self.scene.add_sprite_list("Terrain", use_spatial_hash=True, sprite_list=self.world.terrain)
-
+        self.scene.add_sprite("Terrain", self.landing_pad)
         # Setup the player
-        self.lander = Lander(world=self.world)
         self.lander.center_y = self.window.height / 2
         self.lander.center_x = self.window.width / 2
 
@@ -99,7 +101,7 @@ class GameView(arcade.View):
 
         # Draw the overlay - fuel, shield, etc.
         self.overlay_camera.use()
-        arcade.draw_text(f"Shield: {int(self.lander.shield.power)}  Fuel: {int(self.lander.engine.fuel)}  Velocity: ({self.lander.velocity_x:.1f}, {self.lander.velocity_y:.1f})  Gravity: {self.world.gravity}", 10, 30, arcade.color.BANANA_YELLOW, 20)
+        arcade.draw_text(f"Shield: {int(self.lander.shield.power)}  Fuel: {int(self.lander.engine.fuel)}  Velocity: ({self.lander.velocity_x:.1f}, {self.lander.velocity_y:.1f})  Gravity: {self.world.gravity}  Landing Pad activated timer: {self.landing_pad.activated_timer}", 10, 30, arcade.color.BANANA_YELLOW, 20)
 
 
 class ResizableWindow(arcade.Window):
