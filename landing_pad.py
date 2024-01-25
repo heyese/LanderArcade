@@ -22,16 +22,29 @@ class LandingPad(arcade.SpriteSolidColor):
         self.disabled_color = arcade.color.WHITE_SMOKE
         self.lander = lander
         self.world = world
-        self.danger_colors = [arcade.color.RED, self.disabled_color]
-        self.safe_to_land_colors = [arcade.color.GO_GREEN, self.disabled_color]
+        self.unsafe_to_land_color = arcade.color.RED
+        self.safe_to_land_color = arcade.color.GO_GREEN
         self.activated = False
         self.activated_timer: float = 0
-        self.flicker_rate: int = 3  # Colour changes per second when lander is close
+        self.flicker_rate: int = 10  # Colour changes per second when lander is close
+        self.safe_landing_speed = 50
+        self._safe_to_land = False  # Property
+        self.max_landing_angle = 20
+
         # Put the landing pad onto the world ...
         self.place_landing_pad_on_world()
 
+    @property
+    def safe_to_land(self):
+        return self._safe_to_land
+
+    @safe_to_land.setter
+    def safe_to_land(self, value: bool):
+        self._safe_to_land = value
+        self.color = self.safe_to_land_color if value else self.unsafe_to_land_color
+
     def on_update(self, delta_time: float = 1 / 60):
-        # I'd like it to flash when the lander is near
+        # Landing pad is automatically activated when the lander is close enough
         if arcade.sprite.get_distance_between_sprites(self, self.lander) < self.width:
             if not self.activated:
                 self.activated = True
@@ -41,14 +54,23 @@ class LandingPad(arcade.SpriteSolidColor):
             self.activated_timer = 0
             self.color = self.disabled_color
 
-        # Determine the colour by the timer and the flicker rate
+        # When activated, the landing pad's colour is detemined by whether it's safe to land
+        # ie. is the lander fully over the pad, is it going slowly enough, and is it not too tilted
         if self.activated:
-            colors_index = math.floor((self.activated_timer * self.flicker_rate)) % len(self.safe_to_land_colors)
-            self.color = self.safe_to_land_colors[colors_index]
+            if (self.lander.left < self.left
+                    or self.lander.right > self.right
+                    or self.lander.velocity_y ** 2 + self.lander.velocity_x ** 2 > self.safe_landing_speed ** 2
+                    or abs(self.lander.angle) > self.max_landing_angle):  # Goes from -180 to +180 degress.
+                self.safe_to_land = False
+            else:
+                self.safe_to_land = True
 
     def place_landing_pad_on_world(self):
         # So I need to find a flat space wide enough on the world surface for the pad
         # List all rectangles with large enough width and then pick one at random?
+
+        # Currently I'm assuming it is possible to find a location - I should make sure it is!
+
         for rect in self.world.terrain:
             rect: arcade.SpriteSolidColor
             wide_enough_rectangles = [r for r in self.world.terrain if r.width >= self.width]

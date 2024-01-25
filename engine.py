@@ -17,7 +17,23 @@ class Engine(arcade.Sprite):
         self.fuel = 100
         self.scale = 0.3 * SCALING
         self.burn_rate = 1
-        self.boosted = False
+        self._boosted = False
+
+    @property
+    def boosted(self):
+        return self._boosted
+
+    @boosted.setter
+    def boosted(self, value: bool):
+        self._boosted = value
+        if value is True:
+            self.burn_rate *= 2
+            self.scale *= 1.5
+            self.force *= 2
+        else:
+            self.burn_rate /= 2
+            self.scale /= 1.5
+            self.force /= 2
 
     def activate(self):
         if self.fuel:
@@ -32,15 +48,9 @@ class Engine(arcade.Sprite):
         if on is True:
             if self.fuel and not self.boosted:
                 self.boosted = True
-                self.burn_rate *= 2
-                self.scale *= 1.5
-                self.force *= 2
         else:
             if self.boosted:
                 self.boosted = False
-                self.burn_rate /= 2
-                self.scale /= 1.5
-                self.force /= 2
 
     def on_update(self, delta_time: float = 1 / 60):
         # Stay centred on the lander

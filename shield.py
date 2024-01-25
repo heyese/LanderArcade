@@ -1,5 +1,6 @@
 import arcade
 
+
 class Shield(arcade.SpriteCircle):
     """The lander shield - a sprite that stays centred on the lander and can be activated / deactivated"""
     def __init__(self, owner: arcade.Sprite):
