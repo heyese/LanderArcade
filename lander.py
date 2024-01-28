@@ -19,17 +19,23 @@ class Lander(arcade.Sprite):
         self.velocity_y: float = 0
         # Gravity only applies when we're not "in space"!
         self.in_space: bool = True
+        # Gravity applies pretty heavily if someone tries to fly off into space
+        self.above_space : bool = False
         self.max_landing_angle = 20
         self.mouse_location = None  # Set by Game view.  Want Lander to face mouse on every update
 
     def on_update(self, delta_time: float = 1 / 60):
         # Are we in space or not?
         self.in_space = True if self.center_y >= (2/3) * WORLD_HEIGHT else False
+        self.above_space = True if self.center_y >= WORLD_HEIGHT else False
         # Calculate current velocity from auto-maintained self.change_XXX variables and delta time
         self.velocity_x = self.change_x / delta_time  # pixels per second!
         self.velocity_y = self.change_y / delta_time
         # Calculate the force being applied to the Lander
         force_y = 0
+        if self.above_space:
+            # If someone tries to fly off into deep space, bring them back before they get lost ...
+            force_y -= self.mass * 5 * (self.center_y - WORLD_HEIGHT)
         if not self.in_space:
             force_y -= self.mass * self.world.gravity
         force_x = 0

@@ -11,7 +11,6 @@
 
 import arcade
 import random
-import math
 from lander import Lander
 from world import World
 

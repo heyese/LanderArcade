@@ -13,7 +13,9 @@ class ResizableWindow(arcade.Window):
 
 
 if __name__ == "__main__":
-    window = ResizableWindow(title="Lander Arcade", width=WORLD_WIDTH, height=WORLD_HEIGHT, resizable=True)
+    width, height = arcade.window_commands.get_display_size()
+    window = ResizableWindow(title="Lander Arcade", width=width, height=height, resizable=True)
+    window.maximize()
     menu_view = MenuView()
     window.show_view(menu_view)
     arcade.run()

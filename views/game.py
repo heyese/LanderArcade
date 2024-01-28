@@ -7,6 +7,7 @@ from landing_pad import LandingPad
 from constants import BACKGROUND_COLOR
 from views.next_level import NextLevelView
 from views.menu import MenuView
+from pyglet.math import Vec2
 
 class GameView(arcade.View):
 
@@ -30,6 +31,10 @@ class GameView(arcade.View):
         arcade.set_background_color(BACKGROUND_COLOR)
         # Want sky to fade in to space, with fully space from two thirds the way up
         # https://api.arcade.academy/en/stable/examples/gradients.html#gradients
+
+        # Want a mini-map: https://api.arcade.academy/en/latest/advanced/texture_atlas.html
+        # Want the wold to be larger than the screen
+        # Have a camera shake on impact  (arcade.camera.shake)
 
         self.level = level  # Ultimately want to use this to develop the game in later levels
         self.world = World()
@@ -55,7 +60,7 @@ class GameView(arcade.View):
     def on_update(self, delta_time: float):
         self.scene.on_update()
         if self.lander.mouse_location is not None:
-            self.lander.face_point(self.lander.mouse_location)
+            self.lander.face_point((self.lander.mouse_location + self.game_camera.position))
             self.lander.engine.angle = self.lander.angle
         # Check to see if Lander has collided with the ground
         ground_collision = arcade.check_for_collision_with_lists(self.lander,[self.scene["Terrain"]])
@@ -67,6 +72,9 @@ class GameView(arcade.View):
             # We've blown up
             if "Lander" in self.scene.name_mapping:
                 self.scene.remove_sprite_list_by_name("Lander")
+
+        # Pan to the user
+        self.pan_camera_to_user(panning_fraction=0.04)
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.lander.engine.angle = self.lander.angle
@@ -98,8 +106,27 @@ class GameView(arcade.View):
             self.lander.engine.deactivate()
 
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int) -> None:
-        # angle Lander at the mouse
-        self.lander.mouse_location = (x, y)
+        self.lander.mouse_location = Vec2(x, y)
+
+    def pan_camera_to_user(self, panning_fraction: float = 1.0):
+        """
+        Manage Scrolling
+        :param panning_fraction: Number from 0 to 1. Higher the number, faster we
+                                 pan the camera to the user.
+        """
+
+        # This spot would center on the user
+        screen_center_x = self.lander.center_x - (self.game_camera.viewport_width / 2)
+        screen_center_y = self.lander.center_y - (
+            self.game_camera.viewport_height / 2
+        )
+        if screen_center_x < 0:
+            screen_center_x = 0
+        if screen_center_y < 0:
+            screen_center_y = 0
+        user_centered = screen_center_x, screen_center_y
+
+        self.game_camera.move_to(user_centered, panning_fraction)
 
     def on_draw(self):
         """Draw all game objects"""

@@ -45,6 +45,10 @@ class World:
             rect.left = x
             terrain.append(rect)
             x += width
+
+        # I want a wrap around effect, so that you can endlessly fly sideways and it's a bit like you're just going round the world
+        # To do this, I need an extra camera width on the end of the world, the matches the first camera width
+
         return terrain
 
     def get_star(self):
