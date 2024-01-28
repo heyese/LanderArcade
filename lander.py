@@ -5,6 +5,7 @@ from shield import Shield
 from engine import Engine
 from world import World
 
+
 class Lander(arcade.Sprite):
     def __init__(self, world: World):
         super().__init__(filename="images/lander.png", scale=0.2 * SCALING)
@@ -18,6 +19,8 @@ class Lander(arcade.Sprite):
         self.velocity_y: float = 0
         # Gravity only applies when we're not "in space"!
         self.in_space: bool = True
+        self.max_landing_angle = 20
+
 
     def on_update(self, delta_time: float = 1 / 60):
         # Are we in space or not?
@@ -40,3 +43,10 @@ class Lander(arcade.Sprite):
 
         self.center_x += self.change_x
         self.center_y += self.change_y
+
+    def draw_landing_angle_guide(self):
+        length = (6 * self.height)
+        y = self.center_y + length * math.cos(self.max_landing_angle * math.pi / 180)
+        x_left = self.center_x - length * math.sin(self.max_landing_angle * math.pi / 180)
+        x_right = self.center_x + length * math.sin(self.max_landing_angle * math.pi / 180)
+        arcade.draw_polygon_filled(point_list=[(x_left, y), (self.center_x, self.center_y), (x_right, y)], color=(*arcade.color.WHITE_SMOKE, 20))

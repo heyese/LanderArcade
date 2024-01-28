@@ -18,7 +18,7 @@ from world import World
 
 class LandingPad(arcade.SpriteSolidColor):
     def __init__(self, lander: Lander, world: World):
-        super().__init__(width=int(2 * lander.width), height=int(0.3 * lander.width), color=arcade.color.WHITE_SMOKE)
+        super().__init__(width=int(4 * lander.width), height=int(0.3 * lander.width), color=arcade.color.WHITE_SMOKE)
         self.disabled_color = arcade.color.WHITE_SMOKE
         self.lander = lander
         self.world = world
@@ -29,8 +29,6 @@ class LandingPad(arcade.SpriteSolidColor):
         self.flicker_rate: int = 10  # Colour changes per second when lander is close
         self.safe_landing_speed = 50
         self._safe_to_land = False  # Property
-        self.max_landing_angle = 20
-
         # Put the landing pad onto the world ...
         self.place_landing_pad_on_world()
 
@@ -54,13 +52,13 @@ class LandingPad(arcade.SpriteSolidColor):
             self.activated_timer = 0
             self.color = self.disabled_color
 
-        # When activated, the landing pad's colour is detemined by whether it's safe to land
+        # When activated, the landing pad's colour is determined by whether it's safe to land
         # ie. is the lander fully over the pad, is it going slowly enough, and is it not too tilted
         if self.activated:
             if (self.lander.left < self.left
                     or self.lander.right > self.right
                     or self.lander.velocity_y ** 2 + self.lander.velocity_x ** 2 > self.safe_landing_speed ** 2
-                    or abs(self.lander.angle) > self.max_landing_angle):  # Goes from -180 to +180 degress.
+                    or abs(self.lander.angle) > self.lander.max_landing_angle):  # Goes from -180 to +180 degress.
                 self.safe_to_land = False
             else:
                 self.safe_to_land = True
@@ -77,3 +75,7 @@ class LandingPad(arcade.SpriteSolidColor):
             chosen_rect = wide_enough_rectangles[random.randrange(len(wide_enough_rectangles))]
             self.center_x = chosen_rect.center_x
             self.bottom = chosen_rect.top
+
+
+
+

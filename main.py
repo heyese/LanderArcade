@@ -159,7 +159,11 @@ class GameView(arcade.View):
         arcade.start_render()
         # Draw the game objects
         self.game_camera.use()
+        # Draw game non-sprites
         self.world.background_shapes.draw()  # This is not a sprite, so not covered by scene.draw()
+        if self.landing_pad.activated:
+            self.lander.draw_landing_angle_guide()
+        # Draw game sprites
         self.scene.draw()
 
         # Draw the overlay - fuel, shield, etc.
