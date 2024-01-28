@@ -18,7 +18,7 @@ from world import World
 
 class LandingPad(arcade.SpriteSolidColor):
     def __init__(self, lander: Lander, world: World):
-        super().__init__(width=int(4 * lander.width), height=int(0.3 * lander.width), color=arcade.color.WHITE_SMOKE)
+        super().__init__(width=int(2 * lander.width), height=int(0.3 * lander.width), color=arcade.color.WHITE_SMOKE)
         self.disabled_color = arcade.color.WHITE_SMOKE
         self.lander = lander
         self.world = world

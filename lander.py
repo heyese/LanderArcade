@@ -20,7 +20,7 @@ class Lander(arcade.Sprite):
         # Gravity only applies when we're not "in space"!
         self.in_space: bool = True
         self.max_landing_angle = 20
-
+        self.mouse_location = None  # Set by Game view.  Want Lander to face mouse on every update
 
     def on_update(self, delta_time: float = 1 / 60):
         # Are we in space or not?
