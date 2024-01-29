@@ -2,6 +2,7 @@ import arcade
 import random
 from typing import Union, Tuple
 from constants import WORLD_WIDTH, WORLD_HEIGHT, BACKGROUND_COLOR
+import copy
 
 
 class World:
@@ -15,10 +16,11 @@ class World:
         self.sky_color = sky_color if sky_color else random.choices(range(256), k=3)
         self.ground_color = ground_color if ground_color else random.choices(range(256), k=3)
         self.gravity = gravity if gravity is not None else random.randint(20, 200)
-        self.star_count = star_count if star_count is not None else random.randint(20, 200)
+        self.star_count = star_count if star_count is not None else random.randint(300, 1500)
         # Terrain attributes
         self.hill_height = hill_height if hill_height is not None else random.randint(20, 100) / 100
         self.hill_width = hill_width if hill_width is not None else random.randint(20, 100) / 100
+        self.width, self.height = arcade.window_commands.get_display_size()
 
         # Not everything is a sprite!  But I don't need to detect collisions with everything, so that's ok.
         # Will have a list of shapes associated with the world that get drawn but can't be interacted with
@@ -31,25 +33,38 @@ class World:
         # TODO
 
         # The foreground
-        self.terrain: arcade.SpriteList = self.get_terrain()
+        self.terrain_centre, self.terrain_edge = self.get_terrain()
 
     def get_terrain(self) -> arcade.SpriteList:
-        terrain = arcade.SpriteList()
-        # Bunch of rectangle sprites from left to right
-        x = 0
-        while x < WORLD_WIDTH:
+        def get_rect(x, max_x):
             height = max(50, int(random.randint(30, int((1/3) * WORLD_HEIGHT)) * self.hill_height))
-            width = min(int(random.randint(100, 500) * self.hill_width), WORLD_WIDTH-x)
+            width = min(int(random.randint(100, 500) * self.hill_width), max_x - x)
             rect = arcade.SpriteSolidColor(width=width, height=height, color=self.ground_color)
             rect.bottom = 0
             rect.left = x
-            terrain.append(rect)
-            x += width
+            return rect
+
+        terrain_centre = arcade.SpriteList()
+        terrain_edge = arcade.SpriteList()
+
+        # Bunch of rectangle sprites from left to right
+        x = 0
+        while x < 2 * self.width:
+            left_edge_rect = get_rect(x, max_x=2 * self.width)
+            right_edge_rect = copy.copy(left_edge_rect)
+            right_edge_rect.left = WORLD_WIDTH - 2 * self.width + x
+            terrain_edge.append(left_edge_rect)
+            terrain_edge.append(right_edge_rect)
+            x += left_edge_rect.width
+        while x < WORLD_WIDTH - 2 * self.width:
+            rect = get_rect(x, max_x=WORLD_WIDTH - self.width)
+            terrain_centre.append(rect)
+            x += rect.width
 
         # I want a wrap around effect, so that you can endlessly fly sideways and it's a bit like you're just going round the world
         # To do this, I need an extra camera width on the end of the world, the matches the first camera width
 
-        return terrain
+        return terrain_centre, terrain_edge
 
     def get_star(self):
         # Stars in the sky ...

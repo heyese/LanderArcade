@@ -4,10 +4,11 @@ import arcade
 from lander import Lander
 from world import World
 from landing_pad import LandingPad
-from constants import BACKGROUND_COLOR
+from constants import BACKGROUND_COLOR, WORLD_WIDTH
 from views.next_level import NextLevelView
 from views.menu import MenuView
 from pyglet.math import Vec2
+
 
 class GameView(arcade.View):
 
@@ -22,6 +23,7 @@ class GameView(arcade.View):
         self.world = None
         self.landing_pad = None
         self.level = level
+
 
     def setup(self, level: int = 1):
         """Get the game ready to play"""
@@ -44,8 +46,9 @@ class GameView(arcade.View):
 
         # The world's terrain spritelist - these are the rectangles making up the ground, which I need to be able
         # to detect if I've hit
-        self.scene.add_sprite_list("Terrain", use_spatial_hash=True, sprite_list=self.world.terrain)
-        self.scene.add_sprite("Terrain", self.landing_pad)
+        self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True, sprite_list=self.world.terrain_centre)
+        self.scene.add_sprite_list("Terrain Edge", use_spatial_hash=True, sprite_list=self.world.terrain_edge)
+        self.scene.add_sprite("Terrain Centre", self.landing_pad)
         # Starting location of the Lander
         self.lander.center_y = self.window.height - self.lander.height
         self.lander.center_x = self.window.width / 2
@@ -63,7 +66,8 @@ class GameView(arcade.View):
             self.lander.face_point((self.lander.mouse_location + self.game_camera.position))
             self.lander.engine.angle = self.lander.angle
         # Check to see if Lander has collided with the ground
-        ground_collision = arcade.check_for_collision_with_lists(self.lander,[self.scene["Terrain"]])
+        ground_collision = arcade.check_for_collision_with_lists(self.lander, [self.scene["Terrain Centre"],
+                                                                               self.scene["Terrain Edge"]])
         if ground_collision:
             # Have we landed?
             if ground_collision[0] == self.landing_pad and self.landing_pad.safe_to_land:
@@ -73,8 +77,23 @@ class GameView(arcade.View):
             if "Lander" in self.scene.name_mapping:
                 self.scene.remove_sprite_list_by_name("Lander")
 
-        # Pan to the user
-        self.pan_camera_to_user(panning_fraction=0.04)
+        # Wrap the world around when we go off the edge
+        world_wrapped = False
+        if self.lander.center_x >= WORLD_WIDTH - self.window.width:
+            camera_x = self.game_camera.position[0] - self.lander.center_x + self.window.width
+            self.lander.center_x = self.window.width
+            world_wrapped = True
+        elif self.lander.center_x < self.window.width:
+            camera_x = self.game_camera.position[0] + WORLD_WIDTH - self.window.width - self.lander.center_x
+            self.lander.center_x = WORLD_WIDTH - self.window.width
+            world_wrapped = True
+        if world_wrapped:
+            # If we've gone off the edge of the world, we immediately move the camera so the user doesn't notice
+            camera_position = Vec2(camera_x, self.game_camera.position[1])
+            self.game_camera.move_to(camera_position, 1)
+        else:
+            # Otherwise we gently pan the camera around
+            self.pan_camera_to_user(panning_fraction=0.04)
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.lander.engine.angle = self.lander.angle
@@ -116,15 +135,13 @@ class GameView(arcade.View):
         """
 
         # This spot would center on the user
-        screen_center_x = self.lander.center_x - (self.game_camera.viewport_width / 2)
-        screen_center_y = self.lander.center_y - (
-            self.game_camera.viewport_height / 2
-        )
-        if screen_center_x < 0:
-            screen_center_x = 0
-        if screen_center_y < 0:
-            screen_center_y = 0
-        user_centered = screen_center_x, screen_center_y
+        camera_x0 = self.lander.center_x - (self.game_camera.viewport_width / 2)
+        camera_y0 = self.lander.center_y - (self.game_camera.viewport_height / 2)
+        # if screen_center_x < 0:
+        #     screen_center_x = 0
+        if camera_y0 < 0:
+            camera_y0 = 0
+        user_centered = camera_x0, camera_y0
 
         self.game_camera.move_to(user_centered, panning_fraction)
 

@@ -67,13 +67,11 @@ class LandingPad(arcade.SpriteSolidColor):
         # List all rectangles with large enough width and then pick one at random?
 
         # Currently I'm assuming it is possible to find a location - I should make sure it is!
-
-        for rect in self.world.terrain:
-            rect: arcade.SpriteSolidColor
-            wide_enough_rectangles = [r for r in self.world.terrain if r.width >= self.width]
-            chosen_rect = wide_enough_rectangles[random.randrange(len(wide_enough_rectangles))]
-            self.center_x = chosen_rect.center_x
-            self.bottom = chosen_rect.top
+        wide_enough_rectangles = [r for r in self.world.terrain_centre
+                                  if r.width >= self.width]
+        chosen_rect = wide_enough_rectangles[random.randrange(len(wide_enough_rectangles))]
+        self.center_x = chosen_rect.center_x
+        self.bottom = chosen_rect.top
 
 
 
