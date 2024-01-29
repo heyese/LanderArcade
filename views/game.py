@@ -24,7 +24,6 @@ class GameView(arcade.View):
         self.landing_pad = None
         self.level = level
 
-
     def setup(self, level: int = 1):
         """Get the game ready to play"""
 
@@ -39,7 +38,7 @@ class GameView(arcade.View):
         # Have a camera shake on impact  (arcade.camera.shake)
 
         self.level = level  # Ultimately want to use this to develop the game in later levels
-        self.world = World()
+        self.world = World(camera_width=self.game_camera.viewport_width, camera_height=self.game_camera.viewport_height)
         self.lander = Lander(world=self.world)
         self.landing_pad = LandingPad(lander=self.lander, world=self.world)
         self.scene = arcade.Scene()
@@ -77,15 +76,19 @@ class GameView(arcade.View):
             if "Lander" in self.scene.name_mapping:
                 self.scene.remove_sprite_list_by_name("Lander")
 
-        # Wrap the world around when we go off the edge
+        # If the Lander flies off the edge of the world, I want to wrap it around instantly, so the user doesn't notice.
+        # I have crafted the World so that the first two window.widths are the same as the last two.
+        # So I pull off this trick by never letting the user get closer than 1 window.width to the edge of the world
+        # - when this boundary is crossed, the user is flipped to the other side (along with all the sprites!).
+        world_wrap_distance = WORLD_WIDTH - 2 * self.game_camera.viewport_width
         world_wrapped = False
-        if self.lander.center_x >= WORLD_WIDTH - self.window.width:
-            camera_x = self.game_camera.position[0] - self.lander.center_x + self.window.width
-            self.lander.center_x = self.window.width
+        if self.lander.center_x >= WORLD_WIDTH - self.game_camera.viewport_width:
+            camera_x = self.game_camera.position[0] - world_wrap_distance
+            self.lander.center_x -= world_wrap_distance
             world_wrapped = True
-        elif self.lander.center_x < self.window.width:
-            camera_x = self.game_camera.position[0] + WORLD_WIDTH - self.window.width - self.lander.center_x
-            self.lander.center_x = WORLD_WIDTH - self.window.width
+        elif self.lander.center_x < self.game_camera.viewport_width:
+            camera_x = self.game_camera.position[0] + world_wrap_distance
+            self.lander.center_x += world_wrap_distance
             world_wrapped = True
         if world_wrapped:
             # If we've gone off the edge of the world, we immediately move the camera so the user doesn't notice
@@ -137,11 +140,10 @@ class GameView(arcade.View):
         # This spot would center on the user
         camera_x0 = self.lander.center_x - (self.game_camera.viewport_width / 2)
         camera_y0 = self.lander.center_y - (self.game_camera.viewport_height / 2)
-        # if screen_center_x < 0:
-        #     screen_center_x = 0
+
         if camera_y0 < 0:
             camera_y0 = 0
-        user_centered = camera_x0, camera_y0
+        user_centered = Vec2(camera_x0, camera_y0)
 
         self.game_camera.move_to(user_centered, panning_fraction)
 
@@ -159,5 +161,5 @@ class GameView(arcade.View):
 
         # Draw the overlay - fuel, shield, etc.
         self.overlay_camera.use()
-        arcade.draw_text(f"Level: {self.level}  Shield: {int(self.lander.shield.power)}  Fuel: {int(self.lander.engine.fuel)}  Lander angle: {self.lander.angle:.1f}  Gravity: {self.world.gravity}", 10, 30, arcade.color.BANANA_YELLOW, 20)
+        arcade.draw_text(f"Level: {self.level}  Pos: {self.lander.position[0]:.2f}, {self.lander.position[1]:.2f},  Shield: {int(self.lander.shield.power)}  Fuel: {int(self.lander.engine.fuel)}  Lander angle: {self.lander.angle:.1f}  Gravity: {self.world.gravity}", 10, 30, arcade.color.BANANA_YELLOW, 20)
 

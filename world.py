@@ -12,7 +12,9 @@ class World:
                  gravity: int = None,
                  star_count: int = None,
                  hill_height: float = None,
-                 hill_width: float = None):
+                 hill_width: float = None,
+                 camera_width: int = None,
+                 camera_height: int = None):
         self.sky_color = sky_color if sky_color else random.choices(range(256), k=3)
         self.ground_color = ground_color if ground_color else random.choices(range(256), k=3)
         self.gravity = gravity if gravity is not None else random.randint(20, 200)
@@ -20,14 +22,17 @@ class World:
         # Terrain attributes
         self.hill_height = hill_height if hill_height is not None else random.randint(20, 100) / 100
         self.hill_width = hill_width if hill_width is not None else random.randint(20, 100) / 100
-        self.width, self.height = arcade.window_commands.get_display_size()
+        self.camera_width, self.camera_height = arcade.window_commands.get_display_size()
 
         # Not everything is a sprite!  But I don't need to detect collisions with everything, so that's ok.
         # Will have a list of shapes associated with the world that get drawn but can't be interacted with
         self.background_shapes = arcade.ShapeElementList()
         self.background_shapes.append(self.get_sky_to_space_fade_rectangle())
         for _ in range(self.star_count):
-            self.background_shapes.append(self.get_star())
+            star, star_for_world_wrap = self.get_star()
+            self.background_shapes.append(star)
+            if star_for_world_wrap is not None:
+                self.background_shapes.append(star_for_world_wrap)
         # Perhaps some kind of background
         # Just needs to be obviously distinguishable from the foreground, which we need to "land" on
         # TODO
@@ -35,7 +40,7 @@ class World:
         # The foreground
         self.terrain_centre, self.terrain_edge = self.get_terrain()
 
-    def get_terrain(self) -> arcade.SpriteList:
+    def get_terrain(self) -> Tuple[arcade.SpriteList, arcade.SpriteList]:
         def get_rect(x, max_x):
             height = max(50, int(random.randint(30, int((1/3) * WORLD_HEIGHT)) * self.hill_height))
             width = min(int(random.randint(100, 500) * self.hill_width), max_x - x)
@@ -49,15 +54,15 @@ class World:
 
         # Bunch of rectangle sprites from left to right
         x = 0
-        while x < 2 * self.width:
-            left_edge_rect = get_rect(x, max_x=2 * self.width)
+        while x < 2 * self.camera_width:
+            left_edge_rect = get_rect(x, max_x=2 * self.camera_width)
             right_edge_rect = copy.copy(left_edge_rect)
-            right_edge_rect.left = WORLD_WIDTH - 2 * self.width + x
+            right_edge_rect.left = WORLD_WIDTH - 2 * self.camera_width + x
             terrain_edge.append(left_edge_rect)
             terrain_edge.append(right_edge_rect)
             x += left_edge_rect.width
-        while x < WORLD_WIDTH - 2 * self.width:
-            rect = get_rect(x, max_x=WORLD_WIDTH - self.width)
+        while x < WORLD_WIDTH - 2 * self.camera_width:
+            rect = get_rect(x, max_x=WORLD_WIDTH - self.camera_width)
             terrain_centre.append(rect)
             x += rect.width
 
@@ -68,12 +73,19 @@ class World:
 
     def get_star(self):
         # Stars in the sky ...
-        x = random.randrange(WORLD_WIDTH)
+        x = random.randrange(WORLD_WIDTH - 2 * self.camera_width)
         y = random.randrange(int((2 / 3) * WORLD_HEIGHT), WORLD_HEIGHT)
         radius = random.randrange(2, 8)
         brightness = random.randrange(127, 256)
         color = (brightness, brightness, brightness)
-        return arcade.create_rectangle_filled(x, y, radius, radius, color, 45)
+        star = arcade.create_rectangle_filled(x, y, radius, radius, color, 45)
+        star_copy = None
+        if x < 2 * self.camera_width:
+            # Due to the way we wrap the world around, stars with 2 camera_widths
+            # of the start of the world should be replicated in the last 2 camera_widths
+            world_wrap_distance = WORLD_WIDTH - 2 * self.camera_width
+            star_copy = arcade.create_rectangle_filled(x + world_wrap_distance, y, radius, radius, color, 45)
+        return star, star_copy
 
     def get_sky_to_space_fade_rectangle(self) -> arcade.Shape:
         # A rectangle from bottom to 2/3rds screen height, with increasing transparency from bottom to top,
