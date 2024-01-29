@@ -4,10 +4,12 @@ import arcade
 from lander import Lander
 from world import World
 from landing_pad import LandingPad
-from constants import BACKGROUND_COLOR, WORLD_WIDTH
+from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT
 from views.next_level import NextLevelView
 from views.menu import MenuView
 from pyglet.math import Vec2
+from uuid import uuid4
+from typing import List
 
 
 class GameView(arcade.View):
@@ -16,13 +18,22 @@ class GameView(arcade.View):
         """Initialize the game"""
         super().__init__()
 
-        self.game_camera = arcade.Camera()
+        # Want to leave space at the top of the screen for the mini-map
+        self.game_camera = arcade.Camera(viewport_height=int((5/6) * self.window.height))
         self.overlay_camera = arcade.Camera()
         self.scene = None
         self.lander = None
         self.world = None
         self.landing_pad = None
         self.level = level
+
+        # Mini-map related
+        # Background color must include an alpha component
+        self.minimap_background_colour = (*BACKGROUND_COLOR, 255)
+        self.minimap_sprite_list = None
+        # Texture and associated sprite to render our minimap to
+        self.minimap_texture = None
+        self.minimap_sprite = None
 
     def setup(self, level: int = 1):
         """Get the game ready to play"""
@@ -33,7 +44,7 @@ class GameView(arcade.View):
         # Want sky to fade in to space, with fully space from two thirds the way up
         # https://api.arcade.academy/en/stable/examples/gradients.html#gradients
 
-        # Want a mini-map: https://api.arcade.academy/en/latest/advanced/texture_atlas.html
+
         # Want the wold to be larger than the screen
         # Have a camera shake on impact  (arcade.camera.shake)
 
@@ -59,8 +70,41 @@ class GameView(arcade.View):
         for i in (self.lander, self.lander.engine, self.lander.shield):
             self.scene.add_sprite("Lander", i)
 
+        # Construct the minimap
+        minimap_width = int(0.75 * self.game_camera.viewport_width)
+        minimap_height = self.window.height - self.game_camera.viewport_height
+        self.minimap_texture = arcade.Texture.create_empty(str(uuid4()), (minimap_width, minimap_height))
+        self.minimap_sprite = arcade.Sprite(center_x=self.game_camera.viewport_width / 2,
+                                            center_y=(minimap_height / 2) + self.game_camera.viewport_height,
+                                            texture=self.minimap_texture)
+        self.minimap_sprite_list = arcade.SpriteList()
+        self.minimap_sprite_list.append(self.minimap_sprite)
+
+    def update_minimap(self):
+        # Want a mini-map: https://api.arcade.academy/en/latest/advanced/texture_atlas.html
+        def rescale_and_draw(sprites: List[arcade.Sprite], scale_multiplier: int):
+            for sprite in sprites:
+                sprite.scale *= scale_multiplier
+                sprite.draw()
+                sprite.scale /= scale_multiplier
+
+        proj = self.game_camera.viewport_width, WORLD_WIDTH - self.game_camera.viewport_width, 0, WORLD_HEIGHT
+        with self.minimap_sprite_list.atlas.render_into(self.minimap_texture, projection=proj) as fbo:
+            fbo.clear(self.minimap_background_colour)
+            self.world.background_shapes.draw()
+            self.scene.get_sprite_list('Terrain Centre').draw()
+            self.scene.get_sprite_list('Terrain Edge').draw()
+            # Want the lander and the landing pad to stand out, rather than being tiny
+            rescale_and_draw([self.lander, self.landing_pad], 4)
+
     def on_update(self, delta_time: float):
         self.scene.on_update()
+
+        # I want the lander to always face the mouse pointer, but we only get updates on events (eg. mouse movement)
+        # ie. If the mouse is still and the ship flies past it, without further events, it will be facing in the wrong
+        # direction.
+        # So on mouse move event I store the mouse coordinates, and on every update (event or not) I ensure the ship
+        # is facing the right way.
         if self.lander.mouse_location is not None:
             self.lander.face_point((self.lander.mouse_location + self.game_camera.position))
             self.lander.engine.angle = self.lander.angle
@@ -97,6 +141,9 @@ class GameView(arcade.View):
         else:
             # Otherwise we gently pan the camera around
             self.pan_camera_to_user(panning_fraction=0.04)
+
+        # Update the minimap
+        self.update_minimap()
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.lander.engine.angle = self.lander.angle
@@ -159,7 +206,10 @@ class GameView(arcade.View):
         # Draw game sprites
         self.scene.draw()
 
+
         # Draw the overlay - fuel, shield, etc.
         self.overlay_camera.use()
+        # Draw the minimap
+        self.minimap_sprite_list.draw()
         arcade.draw_text(f"Level: {self.level}  Pos: {self.lander.position[0]:.2f}, {self.lander.position[1]:.2f},  Shield: {int(self.lander.shield.power)}  Fuel: {int(self.lander.engine.fuel)}  Lander angle: {self.lander.angle:.1f}  Gravity: {self.world.gravity}", 10, 30, arcade.color.BANANA_YELLOW, 20)
 

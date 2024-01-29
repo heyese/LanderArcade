@@ -22,7 +22,8 @@ class World:
         # Terrain attributes
         self.hill_height = hill_height if hill_height is not None else random.randint(20, 100) / 100
         self.hill_width = hill_width if hill_width is not None else random.randint(20, 100) / 100
-        self.camera_width, self.camera_height = arcade.window_commands.get_display_size()
+        self.camera_width = camera_width
+        self.camera_height = camera_height
 
         # Not everything is a sprite!  But I don't need to detect collisions with everything, so that's ok.
         # Will have a list of shapes associated with the world that get drawn but can't be interacted with
