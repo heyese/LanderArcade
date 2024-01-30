@@ -1,6 +1,6 @@
 import arcade
 import math
-from constants import SCALING, WORLD_HEIGHT, WORLD_WIDTH
+from constants import SCALING, WORLD_HEIGHT, WORLD_WIDTH, SPACE_START, SPACE_END
 from shield import Shield
 from engine import Engine
 from world import World
@@ -26,8 +26,8 @@ class Lander(arcade.Sprite):
 
     def on_update(self, delta_time: float = 1 / 60):
         # Are we in space or not?
-        self.in_space = True if self.center_y >= (2/3) * WORLD_HEIGHT else False
-        self.above_space = True if self.center_y >= (5/6) * WORLD_HEIGHT else False
+        self.in_space = True if self.center_y >= SPACE_START else False
+        self.above_space = True if self.center_y >= SPACE_END else False
         # Calculate current velocity from auto-maintained self.change_XXX variables and delta time
         self.velocity_x = self.change_x / delta_time  # pixels per second!
         self.velocity_y = self.change_y / delta_time
@@ -36,7 +36,7 @@ class Lander(arcade.Sprite):
 
         if self.above_space:
             # If someone tries to fly off into deep space, bring them back before they get lost ...
-            force_y -= self.mass * 5 * (self.center_y - (5/6) * WORLD_HEIGHT)
+            force_y -= self.mass * 5 * (self.center_y - SPACE_END)
         if not self.in_space:
             # When not in the allowed(!) region of space, there's the world's gravity ...
             force_y -= self.mass * self.world.gravity

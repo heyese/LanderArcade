@@ -4,7 +4,7 @@ import arcade
 from lander import Lander
 from world import World
 from landing_pad import LandingPad
-from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT
+from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT, SPACE_START, SPACE_END
 from views.next_level import NextLevelView
 from views.menu import MenuView
 from pyglet.math import Vec2
@@ -60,8 +60,8 @@ class GameView(arcade.View):
         self.scene.add_sprite_list("Terrain Edge", use_spatial_hash=True, sprite_list=self.world.terrain_edge)
         self.scene.add_sprite("Terrain Centre", self.landing_pad)
         # Starting location of the Lander
-        self.lander.center_y = self.window.height - self.lander.height
-        self.lander.center_x = self.window.width / 2
+        self.lander.center_y = int((1/2) * (SPACE_END - SPACE_START)) + SPACE_START
+        self.lander.center_x = WORLD_WIDTH / 2
         self.lander.change_x = random.randint(-30, 30) / 60
         self.lander.change_y = -random.randint(10, 30) / 60
 

@@ -1,7 +1,7 @@
 import arcade
 import random
 from typing import Union, Tuple
-from constants import WORLD_WIDTH, WORLD_HEIGHT, BACKGROUND_COLOR
+from constants import WORLD_WIDTH, WORLD_HEIGHT, BACKGROUND_COLOR, SPACE_START, SPACE_END
 import copy
 
 
@@ -93,8 +93,8 @@ class World:
         # so that the sky fades into space ...
         points = ((0, 0),
                   (WORLD_WIDTH, 0),
-                  (WORLD_WIDTH, int((2 / 3) * WORLD_HEIGHT)),
-                  (0, int((2 / 3) * WORLD_HEIGHT)))
+                  (WORLD_WIDTH, SPACE_START),
+                  (0, SPACE_START))
         colors = ((*self.sky_color, 255),
                   (*self.sky_color, 255),
                   BACKGROUND_COLOR,
