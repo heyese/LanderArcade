@@ -41,11 +41,6 @@ class GameView(arcade.View):
         # Set the background color
 
         arcade.set_background_color(BACKGROUND_COLOR)
-        # Want sky to fade in to space, with fully space from two thirds the way up
-        # https://api.arcade.academy/en/stable/examples/gradients.html#gradients
-
-
-        # Want the wold to be larger than the screen
         # Have a camera shake on impact  (arcade.camera.shake)
 
         self.level = level  # Ultimately want to use this to develop the game in later levels
@@ -62,6 +57,7 @@ class GameView(arcade.View):
         # Starting location of the Lander
         self.lander.center_y = int((1/2) * (SPACE_END - SPACE_START)) + SPACE_START
         self.lander.center_x = WORLD_WIDTH / 2
+        self.pan_camera_to_user(1)
         self.lander.change_x = random.randint(-30, 30) / 60
         self.lander.change_y = -random.randint(10, 30) / 60
 
@@ -156,7 +152,9 @@ class GameView(arcade.View):
         if modifiers & arcade.key.MOD_SHIFT:
             self.lander.engine.boost(True)
         if symbol == arcade.key.R:
-            # Restart
+            # eventually seem to run out of space.
+            # Found this: https://stackoverflow.com/questions/71599404/python-arcade-caches-textures-when-requested-not-to
+            # So hopefully this will be fixed in Arcade 2.7
             self.setup()
         if symbol == arcade.key.ESCAPE:
             # pass self, the current view, so we can return to it (ie. when we unpause)
