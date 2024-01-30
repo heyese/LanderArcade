@@ -14,7 +14,7 @@ from typing import List
 
 class GameView(arcade.View):
 
-    def __init__(self, level: int = 1):
+    def __init__(self):
         """Initialize the game"""
         super().__init__()
 
@@ -25,7 +25,8 @@ class GameView(arcade.View):
         self.lander = None
         self.world = None
         self.landing_pad = None
-        self.level = level
+        self.level = None
+        self.score = None
 
         # Mini-map related
         # Background color must include an alpha component
@@ -35,7 +36,14 @@ class GameView(arcade.View):
         self.minimap_texture = None
         self.minimap_sprite = None
 
-    def setup(self, level: int = 1):
+        # The HUD text
+        self.fuel_text = None
+        self.shield_text = None
+        self.level_text = None
+        self.score_text = None
+        self.gravity_text = None
+
+    def setup(self, level: int = 1, score: int = 0):
         """Get the game ready to play"""
 
         # Set the background color
@@ -44,23 +52,24 @@ class GameView(arcade.View):
         # Have a camera shake on impact  (arcade.camera.shake)
 
         self.level = level  # Ultimately want to use this to develop the game in later levels
+        self.score = score
         self.world = World(camera_width=self.game_camera.viewport_width, camera_height=self.game_camera.viewport_height)
         self.lander = Lander(world=self.world)
         self.landing_pad = LandingPad(lander=self.lander, world=self.world)
         self.scene = arcade.Scene()
 
         # The world's terrain spritelist - these are the rectangles making up the ground, which I need to be able
-        # to detect if I've hit
+        # to detect if I've hit.
         self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True, sprite_list=self.world.terrain_centre)
         self.scene.add_sprite_list("Terrain Edge", use_spatial_hash=True, sprite_list=self.world.terrain_edge)
         self.scene.add_sprite("Terrain Centre", self.landing_pad)
+
         # Starting location of the Lander
         self.lander.center_y = int((1/2) * (SPACE_END - SPACE_START)) + SPACE_START
         self.lander.center_x = WORLD_WIDTH / 2
         self.pan_camera_to_user(1)
         self.lander.change_x = random.randint(-30, 30) / 60
         self.lander.change_y = -random.randint(10, 30) / 60
-
         # The lander spritelist - ship, engine and shield
         self.scene.add_sprite_list("Lander")
         for i in (self.lander, self.lander.engine, self.lander.shield):
@@ -75,6 +84,70 @@ class GameView(arcade.View):
                                             texture=self.minimap_texture)
         self.minimap_sprite_list = arcade.SpriteList()
         self.minimap_sprite_list.append(self.minimap_sprite)
+
+        self.fuel_text, self.shield_text, self.gravity_text = self.scaled_and_centred_text(
+            texts=["Fuel: XXXX", 'Shield: XXXX', 'Gravity: XXXX'],
+            width=(self.window.width - self.minimap_sprite.width) // 2,
+            height=int(self.minimap_sprite.height),
+            centre_x=(3 * self.window.width + self.minimap_sprite.width) // 4,
+            centre_y=self.window.height - self.minimap_sprite.height // 2
+        )
+        self.level_text, self.score_text = self.scaled_and_centred_text(
+            texts=["Level: XXXX", 'Score: XXXX'],
+            width=(self.window.width - self.minimap_sprite.width) // 2,
+            height=int(self.minimap_sprite.height),
+            centre_x=(self.window.width - self.minimap_sprite.width) // 4,
+            centre_y=self.window.height - self.minimap_sprite.height // 2
+            )
+
+
+    @staticmethod
+    def scaled_and_centred_text(texts: List[str], width: int, height: int, centre_x: int, centre_y: int) -> List[arcade.Text]:
+        # Doesn't seem to be a built in function to scale lines of text to width * height in pixels.
+        # This function scales the font size of each text string so they are just under the given maximum width,
+        # then sets the width of them all to the smallest font size (so all lines are the same size).
+        # Then the cumulative height is considered and the font size scaled down again if necessary
+        def get_text_obj_with_scaled_width(text: str,
+                                           font_size_increment: int = 5) -> arcade.Text:
+            # Returns a text object with maximum width given the known width constraint
+            text_obj = arcade.Text(
+                text=text,
+                start_x=0,
+                start_y=0,
+                color=arcade.color.WHITE,
+                font_size=10,
+                font_name="Kenney Pixel Square",
+                anchor_x="center",
+                anchor_y="top"
+            )
+            while text_obj.content_width < width:
+                text_obj.font_size += font_size_increment
+            while text_obj.content_width > width:
+                text_obj.font_size -= font_size_increment
+
+            return text_obj
+
+        # Pick the smallest font size such that all lines are under the give width
+        text_objs = [get_text_obj_with_scaled_width(t) for t in texts]
+        font_size_scaled_x = min(t.font_size for t in text_objs)
+        for t in text_objs:
+            t.font_size = font_size_scaled_x
+            t.x = centre_x
+
+        # Now make sure text isn't taking up too much vertical space ...
+
+        while sum(t.content_height for t in text_objs) > height:
+            for t in text_objs:
+                t.font_size -= 1
+
+        # Now just a case of placing them all
+        text_objs_height = sum(t.content_height for t in text_objs)
+        y = centre_y + text_objs_height // 2
+        for t in text_objs:
+            t.y = y
+            y -= t.content_height
+
+        return text_objs
 
     def update_minimap(self):
         # Want a mini-map: https://api.arcade.academy/en/latest/advanced/texture_atlas.html
@@ -110,7 +183,7 @@ class GameView(arcade.View):
         if ground_collision:
             # Have we landed?
             if ground_collision[0] == self.landing_pad and self.landing_pad.safe_to_land:
-                self.window.show_view(NextLevelView(self.level))
+                self.window.show_view(NextLevelView(level=self.level, score=self.score))
                 return
             # We've blown up
             if "Lander" in self.scene.name_mapping:
@@ -140,6 +213,12 @@ class GameView(arcade.View):
 
         # Update the minimap
         self.update_minimap()
+
+        self.fuel_text.text = f"FUEL: {self.lander.engine.fuel:.0f}"
+        self.shield_text.text = f"SHIELD: {self.lander.shield.power:.0f}"
+        self.level_text.text = f"LEVEL: {self.level:.0f}"
+        self.score_text.text = f"SCORE: {self.score:.0f}"
+        self.gravity_text.text = f"GRAVITY: {self.world.gravity:.0f}"
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.lander.engine.angle = self.lander.angle
@@ -205,9 +284,8 @@ class GameView(arcade.View):
         self.scene.draw()
 
 
-        # Draw the overlay - fuel, shield, etc.
+        # Draw the overlay - minimap, fuel, shield, etc.
         self.overlay_camera.use()
-        # Draw the minimap
         self.minimap_sprite_list.draw()
-        arcade.draw_text(f"Level: {self.level}  Pos: {self.lander.position[0]:.2f}, {self.lander.position[1]:.2f},  Shield: {int(self.lander.shield.power)}  Fuel: {int(self.lander.engine.fuel)}  Lander angle: {self.lander.angle:.1f}  Gravity: {self.world.gravity}", 10, 30, arcade.color.BANANA_YELLOW, 20)
-
+        for text in [self.level_text, self.score_text, self.gravity_text, self.fuel_text, self.shield_text]:
+            text.draw()
