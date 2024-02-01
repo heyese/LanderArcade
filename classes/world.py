@@ -10,6 +10,7 @@ class World:
                  sky_color: Union[Tuple[int, int, int], arcade.color] = None,
                  ground_color: Union[Tuple[int, int, int], arcade.color] = None,
                  gravity: int = None,
+                 friction_coefficient: float = None,
                  star_count: int = None,
                  hill_height: float = None,
                  hill_width: float = None,
@@ -22,6 +23,8 @@ class World:
         # Terrain attributes
         self.hill_height = hill_height if hill_height is not None else random.randint(20, 100) / 100
         self.hill_width = hill_width if hill_width is not None else random.randint(20, 100) / 100
+        self.friction_coefficient = friction_coefficient if friction_coefficient is not None else random.randint(1, 5)
+
         self.camera_width = camera_width
         self.camera_height = camera_height
 
@@ -39,9 +42,9 @@ class World:
         # TODO
 
         # The foreground
-        self.terrain_centre, self.terrain_edge = self.get_terrain()
+        self.terrain_left_edge, self.terrain_centre, self.terrain_right_edge = self.get_terrain()
 
-    def get_terrain(self) -> Tuple[arcade.SpriteList, arcade.SpriteList]:
+    def get_terrain(self) -> Tuple[arcade.SpriteList, arcade.SpriteList, arcade.SpriteList]:
         def get_rect(x, max_x):
             height = max(50, int(random.randint(30, int((1/3) * WORLD_HEIGHT)) * self.hill_height))
             width = min(int(random.randint(100, 500) * self.hill_width), max_x - x)
@@ -51,7 +54,8 @@ class World:
             return rect
 
         terrain_centre = arcade.SpriteList()
-        terrain_edge = arcade.SpriteList()
+        terrain_left_edge = arcade.SpriteList()
+        terrain_right_edge = arcade.SpriteList()
 
         # Bunch of rectangle sprites from left to right
         x = 0
@@ -59,8 +63,8 @@ class World:
             left_edge_rect = get_rect(x, max_x=2 * self.camera_width)
             right_edge_rect = copy.copy(left_edge_rect)
             right_edge_rect.left = WORLD_WIDTH - 2 * self.camera_width + x
-            terrain_edge.append(left_edge_rect)
-            terrain_edge.append(right_edge_rect)
+            terrain_left_edge.append(left_edge_rect)
+            terrain_right_edge.append(right_edge_rect)
             x += left_edge_rect.width
         while x < WORLD_WIDTH - 2 * self.camera_width:
             rect = get_rect(x, max_x=WORLD_WIDTH - self.camera_width)
@@ -70,7 +74,7 @@ class World:
         # I want a wrap around effect, so that you can endlessly fly sideways and it's a bit like you're just going round the world
         # To do this, I need an extra camera width on the end of the world, the matches the first camera width
 
-        return terrain_centre, terrain_edge
+        return terrain_left_edge, terrain_centre, terrain_right_edge
 
     def get_star(self):
         # Stars in the sky ...

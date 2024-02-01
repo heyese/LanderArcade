@@ -1,12 +1,17 @@
 
+
 import arcade
+from classes.mobile_object import MobileObject
+from classes.world import World
+from constants import SCALING
 from typing import List
+import random
 
 # How on earth are explosions going to work ... ?
 # Explosions will exert a force on mobile objects they come into contact with,
 # but I don't think those objects will exert a force on them ...
 # I think this means that their trajectory is completely determined by initial conditions and gravity?
-# They can't go through the ground
+# They can't go through the ground - when they hit the ground, they should be subject to friction to slow them down.
 # On contact, they will cause objects that can explode to explode (unless a force field is activated)
 # They won't exert a force on other explosions ... I don't think this really makes sense
 # They are always drawn behind anything using a force-field
@@ -24,45 +29,90 @@ from typing import List
 # But then might the object fly away faster than the explosion increases in size?  Does this matter?
 
 
-class Explosion(arcade.Sprite):
+class Explosion(MobileObject):
     def __init__(self,
-                 initial_radius: int,
-                 final_radius: int,
+                 scene: arcade.Scene,
+                 world: World,
+                 mass: int,
+                 scale: float,
+                 radius_initial: int,
+                 radius_final: int,
                  lifetime: float,  # seconds
-                 force: float,   # exerted on mobile objects in contact
-                 velocity: List[float, float]):
-        super().__init__(filename=filename, scale=scale * SCALING)
-        self.scen
-        self.shield: Shield = Shield(self)
-        self.engine: Engine = Engine(self)
-        self.world: World = world
-        self.mass = mass
-        # Don't like the Sprite.velocity attribute, since it's obvious delta_time can vary,
-        # so it's not really a velocity - it's a change in position
-        self.velocity_x: float = 0
-        self.velocity_y: float = 0
-        # Gravity only applies when we're not "in space"!
-        self.in_space: bool | None = None
-        # Gravity applies pretty heavily if someone tries to fly off into space
-        self.above_space: bool | None = None
+                 force: float,  # exerted on mobile objects in contact
+                 velocity_x: float,
+                 velocity_y: float,
+                 center_x: int,
+                 center_y: int):
+        files = [
+            "images/explosion_1.png",
+            "images/explosion_2.png",
+            "images/explosion_3.png",
+            "images/explosion_4.png",
+        ]
+        file = random.choice(files)
+        super().__init__(filename=file,
+                         scale=scale * SCALING,
+                         world=world,
+                         mass=mass,
+                         scene=scene,
+                         has_engine=False,
+                         has_shield=False,
+                         center_x=center_x,
+                         center_y=center_y,
+                         velocity_x=velocity_x,
+                         velocity_y=velocity_y,
+                         angle=random.randint(1, 360))
+
+        self.velocity_x_initial = velocity_x
+        self._radius = radius_initial
+        self.height = 2 * radius_initial
+        self.width = 2 * radius_initial
+        self.radius_initial = radius_initial
+        self.radius_final = radius_final
+        self.lifetime = lifetime  # Explosion lifetime in seconds.  Used to scale it from radius_initial to radius_final.
+        self.force = force
+        self.scene.add_sprite(name="Explosions", sprite=self)
+        self.timer = 0
+        self.rotation_rate = random.randint(1, 180)  # degrees per second
+
+    @property
+    def radius(self) -> float:
+        return self._radius
+
+    @radius.setter
+    def radius(self, new_radius: float):
+        self._radius = new_radius
+        self.height = 2 * new_radius
+        self.width = 2 * new_radius
 
     def on_update(self, delta_time: float = 1 / 60):
-        # Are we in space or not?
-        self.in_space = True if self.center_y >= SPACE_START else False
-        self.above_space = True if self.center_y >= SPACE_END else False
-        # Calculate current velocity from auto-maintained self.change_XXX variables and delta time
-        self.velocity_x = self.change_x / delta_time  # pixels per second!
-        self.velocity_y = self.change_y / delta_time
-        # Calculate the force being applied to the aircraft
-        force_y = self.determine_force_y(0)
-        force_x = self.determine_force_x(0)
+        super().on_update(delta_time=delta_time)
+        self.timer += delta_time
+        self.angle += delta_time * self.rotation_rate * abs(self.velocity_x/self.velocity_x_initial)
+        self.radius = self.radius_initial + (self.timer / self.lifetime) * (self.radius_final - self.radius_initial)
+        if self.timer > self.lifetime:
+            self.remove_from_sprite_lists()
 
-        # s = ut + (0.5)at^2
-        self.change_x = self.velocity_x * delta_time + 0.5 * (force_x / self.mass) * (delta_time ** 2)
-        self.change_y = self.velocity_y * delta_time + 0.5 * (force_y / self.mass) * (delta_time ** 2)
+    def check_for_collision(self):
+        # I am going to let other objects worry about whether they've collided with an explosion.
+        # All the explosion needs to worry about is its interaction with the ground
+        # And here, I'm only considering the centre of the explosion
 
-        self.center_x += self.change_x
-        self.center_y += self.change_y
+        # So I want the three ground rects - directly underneath, and left and right
+        # Since rects are in order from left to right, this shouldn't be hard
+        r1, r2, r3 = None, None, None
+        for r in [*self.world.terrain_left_edge, *self.world.terrain_centre, *self.world.terrain_right_edge]:
+            r1, r2, r3 = r2, r3, r
+            if not r1:
+                continue
+            if r1.right <= self.center_x <= r3.left:
+                break
 
-        # Check for collisions
-        self.check_for_collision()
+        if self.center_y <= r2.top:
+            self.change_y = 0
+            self.on_ground = True
+        else:
+            self.on_ground = False
+        if ((self.center_x + self.change_x <= r1.right and r1.top > self.center_y) or
+                (self.center_x + self.change_x >= r3.left and r3.top > self.center_y)):
+            self.change_x = 0

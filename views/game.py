@@ -52,6 +52,7 @@ class GameView(arcade.View):
         # Have a camera shake on impact  (arcade.camera.shake)
 
         self.scene = arcade.Scene()
+        self.scene.add_sprite_list("Explosions")  # These get drawn behind everything else
         self.level = level  # Ultimately want to use this to develop the game in later levels
         self.score = score
         self.world = World(camera_width=self.game_camera.viewport_width, camera_height=self.game_camera.viewport_height)
@@ -60,8 +61,9 @@ class GameView(arcade.View):
 
         # The world's terrain spritelist - these are the rectangles making up the ground, which I need to be able
         # to detect if I've hit.
+        self.scene.add_sprite_list("Terrain Left Edge", use_spatial_hash=True, sprite_list=self.world.terrain_left_edge)
         self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True, sprite_list=self.world.terrain_centre)
-        self.scene.add_sprite_list("Terrain Edge", use_spatial_hash=True, sprite_list=self.world.terrain_edge)
+        self.scene.add_sprite_list("Terrain Right Edge", use_spatial_hash=True, sprite_list=self.world.terrain_right_edge)
         self.scene.add_sprite("Landing Pad", self.landing_pad)
 
         # Starting location of the Lander
@@ -160,8 +162,9 @@ class GameView(arcade.View):
         with self.minimap_sprite_list.atlas.render_into(self.minimap_texture, projection=proj) as fbo:
             fbo.clear(self.minimap_background_colour)
             self.world.background_shapes.draw()
+            self.scene.get_sprite_list('Terrain Left Edge').draw()
             self.scene.get_sprite_list('Terrain Centre').draw()
-            self.scene.get_sprite_list('Terrain Edge').draw()
+            self.scene.get_sprite_list('Terrain Right Edge').draw()
             # Want the lander and the landing pad to stand out, rather than being tiny
             rescale_and_draw([self.lander, self.landing_pad], 4)
 
@@ -274,7 +277,7 @@ class GameView(arcade.View):
         self.game_camera.use()
         # Draw game non-sprites
         self.world.background_shapes.draw()  # This is not a sprite, so not covered by scene.draw()
-        if self.landing_pad.activated:
+        if self.landing_pad.activated and self.lander.dead is False:
             self.lander.draw_landing_angle_guide()
         # Draw game sprites
         self.scene.draw()
