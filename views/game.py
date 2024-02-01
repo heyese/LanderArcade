@@ -220,6 +220,8 @@ class GameView(arcade.View):
             self.lander.engine.activate()
 
     def on_key_press(self, symbol, modifiers):
+        if symbol == arcade.key.BACKSLASH:
+            self.lander.engine.activate()
         if modifiers & arcade.key.MOD_SHIFT:
             self.lander.engine.boost(True)
         if symbol == arcade.key.R:
@@ -233,6 +235,8 @@ class GameView(arcade.View):
             self.window.show_view(menu)
 
     def on_key_release(self, symbol, modifiers):
+        if symbol == arcade.key.BACKSLASH:
+            self.lander.engine.deactivate()
         if not modifiers & arcade.key.MOD_SHIFT:
             self.lander.engine.boost(False)
 

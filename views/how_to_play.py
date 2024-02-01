@@ -23,17 +23,17 @@ class HowToPlayView(arcade.View):
 
         how_to_play_text = """
         The aim is to land the Lander onto the Landing pad.  You must be going slow enough, be completely over the Landing pad and at a safe angle!\n
-        Left mouse button: Thrust
+        Left mouse button / backslash key: Thrust
         Right mouse button: Shield
         Shift: Boost the engine (uses fuel at higher rate)
         Escape button: Pause
         """
         text_area = arcade.gui.UITextArea(x=100,
-                               y=200,
-                               width=500,
-                               height=500,
-                               text=how_to_play_text,
-                               text_color=(0, 0, 0, 255))
+                                          y=200,
+                                          width=500,
+                                          height=500,
+                                          text=how_to_play_text,
+                                          text_color=(0, 0, 0, 255))
 
         self.v_box.add(
             arcade.gui.UITexturePane(text_area.with_space_around(right=20),
