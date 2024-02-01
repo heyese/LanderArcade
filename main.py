@@ -2,7 +2,6 @@ import arcade
 from views.menu import MenuView
 #  Views for instructions, game over, etc. https://api.arcade.academy/en/stable/tutorials/views/index.html
 #  Camera for GUI overlay: https://api.arcade.academy/en/stable/examples/sprite_move_scrolling.html#sprite-move-scrolling
-#  Scene - useful for ordering when sprites get drawn
 from constants import WORLD_WIDTH, WORLD_HEIGHT, BACKGROUND_COLOR
 
 

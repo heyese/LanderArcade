@@ -1,12 +1,13 @@
 import random
 
 import arcade
-from lander import Lander
-from world import World
-from landing_pad import LandingPad
+from classes.lander import Lander
+from classes.world import World
+from classes.landing_pad import LandingPad
 from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT, SPACE_START, SPACE_END
-from views.next_level import NextLevelView
+
 from views.menu import MenuView
+from views.next_level import NextLevelView
 from pyglet.math import Vec2
 from uuid import uuid4
 from typing import List
@@ -47,22 +48,21 @@ class GameView(arcade.View):
         """Get the game ready to play"""
 
         # Set the background color
-
         arcade.set_background_color(BACKGROUND_COLOR)
         # Have a camera shake on impact  (arcade.camera.shake)
 
+        self.scene = arcade.Scene()
         self.level = level  # Ultimately want to use this to develop the game in later levels
         self.score = score
         self.world = World(camera_width=self.game_camera.viewport_width, camera_height=self.game_camera.viewport_height)
-        self.lander = Lander(world=self.world)
+        self.lander = Lander(scene=self.scene, world=self.world)
         self.landing_pad = LandingPad(lander=self.lander, world=self.world)
-        self.scene = arcade.Scene()
 
         # The world's terrain spritelist - these are the rectangles making up the ground, which I need to be able
         # to detect if I've hit.
         self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True, sprite_list=self.world.terrain_centre)
         self.scene.add_sprite_list("Terrain Edge", use_spatial_hash=True, sprite_list=self.world.terrain_edge)
-        self.scene.add_sprite("Terrain Centre", self.landing_pad)
+        self.scene.add_sprite("Landing Pad", self.landing_pad)
 
         # Starting location of the Lander
         self.lander.center_y = int((1/2) * (SPACE_END - SPACE_START)) + SPACE_START
@@ -99,7 +99,6 @@ class GameView(arcade.View):
             centre_x=(self.window.width - self.minimap_sprite.width) // 4,
             centre_y=self.window.height - self.minimap_sprite.height // 2
             )
-
 
     @staticmethod
     def scaled_and_centred_text(texts: List[str], width: int, height: int, centre_x: int, centre_y: int) -> List[arcade.Text]:
@@ -167,7 +166,7 @@ class GameView(arcade.View):
             rescale_and_draw([self.lander, self.landing_pad], 4)
 
     def on_update(self, delta_time: float):
-        self.scene.on_update()
+        self.scene.on_update(delta_time=delta_time)
 
         # I want the lander to always face the mouse pointer, but we only get updates on events (eg. mouse movement)
         # ie. If the mouse is still and the ship flies past it, without further events, it will be facing in the wrong
@@ -177,17 +176,6 @@ class GameView(arcade.View):
         if self.lander.mouse_location is not None:
             self.lander.face_point((self.lander.mouse_location + self.game_camera.position))
             self.lander.engine.angle = self.lander.angle
-        # Check to see if Lander has collided with the ground
-        ground_collision = arcade.check_for_collision_with_lists(self.lander, [self.scene["Terrain Centre"],
-                                                                               self.scene["Terrain Edge"]])
-        if ground_collision:
-            # Have we landed?
-            if ground_collision[0] == self.landing_pad and self.landing_pad.safe_to_land:
-                self.window.show_view(NextLevelView(level=self.level, score=self.score))
-                return
-            # We've blown up
-            if "Lander" in self.scene.name_mapping:
-                self.scene.remove_sprite_list_by_name("Lander")
 
         # If the Lander flies off the edge of the world, I want to wrap it around instantly, so the user doesn't notice.
         # I have crafted the World so that the first two window.widths are the same as the last two.
@@ -210,6 +198,10 @@ class GameView(arcade.View):
         else:
             # Otherwise we gently pan the camera around
             self.pan_camera_to_user(panning_fraction=0.04)
+
+        # Check to see if the level's been completed!
+        if self.lander.landed:
+            self.window.show_view(NextLevelView(level=self.level, score=self.score))
 
         # Update the minimap
         self.update_minimap()

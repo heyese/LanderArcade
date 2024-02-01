@@ -4,7 +4,10 @@ from constants import SCALING
 
 
 class Engine(arcade.Sprite):
-    def __init__(self, owner: arcade.Sprite):
+    def __init__(self, owner: arcade.Sprite,
+                 fuel: int = 100,
+                 force: int = 5000,
+                 scale: float = 0.3):
         super().__init__()
         self.textures = [arcade.load_texture("images/thrust_1.png"),
                          arcade.load_texture("images/thrust_2.png")]
@@ -13,9 +16,9 @@ class Engine(arcade.Sprite):
         self.visible = False
         # Actual engine attributes (as opposed to sprite attributes)
         self.activated = False
-        self.force = 5000
-        self.fuel = 100
-        self.scale = 0.3 * SCALING
+        self.force = force
+        self.fuel = fuel
+        self.scale = scale * SCALING
         self.burn_rate = 1
         self._boosted = False
 

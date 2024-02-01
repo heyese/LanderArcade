@@ -11,8 +11,8 @@
 
 import arcade
 import random
-from lander import Lander
-from world import World
+from classes.lander import Lander
+from classes.world import World
 
 
 class LandingPad(arcade.SpriteSolidColor):
