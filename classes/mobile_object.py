@@ -21,8 +21,9 @@ class MobileObject(arcade.Sprite):
                  center_x: int = 0,
                  center_y: int = 0,
                  on_ground: bool = False,
-                 against_wall: bool = False,
-                 angle: int = 0  # degrees
+                 angle: int = 0,  # degrees
+                 in_space: bool = False,
+                 above_space: bool = False
                  ):
         super().__init__(filename=filename, scale=scale * SCALING, angle=angle)
         self.scene = scene
@@ -39,13 +40,15 @@ class MobileObject(arcade.Sprite):
         self.change_x = int(self.velocity_x * (1/60))  # pixels per second!
         self.change_y = int(self.velocity_y * (1/60))  #
         # Gravity only applies when we're not "in space"!
-        self.in_space: bool | None = None
-        # Gravity applies pretty heavily if someone tries to fly off into space
-        self.above_space: bool | None = None
+        self.in_space = in_space
+        self.above_space = above_space
         self.on_ground = on_ground
         self.dead = False
 
     def on_update(self, delta_time: float = 1 / 60):
+        if self.engine is not None:
+            self.engine.angle = self.angle
+
         # Are we in space or not?
         self.in_space = True if self.center_y >= SPACE_START else False
         self.above_space = True if self.center_y >= SPACE_END else False

@@ -4,6 +4,7 @@ import arcade
 from classes.lander import Lander
 from classes.world import World
 from classes.landing_pad import LandingPad
+from classes.missile import Missile
 from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT, SPACE_START, SPACE_END
 
 from views.menu import MenuView
@@ -76,6 +77,13 @@ class GameView(arcade.View):
         self.scene.add_sprite_list("Lander")
         for i in (self.lander, self.lander.engine, self.lander.shield):
             self.scene.add_sprite("Lander", i)
+
+        # Let's try adding a missile
+        self.missile = Missile(scene=self.scene, world=self.world)
+        self.missile.center_y = self.lander.center_y
+        self.missile.center_x = self.lander.center_x + 200
+        self.scene.add_sprite(name="Missiles", sprite=self.missile)
+        self.scene.add_sprite(name="Missiles", sprite=self.missile.engine)
 
         # Construct the minimap
         minimap_width = int(0.75 * self.game_camera.viewport_width)
@@ -166,7 +174,7 @@ class GameView(arcade.View):
             self.scene.get_sprite_list('Terrain Centre').draw()
             self.scene.get_sprite_list('Terrain Right Edge').draw()
             # Want the lander and the landing pad to stand out, rather than being tiny
-            rescale_and_draw([self.lander, self.landing_pad], 4)
+            rescale_and_draw([self.lander, self.landing_pad, self.missile], 4)
 
     def on_update(self, delta_time: float):
         self.scene.on_update(delta_time=delta_time)
@@ -178,7 +186,6 @@ class GameView(arcade.View):
         # is facing the right way.
         if self.lander.mouse_location is not None:
             self.lander.face_point((self.lander.mouse_location + self.game_camera.position))
-            self.lander.engine.angle = self.lander.angle
 
         # If the Lander flies off the edge of the world, I want to wrap it around instantly, so the user doesn't notice.
         # I have crafted the World so that the first two window.widths are the same as the last two.

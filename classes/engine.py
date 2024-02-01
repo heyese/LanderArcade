@@ -4,10 +4,13 @@ from constants import SCALING
 
 
 class Engine(arcade.Sprite):
-    def __init__(self, owner: arcade.Sprite,
+    def __init__(self,
+                 owner: arcade.Sprite,
                  fuel: int = 100,
                  force: int = 5000,
-                 scale: float = 0.3):
+                 scale: float = 0.3,
+                 engine_owner_offset: int = None
+):
         super().__init__()
         self.textures = [arcade.load_texture("images/thrust_1.png"),
                          arcade.load_texture("images/thrust_2.png")]
@@ -21,6 +24,7 @@ class Engine(arcade.Sprite):
         self.scale = scale * SCALING
         self.burn_rate = 1
         self._boosted = False
+        self.engine_owner_offset = engine_owner_offset if engine_owner_offset is not None else self.owner.height
 
     @property
     def boosted(self):
@@ -57,8 +61,8 @@ class Engine(arcade.Sprite):
 
     def on_update(self, delta_time: float = 1 / 60):
         # Stay centred on the lander
-        self.center_x = self.owner.center_x + self.owner.height * math.sin(self.owner.radians)
-        self.center_y = self.owner.center_y - self.owner.height * math.cos(self.owner.radians)
+        self.center_x = self.owner.center_x + self.engine_owner_offset * math.sin(self.owner.radians)
+        self.center_y = self.owner.center_y - self.engine_owner_offset * math.cos(self.owner.radians)
         # Flicker the texture used - doing this based on the decimal part of the remaining fuel value
         self.texture = self.textures[int((self.fuel - int(self.fuel)) * 10) % 2]
         # If activated, use up some fuel

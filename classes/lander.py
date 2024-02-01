@@ -3,7 +3,6 @@ import math
 from constants import SCALING, SPACE_END
 from classes.world import World
 from classes.mobile_object import MobileObject
-from classes.explosion import Explosion
 
 
 class Lander(MobileObject):
@@ -14,12 +13,9 @@ class Lander(MobileObject):
                          has_engine=True,
                          has_shield=True,
                          mass=20,
-                         scale=0.2 * SCALING)
+                         scale=0.2 * SCALING
+                         )
 
-        # Gravity only applies when we're not "in space"!
-        self.in_space: bool = True
-        # Gravity applies pretty heavily if someone tries to fly off into space
-        self.above_space: bool = False
         self.max_landing_angle = 20
         self.mouse_location = None  # Set by Game view.  Want Lander to face mouse on every update
         self.landed: bool = False
