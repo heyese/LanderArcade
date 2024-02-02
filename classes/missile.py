@@ -1,6 +1,5 @@
 import arcade
-import math
-from constants import SCALING, SPACE_END
+from constants import SCALING
 from classes.world import World
 from classes.mobile_object import MobileObject
 
@@ -21,8 +20,8 @@ class Missile(MobileObject):
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)
-        if lander_sprite_list := self.scene.name_mapping.get("Lander"):
-            self.face_point(lander_sprite_list[0].position)
-        if not self.engine.activated:
+        if self.engine.activated:
+            if lander_sprite_list := self.scene.name_mapping.get("Lander"):
+                self.face_point(lander_sprite_list[0].position)
+        else:
             self.engine.activate()
-
