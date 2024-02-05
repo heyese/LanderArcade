@@ -53,10 +53,9 @@ class Explosion(MobileObject):
         super().__init__(filename=file,
                          scale=scale * SCALING,
                          world=world,
+
                          mass=mass,
                          scene=scene,
-                         has_engine=False,
-                         has_shield=False,
                          center_x=center_x,
                          center_y=center_y,
                          velocity_x=velocity_x,
@@ -88,7 +87,8 @@ class Explosion(MobileObject):
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)
         self.timer += delta_time
-        self.angle += delta_time * self.rotation_rate * abs(self.velocity_x/self.velocity_x_initial)
+        # We start off spinning but, as friction reduces the horizontal speed of the explosion to zero, we stop rotating
+        self.angle += 0 if not self.velocity_x_initial else delta_time * self.rotation_rate * abs(self.velocity_x/self.velocity_x_initial)
         self.radius = self.radius_initial + (self.timer / self.lifetime) * (self.radius_final - self.radius_initial)
         if self.timer > self.lifetime:
             self.remove_from_sprite_lists()

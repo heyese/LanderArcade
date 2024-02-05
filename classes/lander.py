@@ -3,19 +3,19 @@ import math
 from constants import SCALING, SPACE_END
 from classes.world import World
 from classes.mobile_object import MobileObject
-
+from classes.shield import Shield
+from classes.engine import Engine
 
 class Lander(MobileObject):
     def __init__(self, scene: arcade.Scene, world: World):
         super().__init__(scene=scene,
                          world=world,
                          filename="images/lander.png",
-                         has_engine=True,
-                         has_shield=True,
                          mass=20,
                          scale=0.2 * SCALING
                          )
-
+        self.engine = Engine(owner=self)
+        self.shield = Shield(owner=self)
         self.max_landing_angle = 20
         self.mouse_location = None  # Set by Game view.  Want Lander to face mouse on every update
         self.landed: bool = False

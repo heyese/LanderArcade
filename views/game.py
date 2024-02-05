@@ -232,6 +232,8 @@ class GameView(arcade.View):
     def on_key_press(self, symbol, modifiers):
         if symbol == arcade.key.BACKSLASH:
             self.lander.engine.activate()
+        if symbol == arcade.key.Z:
+            self.lander.shield.activate()
         if modifiers & arcade.key.MOD_SHIFT:
             self.lander.engine.boost(True)
         if symbol == arcade.key.R:
@@ -247,6 +249,8 @@ class GameView(arcade.View):
     def on_key_release(self, symbol, modifiers):
         if symbol == arcade.key.BACKSLASH:
             self.lander.engine.deactivate()
+        if symbol == arcade.key.Z:
+            self.lander.shield.deactivate()
         if not modifiers & arcade.key.MOD_SHIFT:
             self.lander.engine.boost(False)
 
@@ -267,9 +271,10 @@ class GameView(arcade.View):
                                  pan the camera to the user.
         """
 
-        # This spot would center on the user
-        camera_x0 = self.lander.center_x - (self.game_camera.viewport_width / 2)
-        camera_y0 = self.lander.center_y - (self.game_camera.viewport_height / 2)
+        # Centre on the lander until it blows up, then centre on it's explosion
+        centre_on = self.lander if not self.lander.explosion else self.lander.explosion
+        camera_x0 = centre_on.center_x - (self.game_camera.viewport_width / 2)
+        camera_y0 = centre_on.center_y - (self.game_camera.viewport_height / 2)
 
         if camera_y0 < 0:
             camera_y0 = 0

@@ -1,10 +1,7 @@
 import arcade
 import math
 from constants import SCALING, SPACE_START, SPACE_END
-from classes.shield import Shield
-from classes.engine import Engine
 from classes.world import World
-
 
 
 class MobileObject(arcade.Sprite):
@@ -14,8 +11,6 @@ class MobileObject(arcade.Sprite):
                  filename: str,
                  mass: int,
                  scale: float,
-                 has_engine: bool = False,
-                 has_shield: bool = False,
                  velocity_x: float = 0,
                  velocity_y: float = 0,
                  center_x: int = 0,
@@ -27,8 +22,9 @@ class MobileObject(arcade.Sprite):
                  ):
         super().__init__(filename=filename, scale=scale * SCALING, angle=angle)
         self.scene = scene
-        self.shield = Shield(self) if has_shield else None
-        self.engine = Engine(self) if has_engine else None
+        self.shield = None
+        self.engine = None
+        self.explosion = None
         self.world: World = world
         self.mass = mass
         self.center_x = center_x
@@ -47,6 +43,7 @@ class MobileObject(arcade.Sprite):
 
     def on_update(self, delta_time: float = 1 / 60):
         if self.engine is not None:
+            # Assuming here that .png image for the mobile object points at 0 degrees!
             self.engine.angle = self.angle
 
         # Are we in space or not?
@@ -73,10 +70,25 @@ class MobileObject(arcade.Sprite):
     def check_for_collision(self):
         # If the aircraft collides with anything, kill the sprite and create an explosion
         # Check to see if Lander has collided with the ground
-        ground_collision = arcade.check_for_collision_with_lists(self, [self.scene["Terrain Left Edge"],
-                                                                        self.scene["Terrain Centre"],
-                                                                        self.scene["Terrain Right Edge"]])
-        if ground_collision:
+        collision = arcade.check_for_collision_with_lists(self, [self.scene["Terrain Left Edge"],
+                                                                 self.scene["Terrain Centre"],
+                                                                 self.scene["Terrain Right Edge"],
+                                                                 self.scene["Missiles"],
+                                                                 self.scene["Explosions"]])
+        # Basically, if two things collide and a force field isn't involved,
+        # there's an explosion, unless:
+        #  * it's the lander landing on the landing pad
+        #  * possibly in the future, it's the lander rescuing someone?
+        #  * Explosions don't explode when colliding with something else, but the something else does
+        if collision:
+            # If we're the lander and the thing we've collided with is the landing pad,
+            # just ignore.  The lander code can deal with that
+            collided_with = collision[0]
+            if ((self.__class__ == "Lander" and collided_with.__class__ == 'LandingPad')
+                    or self.__class__ == "Explosion"):
+                print('Skipping this bit')
+                return
+
             self.dead = True
             self.remove_from_sprite_lists()
             if self.shield is not None:
@@ -88,18 +100,18 @@ class MobileObject(arcade.Sprite):
     def explode(self):
         # Explosions are automatically added to the scene
         from classes.explosion import Explosion
-        Explosion(scene=self.scene,
-                  world=self.world,
-                  mass=self.mass,
-                  scale=self.scale,
-                  radius_initial=int(self.height) // 2,
-                  radius_final=int(self.height) * 4,
-                  lifetime=2,  # seconds
-                  force=self.engine.force // 2,
-                  velocity_x=self.velocity_x,
-                  velocity_y=self.velocity_y,
-                  center_x=int(self.center_x),
-                  center_y=int(self.center_y))
+        self.explosion = Explosion(scene=self.scene,
+                                   world=self.world,
+                                   mass=self.mass,
+                                   scale=self.scale,
+                                   radius_initial=int(self.height) // 2,
+                                   radius_final=int(self.height) * 4,
+                                   lifetime=2,  # seconds
+                                   force=self.engine.force // 2,
+                                   velocity_x=self.velocity_x,
+                                   velocity_y=self.velocity_y,
+                                   center_x=int(self.center_x),
+                                   center_y=int(self.center_y))
 
     def determine_force_x(self, force_x):
         # Force due to engine
