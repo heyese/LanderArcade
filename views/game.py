@@ -1,6 +1,8 @@
 import random
 
 import arcade
+from arcade import scene
+
 from classes.lander import Lander
 from classes.world import World
 from classes.landing_pad import LandingPad
@@ -12,7 +14,7 @@ from views.next_level import NextLevelView
 from pyglet.math import Vec2
 from uuid import uuid4
 from typing import List
-
+import itertools
 
 class GameView(arcade.View):
 
@@ -81,7 +83,7 @@ class GameView(arcade.View):
         # Let's try adding a missile
         self.missile = Missile(scene=self.scene, world=self.world)
         self.missile.center_y = self.lander.center_y
-        self.missile.center_x = self.lander.center_x + 200
+        self.missile.center_x = self.lander.center_x + 800
         self.scene.add_sprite(name="Missiles", sprite=self.missile)
         self.scene.add_sprite(name="Missiles", sprite=self.missile.engine)
 
@@ -144,7 +146,6 @@ class GameView(arcade.View):
             t.x = centre_x
 
         # Now make sure text isn't taking up too much vertical space ...
-
         while sum(t.content_height for t in text_objs) > height:
             for t in text_objs:
                 t.font_size -= 1
@@ -187,19 +188,29 @@ class GameView(arcade.View):
         if self.lander.mouse_location is not None:
             self.lander.face_point((self.lander.mouse_location + self.game_camera.position))
 
-        # If the Lander flies off the edge of the world, I want to wrap it around instantly, so the user doesn't notice.
+        # If the Lander (or its explosion) flies off the edge of the world, I want to wrap it around instantly,
+        # so the user doesn't notice.
         # I have crafted the World so that the first two window.widths are the same as the last two.
         # So I pull off this trick by never letting the user get closer than 1 window.width to the edge of the world
         # - when this boundary is crossed, the user is flipped to the other side (along with all the sprites!).
+        centred_on = self.lander if not self.lander.explosion else self.lander.explosion
         world_wrap_distance = WORLD_WIDTH - 2 * self.game_camera.viewport_width
         world_wrapped = False
-        if self.lander.center_x >= WORLD_WIDTH - self.game_camera.viewport_width:
+        if centred_on.center_x >= WORLD_WIDTH - self.game_camera.viewport_width:
             camera_x = self.game_camera.position[0] - world_wrap_distance
-            self.lander.center_x -= world_wrap_distance
+            centred_on.center_x -= world_wrap_distance
+            # In fact, we need to move every single sprite with x position >= WORLD_WIDTH - 2 * self.game_camera.viewport_width:
+            for s in itertools.chain(self.scene["Missiles"], self.scene["Explosions"]):
+                if s.center_x >= WORLD_WIDTH - 2 * self.game_camera.viewport_width:
+                    s.center_x -= world_wrap_distance
+
             world_wrapped = True
-        elif self.lander.center_x < self.game_camera.viewport_width:
+        elif centred_on.center_x < self.game_camera.viewport_width:
             camera_x = self.game_camera.position[0] + world_wrap_distance
-            self.lander.center_x += world_wrap_distance
+            centred_on.center_x += world_wrap_distance
+            for s in itertools.chain(self.scene["Missiles"], self.scene["Explosions"]):
+                if s.center_x <= 2 * self.game_camera.viewport_width:
+                    s.center_x += world_wrap_distance
             world_wrapped = True
         if world_wrapped:
             # If we've gone off the edge of the world, we immediately move the camera so the user doesn't notice

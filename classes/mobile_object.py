@@ -2,7 +2,7 @@ import arcade
 import math
 from constants import SCALING, SPACE_START, SPACE_END
 from classes.world import World
-
+from functions import circular_collision
 
 class MobileObject(arcade.Sprite):
     def __init__(self,
@@ -40,6 +40,7 @@ class MobileObject(arcade.Sprite):
         self.above_space = above_space
         self.on_ground = on_ground
         self.dead = False
+        self.collided = False
 
     def on_update(self, delta_time: float = 1 / 60):
         if self.engine is not None:
@@ -70,32 +71,49 @@ class MobileObject(arcade.Sprite):
     def check_for_collision(self):
         # If the aircraft collides with anything, kill the sprite and create an explosion
         # Check to see if Lander has collided with the ground
-        collision = arcade.check_for_collision_with_lists(self, [self.scene["Terrain Left Edge"],
-                                                                 self.scene["Terrain Centre"],
-                                                                 self.scene["Terrain Right Edge"],
-                                                                 self.scene["Missiles"],
+        collision_with_terrain = arcade.check_for_collision_with_lists(self, [self.scene["Terrain Left Edge"],
+                                                                              self.scene["Terrain Centre"],
+                                                                              self.scene["Terrain Right Edge"]])
+
+        collision = arcade.check_for_collision_with_lists(self, [self.scene["Missiles"],
                                                                  self.scene["Explosions"]])
         # Basically, if two things collide and a force field isn't involved,
         # there's an explosion, unless:
         #  * it's the lander landing on the landing pad
         #  * possibly in the future, it's the lander rescuing someone?
         #  * Explosions don't explode when colliding with something else, but the something else does
-        if collision:
-            # If we're the lander and the thing we've collided with is the landing pad,
-            # just ignore.  The lander code can deal with that
-            collided_with = collision[0]
-            if ((self.__class__ == "Lander" and collided_with.__class__ == 'LandingPad')
-                    or self.__class__ == "Explosion"):
-                print('Skipping this bit')
-                return
 
-            self.dead = True
-            self.remove_from_sprite_lists()
-            if self.shield is not None:
-                self.shield.remove_from_sprite_lists()
-            if self.engine is not None:
-                self.engine.remove_from_sprite_lists()
-            self.explode()
+        # In a collision, I explode one party and assume the explosion will kill the other, but if it's quick
+        # that might not happen.  So I place a marker!
+        if self.collided is True:
+            self.die()
+            return
+
+        if collision or collision_with_terrain:
+            collided_with = collision[0] if collision else collision_with_terrain[0]
+            collided_with.collided = True
+            if collision:
+                v1, v2 = circular_collision(self, collided_with)
+                self.velocity_x, self.velocity_y = v1
+                collided_with.velocity_x, collided_with.velocity_y = v2
+            else:
+                # If we're the lander and the thing we've collided with is the landing pad,
+                # just ignore.  The lander code can deal with that
+                if ((self.__class__ == "Lander" and collided_with.__class__ == 'LandingPad')
+                        or self.__class__ == "Explosion"):
+                    print('Skipping this bit')
+                    return
+
+            self.die()
+
+    def die(self):
+        self.dead = True
+        self.remove_from_sprite_lists()
+        if self.shield is not None:
+            self.shield.remove_from_sprite_lists()
+        if self.engine is not None:
+            self.engine.remove_from_sprite_lists()
+        self.explode()
 
     def explode(self):
         # Explosions are automatically added to the scene

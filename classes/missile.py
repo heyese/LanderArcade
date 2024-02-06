@@ -2,7 +2,6 @@ import arcade
 from constants import SCALING
 from classes.world import World
 from classes.mobile_object import MobileObject
-from classes.shield import Shield
 from classes.engine import Engine
 
 
@@ -16,9 +15,8 @@ class Missile(MobileObject):
                          )
 
         # Engine permanently on
-        self.engine = Engine(owner=self)
+        self.engine = Engine(owner=self, fuel=100)
         self.engine.engine_owner_offset = int(1.4 * self.height)
-        self.engine.fuel = 10
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)
