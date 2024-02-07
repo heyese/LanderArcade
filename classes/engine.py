@@ -60,9 +60,10 @@ class Engine(arcade.Sprite):
                 self.boosted = False
 
     def on_update(self, delta_time: float = 1 / 60):
-        # Stay centred on the lander
+        # Stay centred and oriented on the owner
         self.center_x = self.owner.center_x + self.engine_owner_offset * math.sin(self.owner.radians)
         self.center_y = self.owner.center_y - self.engine_owner_offset * math.cos(self.owner.radians)
+        self.angle = self.owner.angle
         # Flicker the texture used - doing this based on the decimal part of the remaining fuel value
         self.texture = self.textures[int((self.fuel - int(self.fuel)) * 10) % 2]
         # If activated, use up some fuel

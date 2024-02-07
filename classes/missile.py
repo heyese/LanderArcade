@@ -1,11 +1,11 @@
 import arcade
 from constants import SCALING
 from classes.world import World
-from classes.mobile_object import MobileObject
+from classes.game_object import GameObject
 from classes.engine import Engine
 
 
-class Missile(MobileObject):
+class Missile(GameObject):
     def __init__(self, scene: arcade.Scene, world: World):
         super().__init__(scene=scene,
                          world=world,
@@ -13,9 +13,10 @@ class Missile(MobileObject):
                          mass=10,
                          scale=0.2 * SCALING,
                          )
-
+        self.scene.add_sprite("Missiles", self)
         # Engine permanently on
         self.engine = Engine(owner=self, fuel=100)
+        self.scene.add_sprite('Engines', self.engine)
         self.engine.engine_owner_offset = int(1.4 * self.height)
 
     def on_update(self, delta_time: float = 1 / 60):

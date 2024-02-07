@@ -7,6 +7,7 @@ import copy
 
 class World:
     def __init__(self,
+                 scene: arcade.Scene,
                  sky_color: Union[Tuple[int, int, int], arcade.color] = None,
                  ground_color: Union[Tuple[int, int, int], arcade.color] = None,
                  gravity: int = None,
@@ -16,6 +17,7 @@ class World:
                  hill_width: float = None,
                  camera_width: int = None,
                  camera_height: int = None):
+        self.scene = scene
         self.sky_color = sky_color if sky_color else random.choices(range(256), k=3)
         self.ground_color = ground_color if ground_color else random.choices(range(256), k=3)
         self.gravity = gravity if gravity is not None else random.randint(20, 200)
@@ -43,6 +45,9 @@ class World:
 
         # The foreground
         self.terrain_left_edge, self.terrain_centre, self.terrain_right_edge = self.get_terrain()
+        self.scene.add_sprite_list("Terrain Left Edge", use_spatial_hash=True, sprite_list=self.terrain_left_edge)
+        self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True, sprite_list=self.terrain_centre)
+        self.scene.add_sprite_list("Terrain Right Edge", use_spatial_hash=True, sprite_list=self.terrain_right_edge)
 
     def get_terrain(self) -> Tuple[arcade.SpriteList, arcade.SpriteList, arcade.SpriteList]:
         def get_rect(x, max_x):

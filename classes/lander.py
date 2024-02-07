@@ -2,11 +2,12 @@ import arcade
 import math
 from constants import SCALING, SPACE_END
 from classes.world import World
-from classes.mobile_object import MobileObject
+from classes.game_object import GameObject
 from classes.shield import Shield
 from classes.engine import Engine
 
-class Lander(MobileObject):
+
+class Lander(GameObject):
     def __init__(self, scene: arcade.Scene, world: World):
         super().__init__(scene=scene,
                          world=world,
@@ -14,25 +15,17 @@ class Lander(MobileObject):
                          mass=20,
                          scale=0.2 * SCALING
                          )
+        self.scene.add_sprite("Lander", self)
         self.engine = Engine(owner=self)
+        self.scene.add_sprite('Engines', self.engine)
         self.shield = Shield(owner=self)
+        self.scene.add_sprite('Shields', self.shield)
         self.max_landing_angle = 20
         self.mouse_location = None  # Set by Game view.  Want Lander to face mouse on every update
         self.landed: bool = False
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)
-
-        landing_pad = self.scene.get_sprite_list(name="Landing Pad")[0]
-        landing_pad_collision = arcade.check_for_collision(self, landing_pad)
-        if landing_pad_collision:
-            if landing_pad.safe_to_land:
-                self.landed = True
-            # We've blown up
-            elif self.dead is False:
-                self.dead = True
-                self.scene.remove_sprite_list_by_name("Lander")
-                self.explode()
 
     def determine_force_y(self, force_y):
         force_y = super().determine_force_y(force_y)

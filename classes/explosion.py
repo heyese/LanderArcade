@@ -1,7 +1,7 @@
 
 
 import arcade
-from classes.mobile_object import MobileObject
+from classes.game_object import GameObject
 from classes.world import World
 from constants import SCALING
 from typing import List
@@ -29,7 +29,7 @@ import random
 # But then might the object fly away faster than the explosion increases in size?  Does this matter?
 
 
-class Explosion(MobileObject):
+class Explosion(GameObject):
     def __init__(self,
                  scene: arcade.Scene,
                  world: World,

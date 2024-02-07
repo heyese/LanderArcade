@@ -2,9 +2,9 @@ import arcade
 import math
 from constants import SCALING, SPACE_START, SPACE_END
 from classes.world import World
-from functions import circular_collision
 
-class MobileObject(arcade.Sprite):
+
+class GameObject(arcade.Sprite):
     def __init__(self,
                  scene: arcade.Scene,
                  world: World,
@@ -18,7 +18,8 @@ class MobileObject(arcade.Sprite):
                  on_ground: bool = False,
                  angle: int = 0,  # degrees
                  in_space: bool = False,
-                 above_space: bool = False
+                 above_space: bool = False,
+                 explodes: bool = True,
                  ):
         super().__init__(filename=filename, scale=scale * SCALING, angle=angle)
         self.scene = scene
@@ -41,12 +42,9 @@ class MobileObject(arcade.Sprite):
         self.on_ground = on_ground
         self.dead = False
         self.collided = False
+        self.explodes = explodes
 
     def on_update(self, delta_time: float = 1 / 60):
-        if self.engine is not None:
-            # Assuming here that .png image for the mobile object points at 0 degrees!
-            self.engine.angle = self.angle
-
         # Are we in space or not?
         self.in_space = True if self.center_y >= SPACE_START else False
         self.above_space = True if self.center_y >= SPACE_END else False
@@ -62,58 +60,9 @@ class MobileObject(arcade.Sprite):
         self.change_x = self.velocity_x * delta_time + 0.5 * (force_x / self.mass) * (delta_time ** 2)
         self.change_y = self.velocity_y * delta_time + 0.5 * (force_y / self.mass) * (delta_time ** 2)
 
-        # Check for collisions
-        self.check_for_collision()
-
         self.center_x += self.change_x
         self.center_y += self.change_y
 
-    def check_for_collision(self):
-        # If the aircraft collides with anything, kill the sprite and create an explosion
-        # Check to see if Lander has collided with the ground
-        collision_with_terrain = arcade.check_for_collision_with_lists(self, [self.scene["Terrain Left Edge"],
-                                                                              self.scene["Terrain Centre"],
-                                                                              self.scene["Terrain Right Edge"]])
-
-        collision = arcade.check_for_collision_with_lists(self, [self.scene["Missiles"],
-                                                                 self.scene["Explosions"]])
-        # Basically, if two things collide and a force field isn't involved,
-        # there's an explosion, unless:
-        #  * it's the lander landing on the landing pad
-        #  * possibly in the future, it's the lander rescuing someone?
-        #  * Explosions don't explode when colliding with something else, but the something else does
-
-        # In a collision, I explode one party and assume the explosion will kill the other, but if it's quick
-        # that might not happen.  So I place a marker!
-        if self.collided is True:
-            self.die()
-            return
-
-        if collision or collision_with_terrain:
-            collided_with = collision[0] if collision else collision_with_terrain[0]
-            collided_with.collided = True
-            if collision:
-                v1, v2 = circular_collision(self, collided_with)
-                self.velocity_x, self.velocity_y = v1
-                collided_with.velocity_x, collided_with.velocity_y = v2
-            else:
-                # If we're the lander and the thing we've collided with is the landing pad,
-                # just ignore.  The lander code can deal with that
-                if ((self.__class__ == "Lander" and collided_with.__class__ == 'LandingPad')
-                        or self.__class__ == "Explosion"):
-                    print('Skipping this bit')
-                    return
-
-            self.die()
-
-    def die(self):
-        self.dead = True
-        self.remove_from_sprite_lists()
-        if self.shield is not None:
-            self.shield.remove_from_sprite_lists()
-        if self.engine is not None:
-            self.engine.remove_from_sprite_lists()
-        self.explode()
 
     def explode(self):
         # Explosions are automatically added to the scene
@@ -125,7 +74,7 @@ class MobileObject(arcade.Sprite):
                                    radius_initial=int(self.height) // 2,
                                    radius_final=int(self.height) * 4,
                                    lifetime=2,  # seconds
-                                   force=self.engine.force // 2,
+                                   force=20,
                                    velocity_x=self.velocity_x,
                                    velocity_y=self.velocity_y,
                                    center_x=int(self.center_x),
@@ -153,3 +102,13 @@ class MobileObject(arcade.Sprite):
         if self.engine is not None and self.engine.activated:
             force_y += self.engine.force * math.cos(self.radians)
         return force_y
+
+    def die(self):
+        self.dead = True
+        self.remove_from_sprite_lists()
+        if self.shield is not None:
+            self.shield.remove_from_sprite_lists()
+        if self.engine is not None:
+            self.engine.remove_from_sprite_lists()
+        if self.explodes:
+            self.explode()

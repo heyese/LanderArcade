@@ -1,13 +1,14 @@
 import random
 
 import arcade
-from arcade import scene
+from arcade import Scene
 
 from classes.lander import Lander
 from classes.world import World
 from classes.landing_pad import LandingPad
 from classes.missile import Missile
 from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT, SPACE_START, SPACE_END
+import collisions
 
 from views.menu import MenuView
 from views.next_level import NextLevelView
@@ -15,6 +16,7 @@ from pyglet.math import Vec2
 from uuid import uuid4
 from typing import List
 import itertools
+
 
 class GameView(arcade.View):
 
@@ -46,6 +48,7 @@ class GameView(arcade.View):
         self.level_text = None
         self.score_text = None
         self.gravity_text = None
+        self.fps_text = None
 
     def setup(self, level: int = 1, score: int = 0):
         """Get the game ready to play"""
@@ -54,19 +57,22 @@ class GameView(arcade.View):
         arcade.set_background_color(BACKGROUND_COLOR)
         # Have a camera shake on impact  (arcade.camera.shake)
 
+        arcade.enable_timings()
         self.scene = arcade.Scene()
-        self.scene.add_sprite_list("Explosions")  # These get drawn behind everything else
+
+        # Adding spritelists now to get the ordering I want
+        # If we draw the engines before their owners, the angles aren't quite right
+        self.scene.add_sprite_list("Lander")
+        self.scene.add_sprite_list("Missiles")
+        self.scene.add_sprite_list("Enemies")
+        self.scene.add_sprite_list("Shields")
+
         self.level = level  # Ultimately want to use this to develop the game in later levels
         self.score = score
-        self.world = World(camera_width=self.game_camera.viewport_width, camera_height=self.game_camera.viewport_height)
+        self.world = World(scene=self.scene, camera_width=self.game_camera.viewport_width, camera_height=self.game_camera.viewport_height)
         self.lander = Lander(scene=self.scene, world=self.world)
         self.landing_pad = LandingPad(lander=self.lander, world=self.world)
 
-        # The world's terrain spritelist - these are the rectangles making up the ground, which I need to be able
-        # to detect if I've hit.
-        self.scene.add_sprite_list("Terrain Left Edge", use_spatial_hash=True, sprite_list=self.world.terrain_left_edge)
-        self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True, sprite_list=self.world.terrain_centre)
-        self.scene.add_sprite_list("Terrain Right Edge", use_spatial_hash=True, sprite_list=self.world.terrain_right_edge)
         self.scene.add_sprite("Landing Pad", self.landing_pad)
 
         # Starting location of the Lander
@@ -75,17 +81,11 @@ class GameView(arcade.View):
         self.pan_camera_to_user(1)
         self.lander.change_x = random.randint(-30, 30) / 60
         self.lander.change_y = -random.randint(10, 30) / 60
-        # The lander spritelist - ship, engine and shield
-        self.scene.add_sprite_list("Lander")
-        for i in (self.lander, self.lander.engine, self.lander.shield):
-            self.scene.add_sprite("Lander", i)
 
         # Let's try adding a missile
         self.missile = Missile(scene=self.scene, world=self.world)
         self.missile.center_y = self.lander.center_y
         self.missile.center_x = self.lander.center_x + 800
-        self.scene.add_sprite(name="Missiles", sprite=self.missile)
-        self.scene.add_sprite(name="Missiles", sprite=self.missile.engine)
 
         # Construct the minimap
         minimap_width = int(0.75 * self.game_camera.viewport_width)
@@ -104,8 +104,8 @@ class GameView(arcade.View):
             centre_x=(3 * self.window.width + self.minimap_sprite.width) // 4,
             centre_y=self.window.height - self.minimap_sprite.height // 2
         )
-        self.level_text, self.score_text = self.scaled_and_centred_text(
-            texts=["Level: XXXX", 'Score: XXXX'],
+        self.level_text, self.score_text, self.fps_text = self.scaled_and_centred_text(
+            texts=["Level: XXXX", 'Score: XXXX', 'FPS: XXXX'],
             width=(self.window.width - self.minimap_sprite.width) // 2,
             height=int(self.minimap_sprite.height),
             centre_x=(self.window.width - self.minimap_sprite.width) // 4,
@@ -232,6 +232,11 @@ class GameView(arcade.View):
         self.level_text.text = f"LEVEL: {self.level:.0f}"
         self.score_text.text = f"SCORE: {self.score:.0f}"
         self.gravity_text.text = f"GRAVITY: {self.world.gravity:.0f}"
+        self.fps_text.text = f"FPS: {arcade.get_fps():.0f}"
+
+        # Check for collisions
+        collisions.check_for_collisions(self.scene)
+
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.lander.engine.angle = self.lander.angle
@@ -309,5 +314,5 @@ class GameView(arcade.View):
         # Draw the overlay - minimap, fuel, shield, etc.
         self.overlay_camera.use()
         self.minimap_sprite_list.draw()
-        for text in [self.level_text, self.score_text, self.gravity_text, self.fuel_text, self.shield_text]:
+        for text in [self.level_text, self.score_text, self.gravity_text, self.fuel_text, self.shield_text, self.fps_text]:
             text.draw()

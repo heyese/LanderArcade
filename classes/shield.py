@@ -1,13 +1,13 @@
 import arcade
-
+from classes.game_object import GameObject
 
 class Shield(arcade.SpriteCircle):
-    """The lander shield - a sprite that stays centred on the lander and can be activated / deactivated"""
+    """The shield - a sprite that stays centred on the owner and can be activated / deactivated"""
     def __init__(self, owner: arcade.Sprite):
-        super().__init__(radius=int(owner.height * 2),
+        super().__init__(radius=int(max(owner.height, owner.width) * 2),
                          # Transparent arcade.color.AQUA
                          color=(0, 255, 255, 50))
-        self.owner = owner
+        self.owner: GameObject = owner
         self.visible = False
         self.power: int = 100
         self.activated = False
