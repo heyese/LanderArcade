@@ -16,7 +16,7 @@ from classes.world import World
 
 
 class LandingPad(arcade.SpriteSolidColor):
-    def __init__(self, lander: Lander, world: World):
+    def __init__(self, scene: arcade.Scene, lander: Lander, world: World):
         super().__init__(width=int(2 * lander.width), height=int(0.3 * lander.width), color=arcade.color.WHITE_SMOKE)
         self.disabled_color = arcade.color.WHITE_SMOKE
         self.lander = lander
@@ -30,6 +30,8 @@ class LandingPad(arcade.SpriteSolidColor):
         self._safe_to_land = False  # Property
         # Put the landing pad onto the world ...
         self.place_landing_pad_on_world()
+        self.scene = scene
+        self.scene.add_sprite("Landing Pad", self)
 
     @property
     def safe_to_land(self):

@@ -17,4 +17,6 @@ if __name__ == "__main__":
     window.maximize()
     menu_view = MenuView()
     window.show_view(menu_view)
+    # To allow me to display FPS
+    arcade.enable_timings()
     arcade.run()

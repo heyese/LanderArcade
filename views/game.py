@@ -57,7 +57,6 @@ class GameView(arcade.View):
         arcade.set_background_color(BACKGROUND_COLOR)
         # Have a camera shake on impact  (arcade.camera.shake)
 
-        arcade.enable_timings()
         self.scene = arcade.Scene()
 
         # Adding spritelists now to get the ordering I want
@@ -66,14 +65,14 @@ class GameView(arcade.View):
         self.scene.add_sprite_list("Missiles")
         self.scene.add_sprite_list("Enemies")
         self.scene.add_sprite_list("Shields")
+        self.scene.add_sprite_list("Disabled Shields")
+        self.scene.add_sprite_list("Explosions")
 
         self.level = level  # Ultimately want to use this to develop the game in later levels
         self.score = score
         self.world = World(scene=self.scene, camera_width=self.game_camera.viewport_width, camera_height=self.game_camera.viewport_height)
         self.lander = Lander(scene=self.scene, world=self.world)
-        self.landing_pad = LandingPad(lander=self.lander, world=self.world)
-
-        self.scene.add_sprite("Landing Pad", self.landing_pad)
+        self.landing_pad = LandingPad(scene=self.scene, lander=self.lander, world=self.world)
 
         # Starting location of the Lander
         self.lander.center_y = int((1/2) * (SPACE_END - SPACE_START)) + SPACE_START

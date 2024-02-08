@@ -5,6 +5,7 @@ from constants import SCALING
 
 class Engine(arcade.Sprite):
     def __init__(self,
+                 scene: arcade.Scene,
                  owner: arcade.Sprite,
                  fuel: int = 100,
                  force: int = 5000,
@@ -12,6 +13,7 @@ class Engine(arcade.Sprite):
                  engine_owner_offset: int = None
 ):
         super().__init__()
+        self.scene = scene
         self.textures = [arcade.load_texture("images/thrust_1.png"),
                          arcade.load_texture("images/thrust_2.png")]
         self.texture = self.textures[0]
@@ -25,6 +27,7 @@ class Engine(arcade.Sprite):
         self.burn_rate = 1
         self._boosted = False
         self.engine_owner_offset = engine_owner_offset if engine_owner_offset is not None else self.owner.height
+        self.scene.add_sprite('Engines', self)
 
     @property
     def boosted(self):

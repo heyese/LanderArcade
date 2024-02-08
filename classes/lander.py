@@ -3,7 +3,7 @@ import math
 from constants import SCALING, SPACE_END
 from classes.world import World
 from classes.game_object import GameObject
-from classes.shield import Shield
+from classes.shield import Shield, DisabledShield
 from classes.engine import Engine
 
 
@@ -16,10 +16,9 @@ class Lander(GameObject):
                          scale=0.2 * SCALING
                          )
         self.scene.add_sprite("Lander", self)
-        self.engine = Engine(owner=self)
-        self.scene.add_sprite('Engines', self.engine)
-        self.shield = Shield(owner=self)
-        self.scene.add_sprite('Shields', self.shield)
+        self.engine = Engine(scene=scene, owner=self)
+        self.shield = Shield(scene=scene, owner=self)
+        self.disabled_shield = DisabledShield(scene=scene, owner=self)
         self.max_landing_angle = 20
         self.mouse_location = None  # Set by Game view.  Want Lander to face mouse on every update
         self.landed: bool = False

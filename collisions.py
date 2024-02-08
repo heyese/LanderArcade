@@ -28,8 +28,8 @@ def dot(a: Tuple[float, float], b: Tuple[float, float]) -> float:
     return a[0] * b[0] + a[1] * b[1]
 
 
-def normal_vector_from_pos1_to_pos2(pos1: Tuple[float, float], pos2: Tuple[float, float]) -> Tuple[float, float]:
-    # Unit vector from centre of sprite1 to centre of sprite2
+def unit_vector_from_pos1_to_pos2(pos1: Tuple[float, float], pos2: Tuple[float, float]) -> Tuple[float, float]:
+    # Unit vector from pos1 to pos2
     x1, y1 = pos1
     x2, y2 = pos2
     n1 = (x2 - x1) / modulus((x2 - x1, y2 - y1))
@@ -41,7 +41,7 @@ def normal_vector_from_pos1_to_pos2(pos1: Tuple[float, float], pos2: Tuple[float
 # https://ravnik.eu/collision-of-spheres-in-2d/
 def circular_collision(sprite1: Sprite, sprite2: Sprite) -> Tuple[Tuple[float, float], Tuple[float, float]]:
     e = coefficient_of_restitution[frozenset({sprite1.__class__.__name__, sprite2.__class__.__name__})]
-    n = normal_vector_from_pos1_to_pos2(sprite1.position, sprite2.position)
+    n = unit_vector_from_pos1_to_pos2(sprite1.position, sprite2.position)
     t = -n[1], n[0]  # Tangent unit vector
     u1 = sprite1.velocity_x, sprite1.velocity_y  # My sprites have velocity_x,y attributes
     u2 = sprite2.velocity_x, sprite2.velocity_y
@@ -76,6 +76,7 @@ def check_for_collisions(scene: Scene):
                                   ):
         check_for_collision_with_landing_pad(sprite, scene)
         check_for_collision_with_terrain(sprite, terrain_spritelists, scene)
+        # TODO: check for other collisions
 
 
 def check_for_collision_with_landing_pad(sprite: GameObject, scene: Scene):
@@ -94,12 +95,12 @@ def check_for_collision_with_landing_pad(sprite: GameObject, scene: Scene):
         if sprite in scene['Shields'].sprite_list:
             shield: Shield = sprite
             if shield.activated:
-                # Bounce in some way
-                # Not perfect, but for now just going to bounce back up!
-                # TODO: Fix this - we get stuck if we don't come from above or below
-                shield.owner.change_y *= -1
+                check_for_shield_collision_with_rectangle_sprite(shield, landing_pad)
             return
-        # If we aren't the lander landing, and we're not a shield, we're dead.
+        if sprite in scene['Explosions'].sprite_list:
+            # TODO: explosions interacting with LandingPad
+            pass
+        # If we aren't the lander landing, and we're not a shield, and we're not an explosion, we die.
         sprite.die()
 
 
@@ -108,24 +109,62 @@ def check_for_collision_with_terrain(sprite: Sprite, terrain: List[SpriteList], 
         shield: Shield = sprite
         # If a shield isn't activated, it's also not visible and not really meant to be there
         # Let's return now before any work is done
-        if not shield.activated:
-            return
+        if shield.activated:
+            check_for_shield_collision_with_terrain(shield, terrain)
+        return
 
-    collision_with_terrain = arcade.check_for_collision_with_lists(sprite, terrain)
-    if collision_with_terrain:
 
-        # Shield and the Terrain
-        # If an object has an activated shield, then it bounces ...
-        # Already checked above that shield is activated.
-        if sprite in scene['Shields'].sprite_list:
-            shield: Shield = sprite
-            r1, r2, r3 = get_left_centre_right_terrain_rectangles(sprite, scene)
-            # we've either hit the right hand side of r1, the top of r2 or the left hand side of r3.
-            if r1.right >= shield.left or r3.left <= shield.right:
-                shield.owner.velocity_x *= -1
-            if r2.top >= shield.bottom:
-                shield.owner.velocity_y *= -1
-            # Or we've bumped into a corner - no idea how to handle that yet ...
+def check_for_shield_collision_with_terrain(shield: Shield, terrain: List[SpriteList]):
+    collision_with_terrain = arcade.check_for_collision_with_lists(shield, terrain)
+    for rect in collision_with_terrain:
+        check_for_shield_collision_with_rectangle_sprite(shield, rect)
+
+
+def check_for_shield_collision_with_rectangle_sprite(shield: Shield, rect: arcade.SpriteSolidColor):
+    # 5 possibilities.  Bounce off left side, left corner, top side, right corner or right side.
+    # Left or right side
+    if (shield.center_y <= rect.top and
+            ((shield.left < rect.left <= shield.right) or (shield.left <= rect.right < shield.right))):
+        shield.owner.change_x *= -1
+    # Top side
+    elif (rect.left <= shield.center_x <= rect.right) and shield.bottom <= rect.top:
+        shield.owner.change_y *= -1
+    # Left and right corners
+    elif (((shield.left < rect.left <= shield.right) or (shield.left <= rect.right < shield.right))
+          and shield.bottom <= rect.top):
+        # Want to bounce off the plane that is perpendicular to the vector from the corner to the shield centre
+        # (Which is what happens when you bounce off a flat wall, except that the plane is much more obvious then!)
+        if shield.left < rect.left <= shield.right:
+            corner_x, corner_y = rect.left, rect.top
+        else:
+            corner_x, corner_y = rect.right, rect.top
+        # Corner to shield centre vector (unit vector normal to plane)
+        n_x, n_y = unit_vector_from_pos1_to_pos2((corner_x, corner_y), (shield.center_x, shield.center_y))
+        # Tangential unit vector along plane
+        t_x, t_y = -n_y, n_x
+        # So want to project the existing movement vectors onto these vectors, then the tangential movement
+        # is preserved and the movement along the normal vector is reversed ...
+        normal_projection = dot((shield.owner.change_x, shield.owner.change_y), (n_x, n_y))
+        tangential_projection = dot((shield.owner.change_x, shield.owner.change_y), (t_x, t_y))
+        shield.owner.change_x = -normal_projection * n_x + tangential_projection * t_x
+        shield.owner.change_y = -normal_projection * n_y + tangential_projection * t_y
+        shield.center_x += -normal_projection * n_x + tangential_projection * t_x
+        shield.center_y += -normal_projection * n_y + tangential_projection * t_y
+        # In edge cases, we can get trapped in a rect - ie. after flipping the normal projection of our vector,
+        # we're still colliding, so we then flip it again, which obviously doesn't work.
+        # So below I keep pushing in the same direction until we're no longer colliding ...
+        repeats = 0
+        while arcade.check_for_collision(shield, rect):
+            repeats += 1
+            shield.owner.center_x += -normal_projection * n_x + tangential_projection * t_x
+            shield.owner.center_y += -normal_projection * n_y + tangential_projection * t_y
+            shield.center_x += -normal_projection * n_x + tangential_projection * t_x
+            shield.center_y += -normal_projection * n_y + tangential_projection * t_y
+            if repeats == 30:
+                # Something's gone wrong - we're stuck!
+                # Disable the shield to let the user know something's gone wrong
+                shield.disable()
+                break
 
 
 def get_left_centre_right_terrain_rectangles(sprite: Sprite, scene: Scene):
