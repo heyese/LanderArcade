@@ -59,14 +59,18 @@ class GameView(arcade.View):
 
         self.scene = arcade.Scene()
 
-        # Adding spritelists now to get the ordering I want
+        # Adding spritelists now to get the ordering I want, and so that it's easy to see all of them in one go!
         # If we draw the engines before their owners, the angles aren't quite right
         self.scene.add_sprite_list("Lander")
         self.scene.add_sprite_list("Missiles")
         self.scene.add_sprite_list("Enemies")
         self.scene.add_sprite_list("Shields")
         self.scene.add_sprite_list("Disabled Shields")
+        self.scene.add_sprite_list('Engines')
         self.scene.add_sprite_list("Explosions")
+        self.scene.add_sprite_list("Terrain Left Edge", use_spatial_hash=True)
+        self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True)
+        self.scene.add_sprite_list("Terrain Right Edge", use_spatial_hash=True)
 
         self.level = level  # Ultimately want to use this to develop the game in later levels
         self.score = score

@@ -92,27 +92,3 @@ class Explosion(GameObject):
         self.radius = self.radius_initial + (self.timer / self.lifetime) * (self.radius_final - self.radius_initial)
         if self.timer > self.lifetime:
             self.remove_from_sprite_lists()
-
-    def check_for_collision(self):
-        # I am going to let other objects worry about whether they've collided with an explosion.
-        # All the explosion needs to worry about is its interaction with the ground
-        # And here, I'm only considering the centre of the explosion
-
-        # So I want the three ground rects - directly underneath, and left and right
-        # Since rects are in order from left to right, this shouldn't be hard
-        r1, r2, r3 = None, None, None
-        for r in [*self.world.terrain_left_edge, *self.world.terrain_centre, *self.world.terrain_right_edge]:
-            r1, r2, r3 = r2, r3, r
-            if not r1:
-                continue
-            if r1.right <= self.center_x <= r3.left:
-                break
-
-        if self.center_y <= r2.top:
-            self.change_y = 0
-            self.on_ground = True
-        else:
-            self.on_ground = False
-        if ((self.center_x + self.change_x <= r1.right and r1.top > self.center_y) or
-                (self.center_x + self.change_x >= r3.left and r3.top > self.center_y)):
-            self.change_x = 0

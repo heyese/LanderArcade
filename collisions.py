@@ -6,6 +6,7 @@ from classes.landing_pad import LandingPad
 from classes.lander import Lander
 from classes.shield import Shield
 from classes.game_object import GameObject
+from classes.explosion import Explosion
 import itertools
 from typing import List
 
@@ -64,15 +65,18 @@ def circular_collision(sprite1: Sprite, sprite2: Sprite) -> Tuple[Tuple[float, f
 
 
 def check_for_collisions(scene: Scene):
-    terrain_spritelists = [scene["Terrain Left Edge"],
-                           scene["Terrain Centre"],
-                           scene["Terrain Right Edge"],
-                           ]
+    terrain_spritelists = [
+        # Purposefully ordered left to right, for explosion collision logic
+        scene["Terrain Left Edge"],
+        scene["Terrain Centre"],
+        scene["Terrain Right Edge"],
+    ]
 
     for sprite in itertools.chain(scene['Lander'],
                                   scene['Shields'],
                                   scene['Missiles'],
-                                  #scene['Explosions'],
+                                  scene['Enemies'],
+                                  scene['Explosions'],
                                   ):
         check_for_collision_with_landing_pad(sprite, scene)
         check_for_collision_with_terrain(sprite, terrain_spritelists, scene)
@@ -112,6 +116,38 @@ def check_for_collision_with_terrain(sprite: Sprite, terrain: List[SpriteList], 
         if shield.activated:
             check_for_shield_collision_with_terrain(shield, terrain)
         return
+    if sprite in scene['Explosions'].sprite_list:
+        sprite: Explosion
+        check_for_explosion_collision_with_terrain(sprite, terrain)
+        return
+    # I think everything else should just die ...
+    sprite: GameObject
+    if arcade.check_for_collision_with_lists(sprite, terrain):
+        sprite.die()
+
+
+def check_for_explosion_collision_with_terrain(explosion: Explosion, terrain: List[SpriteList]):
+    # Rather than explosions looking like they're hovering in the air, it makes more sense to just
+    # consider the centre points.  So if an explosion is on the ground, you only see the top half of it.
+
+    # So I want the three ground rects - directly underneath, and left and right
+    # Since rects are in order from left to right, this shouldn't be hard
+    r1, r2, r3 = None, None, None
+    for r in [i for t in terrain for i in t.sprite_list]:
+        r1, r2, r3 = r2, r3, r
+        if not r1:
+            continue
+        if r1.right <= explosion.center_x <= r3.left:
+            break
+
+    if explosion.center_y <= r2.top:
+        explosion.change_y = 0
+        explosion.on_ground = True
+    else:
+        explosion.on_ground = False
+    if ((explosion.center_x <= r1.right and r1.top > explosion.center_y) or
+            (explosion.center_x >= r3.left and r3.top > explosion.center_y)):
+        explosion.change_x = 0
 
 
 def check_for_shield_collision_with_terrain(shield: Shield, terrain: List[SpriteList]):
@@ -156,30 +192,16 @@ def check_for_shield_collision_with_rectangle_sprite(shield: Shield, rect: arcad
         repeats = 0
         while arcade.check_for_collision(shield, rect):
             repeats += 1
-            shield.owner.center_x += -normal_projection * n_x + tangential_projection * t_x
-            shield.owner.center_y += -normal_projection * n_y + tangential_projection * t_y
-            shield.center_x += -normal_projection * n_x + tangential_projection * t_x
-            shield.center_y += -normal_projection * n_y + tangential_projection * t_y
-            if repeats == 30:
+            shield.owner.center_x += (-normal_projection * n_x + tangential_projection * t_x) * repeats
+            shield.owner.center_y += (-normal_projection * n_y + tangential_projection * t_y) * repeats
+            shield.center_x += (-normal_projection * n_x + tangential_projection * t_x) * repeats
+            shield.center_y += (-normal_projection * n_y + tangential_projection * t_y) * repeats
+            if repeats == 10:
                 # Something's gone wrong - we're stuck!
                 # Disable the shield to let the user know something's gone wrong
                 shield.disable()
                 break
 
-
-def get_left_centre_right_terrain_rectangles(sprite: Sprite, scene: Scene):
-    # So I want the three ground rects - directly underneath, and left and right
-    # Since rects are in order from left to right, this shouldn't be hard
-    r1, r2, r3 = None, None, None
-    for r in itertools.chain(scene["Terrain Left Edge"],
-                             scene["Terrain Centre"],
-                             scene["Terrain Right Edge"]):
-        r1, r2, r3 = r2, r3, r
-        if not r1:
-            continue
-        if r1.right <= sprite.center_x <= r3.left:
-            break
-    return r1, r2, r3
 
 
 # def check_for_collision(sprite1: Sprite, sprite2: Sprite, scene: Scene) -> bool:

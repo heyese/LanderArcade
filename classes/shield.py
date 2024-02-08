@@ -44,6 +44,8 @@ class Shield(arcade.SpriteCircle):
                 if self.disabled_timer <= 0:
                     self.disabled_timer = None
                     self.disabled = False
+                    # TODO: At this point, if the user still wants the shield on (ie. key/button still pressed),
+                    # we should try to re-enable.
 
     def activate(self):
         if self.power and self.disabled is False:
