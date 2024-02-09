@@ -6,7 +6,7 @@ shield_disabled_when_collisions_exist_with = [
     "Terrain Centre",
     "Terrain Right Edge",
     "Missiles",
-    "Shields",
+    "Shields",  # only activated shields
     "Enemies",
     "Explosions"]
 
@@ -19,7 +19,7 @@ class Shield(arcade.SpriteCircle):
                          color=(0, 255, 255, 50))
         self.owner: GameObject = owner
         self.visible = False
-        self.power: int = 100
+        self.power: int = 10
         self.activated = False
         self.scene = scene
         self.scene.add_sprite('Shields', self)

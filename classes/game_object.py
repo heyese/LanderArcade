@@ -24,6 +24,7 @@ class GameObject(arcade.Sprite):
         super().__init__(filename=filename, scale=scale * SCALING, angle=angle)
         self.scene = scene
         self.shield = None
+        self.disabled_shield = None
         self.engine = None
         self.explosion = None
         self.world: World = world
@@ -105,10 +106,8 @@ class GameObject(arcade.Sprite):
 
     def die(self):
         self.dead = True
-        self.remove_from_sprite_lists()
-        if self.shield is not None:
-            self.shield.remove_from_sprite_lists()
-        if self.engine is not None:
-            self.engine.remove_from_sprite_lists()
+        for s in [self, self.shield, self.engine, self.disabled_shield]:
+            if s is not None:
+                s.remove_from_sprite_lists()
         if self.explodes:
             self.explode()
