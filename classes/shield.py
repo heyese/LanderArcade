@@ -44,11 +44,16 @@ class Shield(arcade.SpriteCircle):
                 if self.disabled_timer <= 0:
                     self.disabled_timer = None
                     self.disabled = False
-                    # TODO: At this point, if the user still wants the shield on (ie. key/button still pressed),
-                    # we should try to re-enable.
+                    # If the shield owner happens to be the Lander itself, and the user is still trying to operate
+                    # the shield (ie. mouse button / key still pressed), we auto try to re-enable it here
+                    if self.owner in self.scene["Lander"].sprite_list and self.owner.trying_to_activate_shield:
+                        self.activate()
 
     def activate(self):
-        if self.power and self.disabled is False:
+        if self.disabled is False:
+            if not self.power:
+                self.disabled = True
+                return
             # Cannot enable shield when an object is already within the perimeter - if you try to, it is disabled
             # for a small period
             collisions = arcade.check_for_collision_with_lists(self, [self.scene[i] for i in shield_disabled_when_collisions_exist_with])

@@ -240,11 +240,11 @@ class GameView(arcade.View):
         # Check for collisions
         collisions.check_for_collisions(self.scene)
 
-
     def on_mouse_press(self, x, y, button, modifiers):
         self.lander.engine.angle = self.lander.angle
         if button == arcade.MOUSE_BUTTON_RIGHT:
             self.lander.shield.activate()
+            self.lander.trying_to_activate_shield = True
         if button == arcade.MOUSE_BUTTON_LEFT:
             self.lander.engine.activate()
 
@@ -253,6 +253,7 @@ class GameView(arcade.View):
             self.lander.engine.activate()
         if symbol == arcade.key.Z:
             self.lander.shield.activate()
+            self.lander.trying_to_activate_shield = True
         if modifiers & arcade.key.MOD_SHIFT:
             self.lander.engine.boost(True)
         if symbol == arcade.key.R:
@@ -270,6 +271,7 @@ class GameView(arcade.View):
             self.lander.engine.deactivate()
         if symbol == arcade.key.Z:
             self.lander.shield.deactivate()
+            self.lander.trying_to_activate_shield = False
         if not modifiers & arcade.key.MOD_SHIFT:
             self.lander.engine.boost(False)
 
@@ -277,6 +279,7 @@ class GameView(arcade.View):
         self.lander.engine.angle = self.lander.angle
         if button == arcade.MOUSE_BUTTON_RIGHT:
             self.lander.shield.deactivate()
+            self.lander.trying_to_activate_shield = False
         if button == arcade.MOUSE_BUTTON_LEFT:
             self.lander.engine.deactivate()
 

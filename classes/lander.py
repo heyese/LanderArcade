@@ -22,6 +22,7 @@ class Lander(GameObject):
         self.max_landing_angle = 20
         self.mouse_location = None  # Set by Game view.  Want Lander to face mouse on every update
         self.landed: bool = False
+        self.trying_to_activate_shield = False
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)
