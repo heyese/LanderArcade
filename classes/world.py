@@ -72,6 +72,8 @@ class World:
             terrain_right_edge.append(right_edge_rect)
             x += left_edge_rect.width
         while x < WORLD_WIDTH - 2 * self.camera_width:
+            # First rect should always be wide enough for the landing pad.
+            # Then I can re-order the rects as I wish?
             rect = get_rect(x, max_x=WORLD_WIDTH - self.camera_width)
             terrain_centre.append(rect)
             x += rect.width
