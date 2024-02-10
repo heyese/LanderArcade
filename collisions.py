@@ -1,5 +1,5 @@
 import arcade
-from arcade import Sprite, Scene, SpriteList
+from arcade import Sprite, Scene, SpriteList, Camera
 from typing import Tuple
 import math
 from classes.landing_pad import LandingPad
@@ -9,7 +9,8 @@ from classes.game_object import GameObject
 from classes.explosion import Explosion
 import itertools
 from typing import List
-
+from pyglet.math import Vec2
+import random
 
 # The coefficient of restitution epsilon (e), is the ratio of the final to initial relative speed between two objects
 # after they collide. It normally ranges from 0 to 1 where 1 would be a perfectly elastic collision.
@@ -64,7 +65,7 @@ def circular_collision(sprite1: Sprite, sprite2: Sprite) -> Tuple[Tuple[float, f
     return v1, v2
 
 
-def check_for_collisions(scene: Scene):
+def check_for_collisions(scene: Scene, camera: Camera):
     terrain_spritelists = [
         # Purposefully ordered left to right, for explosion collision logic
         scene["Terrain Left Edge"],
@@ -79,8 +80,20 @@ def check_for_collisions(scene: Scene):
                                   scene['Air Enemies'],
                                   scene['Explosions'],
                                   ):
-        check_for_collision_with_landing_pad(sprite, scene)
-        check_for_collision_with_terrain(sprite, terrain_spritelists, scene)
+        is_lander = sprite in scene['Lander'] or getattr(sprite, 'owner') in scene['Lander']
+        if is_lander:
+            lander = sprite if sprite in scene['Lander'] else sprite.owner
+        is_collision = False
+        is_collision |= check_for_collision_with_landing_pad(sprite, scene)
+        is_collision |= check_for_collision_with_terrain(sprite, terrain_spritelists, scene)
+        # Not 100% sold on this, but below, if the lander has collided with something,
+        # I cause a little camera shake.  It's fixed amplitude, so not very sophisticated
+        if is_lander and is_collision:
+            angle = math.atan2(lander.change_y, lander.change_x)
+            vector = Vec2(5 * math.cos(angle), 5 * math.sin(angle))
+            camera.shake(vector,
+                         speed=0.5,
+                         damping=0.7)
         # TODO: check for other collisions
 
 
@@ -89,6 +102,7 @@ def check_for_collision_with_landing_pad(sprite: GameObject, scene: Scene):
     # because it will have its own forcefield that comes on automatically and will block everything except the lander
     landing_pad_spritelist = scene['Landing Pad']
     collision = arcade.check_for_collision_with_list(sprite, landing_pad_spritelist)
+    sprite_collided = bool(collision)
     if collision:
         landing_pad: LandingPad = collision[0]
         # Lander and LandingPad
@@ -98,14 +112,17 @@ def check_for_collision_with_landing_pad(sprite: GameObject, scene: Scene):
             lander: Lander = sprite
             if landing_pad.safe_to_land:
                 lander.landed = True
-                return
-        if sprite in scene['Shields'].sprite_list:
+                sprite_collided = False
+        elif sprite in scene['Shields'].sprite_list:
             shield: Shield = sprite
             if shield.activated:
-                check_for_shield_collision_with_rectangle_sprite(shield, landing_pad)
-            return
-        if sprite not in scene['Explosions'].sprite_list:
+                check_for_shield_collision_with_rectangle_sprite(shield, landing_pad, scene)
+            else:
+                # A collision with a deactivated shield isn't a collision
+                sprite_collided = False
+        elif sprite not in scene['Explosions'].sprite_list:
             sprite.die()
+    return sprite_collided
 
 
 def check_for_collision_with_terrain(sprite: Sprite, terrain: List[SpriteList], scene: Scene):
@@ -114,16 +131,18 @@ def check_for_collision_with_terrain(sprite: Sprite, terrain: List[SpriteList], 
         # If a shield isn't activated, it's also not visible and not really meant to be there
         # Let's return now before any work is done
         if shield.activated:
-            check_for_shield_collision_with_terrain(shield, terrain, scene)
-        return
-    if sprite in scene['Explosions'].sprite_list:
+            return check_for_shield_collision_with_terrain(shield, terrain, scene)
+        return False
+    elif sprite in scene['Explosions'].sprite_list:
         sprite: Explosion
         check_for_explosion_collision_with_terrain(sprite, terrain)
-        return
+        return False
     # I think everything else should just die ...
-    sprite: GameObject
-    if arcade.check_for_collision_with_lists(sprite, terrain):
+    elif arcade.check_for_collision_with_lists(sprite, terrain):
+        sprite: GameObject
         sprite.die()
+        return True
+    return False
 
 
 def check_for_explosion_collision_with_terrain(explosion: Explosion, terrain: List[SpriteList]):
@@ -139,7 +158,6 @@ def check_for_explosion_collision_with_terrain(explosion: Explosion, terrain: Li
             continue
         if r1.right <= explosion.center_x <= r3.left:
             break
-
     if explosion.center_y <= r2.top:
         explosion.change_y = 0
         explosion.on_ground = True
@@ -148,20 +166,22 @@ def check_for_explosion_collision_with_terrain(explosion: Explosion, terrain: Li
     if ((explosion.center_x + explosion.change_x <= r1.right and r1.top > explosion.center_y) or
             (explosion.center_x + explosion.change_x >= r3.left and r3.top > explosion.center_y)):
         explosion.change_x = 0
-
+    # Not interested in returning whether the sprite collided or not, as don't do screen shakes for explosions
 
 def check_for_shield_collision_with_terrain(shield: Shield, terrain: List[SpriteList], scene: Scene):
     # The LandingPad's shield is allowed to clash with the terrain
     if shield.owner in scene['Landing Pad'].sprite_list:
-        return
+        return False
     collision_with_terrain = arcade.check_for_collision_with_lists(shield, terrain)
     for rect in collision_with_terrain:
-        check_for_shield_collision_with_rectangle_sprite(shield, rect)
+        check_for_shield_collision_with_rectangle_sprite(shield, rect, scene)
+    return bool(collision_with_terrain)
 
 
-def check_for_shield_collision_with_rectangle_sprite(shield: Shield, rect: arcade.SpriteSolidColor):
+def check_for_shield_collision_with_rectangle_sprite(shield: Shield, rect: arcade.SpriteSolidColor, scene: Scene):
     # 5 possibilities.  Bounce off left side, left corner, top side, right corner or right side.
     # Left or right side
+
     if (shield.center_y <= rect.top and
             ((shield.left < rect.left <= shield.right) or (shield.left <= rect.right < shield.right))):
         shield.owner.change_x *= -1
@@ -204,6 +224,7 @@ def check_for_shield_collision_with_rectangle_sprite(shield: Shield, rect: arcad
                 # Disable the shield to let the user know something's gone wrong
                 shield.disable()
                 break
+
 
 
 

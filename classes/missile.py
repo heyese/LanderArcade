@@ -24,7 +24,6 @@ class Missile(GameObject):
         if self.engine.activated:
             # I want the missile to take the shortest route to the lander - and that might
             # involve a world wrap.
-            points = [self]
             if lander_sprite_list := self.scene.name_mapping.get("Lander"):
                 lander: Lander = lander_sprite_list[0]
                 points = [lander.position,

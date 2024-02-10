@@ -8,7 +8,7 @@ from classes.engine import Engine
 
 
 class Lander(GameObject):
-    def __init__(self, scene: arcade.Scene, world: World):
+    def __init__(self, scene: arcade.Scene, world: World, camera: arcade.Camera):
         super().__init__(scene=scene,
                          world=world,
                          filename="images/lander.png",
@@ -23,6 +23,7 @@ class Lander(GameObject):
         self.mouse_location = None  # Set by Game view.  Want Lander to face mouse on every update
         self.landed: bool = False
         self.trying_to_activate_shield = False
+        self.camera = camera  # to make it easier to apply screen shakes when we hit things
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)

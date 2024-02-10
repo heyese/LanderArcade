@@ -14,7 +14,7 @@ shield_disabled_when_collisions_exist_with = [
 
 class Shield(arcade.SpriteCircle):
     """The shield - a sprite that stays centred on the owner and can be activated / deactivated"""
-    def __init__(self, scene: arcade.Scene, owner: arcade.Sprite, radius: int = None, power: int = 10):
+    def __init__(self, scene: arcade.Scene, owner: arcade.Sprite, radius: int = None, power: int = 100):
         if radius is None:
             radius = int(max(owner.height, owner.width) * 1.5)
         super().__init__(radius=radius,

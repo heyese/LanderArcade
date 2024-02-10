@@ -20,6 +20,7 @@ class GameObject(arcade.Sprite):
                  in_space: bool = False,
                  above_space: bool = False,
                  explodes: bool = True,
+                 owner=None
                  ):
         super().__init__(filename=filename, scale=scale * SCALING, angle=angle)
         self.scene = scene
@@ -44,6 +45,7 @@ class GameObject(arcade.Sprite):
         self.dead = False
         self.collided = False
         self.explodes = explodes
+        self.owner = owner
 
     def on_update(self, delta_time: float = 1 / 60):
         # Are we in space or not?
@@ -78,7 +80,8 @@ class GameObject(arcade.Sprite):
                                    velocity_x=self.velocity_x,
                                    velocity_y=self.velocity_y,
                                    center_x=int(self.center_x),
-                                   center_y=int(self.center_y))
+                                   center_y=int(self.center_y),
+                                   owner=self)
 
     def determine_force_x(self, force_x):
         # Force due to engine

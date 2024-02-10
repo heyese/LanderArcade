@@ -42,7 +42,8 @@ class Explosion(GameObject):
                  velocity_x: float,
                  velocity_y: float,
                  center_x: int,
-                 center_y: int):
+                 center_y: int,
+                 owner: GameObject):
         files = [
             "images/explosion_1.png",
             "images/explosion_2.png",
@@ -60,7 +61,8 @@ class Explosion(GameObject):
                          center_y=center_y,
                          velocity_x=velocity_x,
                          velocity_y=velocity_y,
-                         angle=random.randint(1, 360))
+                         angle=random.randint(1, 360),
+                         owner=owner)
 
         self.velocity_x_initial = velocity_x
         self._radius = radius_initial

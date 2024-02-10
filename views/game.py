@@ -83,7 +83,7 @@ class GameView(arcade.View):
         self.world = World(scene=self.scene, camera_width=self.game_camera.viewport_width,
                            camera_height=self.game_camera.viewport_height,
                            landing_pad_width_limit=landing_pad_width_limit)
-        self.lander = Lander(scene=self.scene, world=self.world)
+        self.lander = Lander(scene=self.scene, world=self.world, camera=self.game_camera)
         landing_pad_width = int(2 * self.lander.width)
         if landing_pad_width > landing_pad_width_limit:
             print("Your hardcoded value for the landing pad width limit isn't large enough!")
@@ -265,7 +265,7 @@ class GameView(arcade.View):
         self.fps_text.text = f"FPS: {arcade.get_fps():.0f}"
 
         # Check for collisions
-        collisions.check_for_collisions(self.scene)
+        collisions.check_for_collisions(self.scene, self.game_camera)
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.lander.engine.angle = self.lander.angle
