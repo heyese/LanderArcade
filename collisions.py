@@ -144,8 +144,8 @@ def check_for_explosion_collision_with_terrain(explosion: Explosion, terrain: Li
         explosion.on_ground = True
     else:
         explosion.on_ground = False
-    if ((explosion.center_x <= r1.right and r1.top > explosion.center_y) or
-            (explosion.center_x >= r3.left and r3.top > explosion.center_y)):
+    if ((explosion.center_x + explosion.change_x <= r1.right and r1.top > explosion.center_y) or
+            (explosion.center_x + explosion.change_x >= r3.left and r3.top > explosion.center_y)):
         explosion.change_x = 0
 
 

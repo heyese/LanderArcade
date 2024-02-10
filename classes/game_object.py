@@ -64,7 +64,6 @@ class GameObject(arcade.Sprite):
         self.center_x += self.change_x
         self.center_y += self.change_y
 
-
     def explode(self):
         # Explosions are automatically added to the scene
         from classes.explosion import Explosion

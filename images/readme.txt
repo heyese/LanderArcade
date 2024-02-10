@@ -7,6 +7,5 @@ Also, make sure, like the lander, that they do wrap around!!
 
 should use spatial hashing on ground enemies
 
-Make certain that there is a spot for the landing pad.
-Easy to do - make it the first rect in the central terrain, then swap it with another rect.
-
+Screen should shudder on impacts to the lander
+Severity linked to change of momentum (force applied)
