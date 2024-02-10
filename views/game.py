@@ -239,11 +239,15 @@ class GameView(arcade.View):
 
         # If we've wrapped the lander to the other side of the world, we move the camera instantly
         if abs(self.lander.center_x - self.game_camera.position[0]) > WORLD_WIDTH - 4 * screen_width:
-            new_x_position = self.game_camera.position[0] + WORLD_WIDTH - 2 * screen_width if self.lander.center_x > self.game_camera.position[0] else self.game_camera.position[0] - (WORLD_WIDTH - 2 * screen_width)
-            new_position = Vec2(new_x_position, self.game_camera.position[1])
+            if self.lander.center_x > self.game_camera.position[0]:
+                new_x_position = self.game_camera.position[0] + WORLD_WIDTH - 2 * screen_width
+            else:
+                new_x_position = self.game_camera.position[0] - (WORLD_WIDTH - 2 * screen_width)
+            new_position = Vec2(new_x_position + self.lander.change_x,
+                                self.game_camera.position[1] + self.lander.change_y)
             self.game_camera.move_to(new_position, 1)
         else:
-            # Otherwise we gently pan the camera around
+            # Gently pan the camera around after the lander
             self.pan_camera_to_lander(panning_fraction=0.04)
 
         # Check to see if the level's been completed!
