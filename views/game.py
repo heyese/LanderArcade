@@ -61,6 +61,7 @@ class GameView(arcade.View):
 
         # Adding spritelists now to get the ordering I want, and so that it's easy to see all of them in one go!
         # If we draw the engines before their owners, the angles aren't quite right
+        self.scene.add_sprite_list("Explosions")
         self.scene.add_sprite_list("Lander")
         self.scene.add_sprite_list("Missiles")
         self.scene.add_sprite_list("Air Enemies")
@@ -68,7 +69,6 @@ class GameView(arcade.View):
         self.scene.add_sprite_list("Shields")
         self.scene.add_sprite_list("Disabled Shields")
         self.scene.add_sprite_list('Engines')
-        self.scene.add_sprite_list("Explosions")
         self.scene.add_sprite_list("Terrain Left Edge", use_spatial_hash=True)
         self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True)
         self.scene.add_sprite_list("Terrain Right Edge", use_spatial_hash=True)
@@ -83,7 +83,7 @@ class GameView(arcade.View):
         self.world = World(scene=self.scene, camera_width=self.game_camera.viewport_width,
                            camera_height=self.game_camera.viewport_height,
                            landing_pad_width_limit=landing_pad_width_limit)
-        self.lander = Lander(scene=self.scene, world=self.world, camera=self.game_camera)
+        self.lander = Lander(scene=self.scene, world=self.world)
         landing_pad_width = int(2 * self.lander.width)
         if landing_pad_width > landing_pad_width_limit:
             print("Your hardcoded value for the landing pad width limit isn't large enough!")
