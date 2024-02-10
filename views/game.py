@@ -63,7 +63,8 @@ class GameView(arcade.View):
         # If we draw the engines before their owners, the angles aren't quite right
         self.scene.add_sprite_list("Lander")
         self.scene.add_sprite_list("Missiles")
-        self.scene.add_sprite_list("Enemies")
+        self.scene.add_sprite_list("Air Enemies")
+        self.scene.add_sprite_list("Ground Enemies")
         self.scene.add_sprite_list("Shields")
         self.scene.add_sprite_list("Disabled Shields")
         self.scene.add_sprite_list('Engines')
@@ -95,7 +96,7 @@ class GameView(arcade.View):
         # Starting location of the Lander
         self.lander.center_y = int((1/2) * (SPACE_END - SPACE_START)) + SPACE_START
         self.lander.center_x = WORLD_WIDTH / 2
-        self.pan_camera_to_user(1)
+        self.pan_camera_to_lander(1)
         self.lander.change_x = random.randint(-30, 30) / 60
         self.lander.change_y = -random.randint(10, 30) / 60
 
@@ -184,7 +185,8 @@ class GameView(arcade.View):
                 sprite.draw()
                 sprite.scale /= scale_multiplier
 
-        proj = self.game_camera.viewport_width, WORLD_WIDTH - self.game_camera.viewport_width, 0, WORLD_HEIGHT
+        # I show the repeated terrain in the minimap - I think this makes the most sense
+        proj = 0, WORLD_WIDTH, 0, WORLD_HEIGHT
         with self.minimap_sprite_list.atlas.render_into(self.minimap_texture, projection=proj) as fbo:
             fbo.clear(self.minimap_background_colour)
             self.world.background_shapes.draw()
@@ -210,32 +212,39 @@ class GameView(arcade.View):
         # I have crafted the World so that the first two window.widths are the same as the last two.
         # So I pull off this trick by never letting the user get closer than 1 window.width to the edge of the world
         # - when this boundary is crossed, the user is flipped to the other side (along with all the sprites!).
-        centred_on = self.lander if not self.lander.explosion else self.lander.explosion
-        world_wrap_distance = WORLD_WIDTH - 2 * self.game_camera.viewport_width
-        world_wrapped = False
-        if centred_on.center_x >= WORLD_WIDTH - self.game_camera.viewport_width:
-            camera_x = self.game_camera.position[0] - world_wrap_distance
-            centred_on.center_x -= world_wrap_distance
-            # In fact, we need to move every single sprite with x position >= WORLD_WIDTH - 2 * self.game_camera.viewport_width:
-            for s in itertools.chain(self.scene["Missiles"], self.scene["Explosions"]):
-                if s.center_x >= WORLD_WIDTH - 2 * self.game_camera.viewport_width:
-                    s.center_x -= world_wrap_distance
+        # I wrap other sprites in the same way, ensuring they are always (when relevant) on the same side of
+        # the world as the lander
 
-            world_wrapped = True
-        elif centred_on.center_x < self.game_camera.viewport_width:
-            camera_x = self.game_camera.position[0] + world_wrap_distance
-            centred_on.center_x += world_wrap_distance
-            for s in itertools.chain(self.scene["Missiles"], self.scene["Explosions"]):
-                if s.center_x <= 2 * self.game_camera.viewport_width:
-                    s.center_x += world_wrap_distance
-            world_wrapped = True
-        if world_wrapped:
-            # If we've gone off the edge of the world, we immediately move the camera so the user doesn't notice
-            camera_position = Vec2(camera_x, self.game_camera.position[1])
-            self.game_camera.move_to(camera_position, 1)
+        # First, just deal with sprite positions.  Then consider the camera.
+        # Landing pad is effectively terrain.  Shields and Engines move themselves, as centred on owner
+        non_terrain_spritelist_names = ["Lander", "Missiles", "Air Enemies", "Ground Enemies", "Explosions"]
+        non_terrain_spritelists = [self.scene[i] for i in non_terrain_spritelist_names]
+        non_terrain_sprites = [s for i in non_terrain_spritelists for s in i]
+        # Flip all sprites from one side to the other
+        screen_width = self.game_camera.viewport_width
+        for s in non_terrain_sprites:
+            if s.center_x < screen_width:
+                s.center_x += WORLD_WIDTH - 2 * screen_width
+            elif s.center_x > WORLD_WIDTH - screen_width:
+                s.center_x -= WORLD_WIDTH - 2 * screen_width
+        # But if the lander is in the first or last 2 viewport_widths, we ensure the lander can see them
+        if self.lander.center_x < 2 * screen_width:
+            for s in [s for s in non_terrain_sprites
+                      if WORLD_WIDTH - 2 * screen_width <= s.right]:
+                s.center_x -= WORLD_WIDTH - 2 * screen_width
+        elif WORLD_WIDTH - 2 * screen_width <= self.lander.center_x:
+            for s in [s for s in non_terrain_sprites
+                      if 2 * screen_width >= s.left]:
+                s.center_x += WORLD_WIDTH - 2 * screen_width
+
+        # If we've wrapped the lander to the other side of the world, we move the camera instantly
+        if abs(self.lander.center_x - self.game_camera.position[0]) > WORLD_WIDTH - 4 * screen_width:
+            new_x_position = self.game_camera.position[0] + WORLD_WIDTH - 2 * screen_width if self.lander.center_x > self.game_camera.position[0] else self.game_camera.position[0] - (WORLD_WIDTH - 2 * screen_width)
+            new_position = Vec2(new_x_position, self.game_camera.position[1])
+            self.game_camera.move_to(new_position, 1)
         else:
             # Otherwise we gently pan the camera around
-            self.pan_camera_to_user(panning_fraction=0.04)
+            self.pan_camera_to_lander(panning_fraction=0.04)
 
         # Check to see if the level's been completed!
         if self.lander.landed:
@@ -300,9 +309,10 @@ class GameView(arcade.View):
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int) -> None:
         self.lander.mouse_location = Vec2(x, y)
 
-    def pan_camera_to_user(self, panning_fraction: float = 1.0):
+    def pan_camera_to_lander(self, panning_fraction: float = 1.0):
         """
         Manage Scrolling
+
         :param panning_fraction: Number from 0 to 1. Higher the number, faster we
                                  pan the camera to the user.
         """

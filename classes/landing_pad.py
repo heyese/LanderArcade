@@ -74,7 +74,7 @@ class LandingPad(arcade.SpriteSolidColor):
         # We use the shield_sensor to know if we need to switch the shield on or off
         collision = arcade.check_for_collision_with_lists(self.shield_sensor,
                                                           [self.scene['Missiles'],
-                                                           self.scene['Enemies'],
+                                                           self.scene['Air Enemies'],
                                                            self.scene['Explosions']])
         if collision:
             self.shield.activate()

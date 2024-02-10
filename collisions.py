@@ -75,7 +75,8 @@ def check_for_collisions(scene: Scene):
     for sprite in itertools.chain(scene['Lander'],
                                   scene['Shields'],
                                   scene['Missiles'],
-                                  scene['Enemies'],
+                                  scene['Ground Enemies'],
+                                  scene['Air Enemies'],
                                   scene['Explosions'],
                                   ):
         check_for_collision_with_landing_pad(sprite, scene)
