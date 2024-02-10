@@ -74,9 +74,23 @@ class GameView(arcade.View):
 
         self.level = level  # Ultimately want to use this to develop the game in later levels
         self.score = score
-        self.world = World(scene=self.scene, camera_width=self.game_camera.viewport_width, camera_height=self.game_camera.viewport_height)
+        # Tied myself up in knots here.  I want to ensure there is a hill wide enough in the world for the
+        # landing pad.  But the landing pad width depends on the lander width, and I pass the world in when
+        # creating the lander ... Rather than sort that out, for now I'm just hard coding a number that's large
+        # enough and passing that in!
+        landing_pad_width_limit = 200
+        self.world = World(scene=self.scene, camera_width=self.game_camera.viewport_width,
+                           camera_height=self.game_camera.viewport_height,
+                           landing_pad_width_limit=landing_pad_width_limit)
         self.lander = Lander(scene=self.scene, world=self.world)
-        self.landing_pad = LandingPad(scene=self.scene, lander=self.lander, world=self.world)
+        landing_pad_width = int(2 * self.lander.width)
+        if landing_pad_width > landing_pad_width_limit:
+            print("Your hardcoded value for the landing pad width limit isn't large enough!")
+            return
+        landing_pad_height = int(0.3 * landing_pad_width)
+        self.landing_pad = LandingPad(scene=self.scene, lander=self.lander, world=self.world,
+                                      width=landing_pad_width,
+                                      height=landing_pad_height)
 
         # Starting location of the Lander
         self.lander.center_y = int((1/2) * (SPACE_END - SPACE_START)) + SPACE_START

@@ -53,7 +53,7 @@ class Explosion(GameObject):
         super().__init__(filename=file,
                          scale=scale * SCALING,
                          world=world,
-
+                         explodes=False,
                          mass=mass,
                          scene=scene,
                          center_x=center_x,

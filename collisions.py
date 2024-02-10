@@ -84,6 +84,8 @@ def check_for_collisions(scene: Scene):
 
 
 def check_for_collision_with_landing_pad(sprite: GameObject, scene: Scene):
+    # I have realized it should only ever be the lander that interacts with the landing pad,
+    # because it will have its own forcefield that comes on automatically and will block everything except the lander
     landing_pad_spritelist = scene['Landing Pad']
     collision = arcade.check_for_collision_with_list(sprite, landing_pad_spritelist)
     if collision:
@@ -101,11 +103,8 @@ def check_for_collision_with_landing_pad(sprite: GameObject, scene: Scene):
             if shield.activated:
                 check_for_shield_collision_with_rectangle_sprite(shield, landing_pad)
             return
-        if sprite in scene['Explosions'].sprite_list:
-            # TODO: explosions interacting with LandingPad
-            pass
-        # If we aren't the lander landing, and we're not a shield, and we're not an explosion, we die.
-        sprite.die()
+        if sprite not in scene['Explosions'].sprite_list:
+            sprite.die()
 
 
 def check_for_collision_with_terrain(sprite: Sprite, terrain: List[SpriteList], scene: Scene):
@@ -114,7 +113,7 @@ def check_for_collision_with_terrain(sprite: Sprite, terrain: List[SpriteList], 
         # If a shield isn't activated, it's also not visible and not really meant to be there
         # Let's return now before any work is done
         if shield.activated:
-            check_for_shield_collision_with_terrain(shield, terrain)
+            check_for_shield_collision_with_terrain(shield, terrain, scene)
         return
     if sprite in scene['Explosions'].sprite_list:
         sprite: Explosion
@@ -150,7 +149,10 @@ def check_for_explosion_collision_with_terrain(explosion: Explosion, terrain: Li
         explosion.change_x = 0
 
 
-def check_for_shield_collision_with_terrain(shield: Shield, terrain: List[SpriteList]):
+def check_for_shield_collision_with_terrain(shield: Shield, terrain: List[SpriteList], scene: Scene):
+    # The LandingPad's shield is allowed to clash with the terrain
+    if shield.owner in scene['Landing Pad'].sprite_list:
+        return
     collision_with_terrain = arcade.check_for_collision_with_lists(shield, terrain)
     for rect in collision_with_terrain:
         check_for_shield_collision_with_rectangle_sprite(shield, rect)

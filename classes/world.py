@@ -8,6 +8,7 @@ import copy
 class World:
     def __init__(self,
                  scene: arcade.Scene,
+                 landing_pad_width_limit: int,
                  sky_color: Union[Tuple[int, int, int], arcade.color] = None,
                  ground_color: Union[Tuple[int, int, int], arcade.color] = None,
                  gravity: int = None,
@@ -18,6 +19,7 @@ class World:
                  camera_width: int = None,
                  camera_height: int = None):
         self.scene = scene
+        self.landing_pad_width_limit = landing_pad_width_limit
         self.sky_color = sky_color if sky_color else random.choices(range(256), k=3)
         self.ground_color = ground_color if ground_color else random.choices(range(256), k=3)
         self.gravity = gravity if gravity is not None else random.randint(20, 200)
@@ -44,15 +46,21 @@ class World:
         # TODO
 
         # The foreground
-        self.terrain_left_edge, self.terrain_centre, self.terrain_right_edge = self.get_terrain()
+        self.terrain_left_edge, self.terrain_centre, self.terrain_right_edge = self.get_terrain(self.landing_pad_width_limit)
         self.scene.add_sprite_list("Terrain Left Edge", use_spatial_hash=True, sprite_list=self.terrain_left_edge)
         self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True, sprite_list=self.terrain_centre)
         self.scene.add_sprite_list("Terrain Right Edge", use_spatial_hash=True, sprite_list=self.terrain_right_edge)
 
-    def get_terrain(self) -> Tuple[arcade.SpriteList, arcade.SpriteList, arcade.SpriteList]:
-        def get_rect(x, max_x):
+    def get_terrain(self, landing_pad_width_limit) -> Tuple[arcade.SpriteList, arcade.SpriteList, arcade.SpriteList]:
+        # Generates a set of rectangles that's used as the terrain.
+        # We are assured that at least one of them is wide enough for the landing pad.
+        def get_rect(x, max_x, min_x=None):
+            """Returns a rectangle starting at x, and not ending >= max_x"""
             height = max(50, int(random.randint(30, int((1/3) * WORLD_HEIGHT)) * self.hill_height))
             width = min(int(random.randint(100, 500) * self.hill_width), max_x - x)
+            if min_x:
+                # We make sure there is at least one spot for the landing pad
+                width = max(min_x, width)
             rect = arcade.SpriteSolidColor(width=width, height=height, color=self.ground_color)
             rect.bottom = 0
             rect.left = x
@@ -71,9 +79,11 @@ class World:
             terrain_left_edge.append(left_edge_rect)
             terrain_right_edge.append(right_edge_rect)
             x += left_edge_rect.width
+        # Ensure there's a possible spot for the Landing Pad
+        rect = get_rect(x, max_x=WORLD_WIDTH - self.camera_width, min_x=int(landing_pad_width_limit * 1.5))
+        terrain_centre.append(rect)
+        x += rect.width
         while x < WORLD_WIDTH - 2 * self.camera_width:
-            # First rect should always be wide enough for the landing pad.
-            # Then I can re-order the rects as I wish?
             rect = get_rect(x, max_x=WORLD_WIDTH - self.camera_width)
             terrain_centre.append(rect)
             x += rect.width

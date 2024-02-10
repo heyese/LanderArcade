@@ -13,13 +13,15 @@ shield_disabled_when_collisions_exist_with = [
 
 class Shield(arcade.SpriteCircle):
     """The shield - a sprite that stays centred on the owner and can be activated / deactivated"""
-    def __init__(self, scene: arcade.Scene, owner: arcade.Sprite):
-        super().__init__(radius=int(max(owner.height, owner.width) * 2),
+    def __init__(self, scene: arcade.Scene, owner: arcade.Sprite, radius: int = None, power: int = 10):
+        if radius is None:
+            radius = int(max(owner.height, owner.width) * 1.5)
+        super().__init__(radius=radius,
                          # Transparent arcade.color.AQUA
                          color=(0, 255, 255, 50))
         self.owner: GameObject = owner
         self.visible = False
-        self.power: int = 10
+        self.power = power
         self.activated = False
         self.scene = scene
         self.scene.add_sprite('Shields', self)
@@ -54,15 +56,16 @@ class Shield(arcade.SpriteCircle):
             if not self.power:
                 self.disabled = True
                 return
-            # Cannot enable shield when an object is already within the perimeter - if you try to, it is disabled
-            # for a small period
-            collisions = arcade.check_for_collision_with_lists(self, [self.scene[i] for i in shield_disabled_when_collisions_exist_with])
-            for obj in collisions:
-                if obj in self.scene["Shields"] and not obj.activated:
-                    # Collisions with de-activated shields don't count
-                    continue
-                self.disabled = True
-                return
+            # Excepty for the Landing Pad, Cannot enable shield when an object is already within the perimeter
+            # If you try to, it is disabled for a small period
+            if self.owner not in self.scene["Landing Pad"].sprite_list:
+                collisions = arcade.check_for_collision_with_lists(self, [self.scene[i] for i in shield_disabled_when_collisions_exist_with])
+                for obj in collisions:
+                    if obj in self.scene["Shields"] and not obj.activated:
+                        # Collisions with de-activated shields don't count
+                        continue
+                    self.disabled = True
+                    return
             self.visible = True
             self.activated = True
 
@@ -79,7 +82,7 @@ class DisabledShield(arcade.SpriteCircle):
     """If someone tries to activate the actual shield with an object within it's perimeter, the shield
     is disabled for a period of time, during which this "disabled shield" is displayed"""
     def __init__(self, scene: arcade.Scene, owner: arcade.Sprite):
-        super().__init__(radius=int(max(owner.height, owner.width) * 2),
+        super().__init__(radius=int(max(owner.height, owner.width) * 1.5),
                          # Transparent arcade.color.AQUA
                          color=(255, 0, 0, 50))
         self.owner: GameObject = owner
