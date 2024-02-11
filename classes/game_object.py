@@ -20,7 +20,7 @@ class GameObject(arcade.Sprite):
                  in_space: bool = False,
                  above_space: bool = False,
                  explodes: bool = True,
-                 owner=None
+                 owner=None,
                  ):
         super().__init__(filename=filename, scale=scale * SCALING, angle=angle)
         self.scene = scene

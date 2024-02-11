@@ -37,6 +37,9 @@ class LandingPad(arcade.SpriteSolidColor):
         self.shield = Shield(scene=self.scene, owner=self, radius=int(1.5*self.width), power=999)
         self.shield_sensor = arcade.SpriteCircle(radius=int(4*self.width), color=(0, 0, 0, 200))
         self.shield_sensor.center_x, self.shield_sensor.center_y = self.center_x, self.center_y
+        self.mass = 999  # Effectively, infinitely heavy
+        self.velocity_x, self.velocity_y = 0, 0
+        self.on_ground = True
 
     @property
     def safe_to_land(self):
@@ -75,7 +78,6 @@ class LandingPad(arcade.SpriteSolidColor):
         collision = arcade.check_for_collision_with_lists(self.shield_sensor,
                                                           [self.scene['Missiles'],
                                                            self.scene['Air Enemies'],
-                                                           self.scene['Lander'],
                                                            self.scene['Explosions']])
         if collision:
             self.shield.activate()
