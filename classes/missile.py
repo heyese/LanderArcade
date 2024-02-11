@@ -11,7 +11,7 @@ class Missile(GameObject):
         super().__init__(scene=scene,
                          world=world,
                          filename="images/missile.png",
-                         mass=10,
+                         mass=30,
                          scale=0.2 * SCALING,
                          )
         self.scene.add_sprite("Missiles", self)

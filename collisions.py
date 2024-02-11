@@ -109,12 +109,12 @@ def check_for_collisions(scene: Scene, camera: Camera):
         # Not 100% sold on this, but below, if the lander has collided with something,
         # I cause a little camera shake.  It's fixed amplitude and along the movement vector of the lander,
         # which is not necessarily the same as the vector along which it was hit, so not very sophisticated
-        # if lander is not None and lander in {sprite, getattr(sprite, 'owner')} and is_collision:
-        #     angle = math.atan2(lander.change_y, lander.change_x)
-        #     vector = Vec2(5 * math.cos(angle), 5 * math.sin(angle))
-        #     camera.shake(vector,
-        #                  speed=0.5,
-        #                  damping=0.7)
+        if lander is not None and lander in {sprite, getattr(sprite, 'owner')} and is_collision:
+            angle = math.atan2(lander.change_y, lander.change_x)
+            vector = Vec2(5 * math.cos(angle), 5 * math.sin(angle))
+            camera.shake(vector,
+                         speed=0.5,
+                         damping=0.7)
         # # TODO: check for other collisions
 
 
@@ -149,6 +149,7 @@ def check_for_collision_with_landing_pad(sprite: Sprite, lander: Lander, landing
 
 def check_for_collisions_general(sprite: Sprite, airborne_spritelists: List[SpriteList], scene: Scene, considered_collisions: set):
     collisions = arcade.check_for_collision_with_lists(sprite, airborne_spritelists)
+    sprite_collided = False
     for collision in collisions:
         # Nothing to do if the sprite and the collision object are one and the same,
         # or if one is the shield of the other,
@@ -166,6 +167,7 @@ def check_for_collisions_general(sprite: Sprite, airborne_spritelists: List[Spri
             # When a shield isn't activated, it isn't visible, and doesn't count as a collision
             continue
 
+        sprite_collided = True
         # TODO: If we're colliding with the activated shield of a ground object, it's like the shield bouncing off the terrain.  Does not lose energy
         v1, v2 = circular_collision(sprite, collision)
         if sprite in scene['Shields']:
@@ -181,7 +183,7 @@ def check_for_collisions_general(sprite: Sprite, airborne_spritelists: List[Spri
             if collision not in scene['Ground Enemies']:
                 collision.change_x, collision.change_y = v2[0] * (1/60), v2[1] * (1/60)
             collision.die()
-    return bool(collisions)
+    return sprite_collided
 
 
 
