@@ -75,6 +75,7 @@ class LandingPad(arcade.SpriteSolidColor):
         collision = arcade.check_for_collision_with_lists(self.shield_sensor,
                                                           [self.scene['Missiles'],
                                                            self.scene['Air Enemies'],
+                                                           self.scene['Lander'],
                                                            self.scene['Explosions']])
         if collision:
             self.shield.activate()
