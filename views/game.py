@@ -84,7 +84,7 @@ class GameView(arcade.View):
                            camera_height=self.game_camera.viewport_height,
                            landing_pad_width_limit=landing_pad_width_limit)
         self.lander = Lander(scene=self.scene, world=self.world)
-        landing_pad_width = int(4 * self.lander.width)
+        landing_pad_width = int(2 * self.lander.width)
         if landing_pad_width > landing_pad_width_limit:
             print("Your hardcoded value for the landing pad width limit isn't large enough!")
             return
@@ -181,18 +181,23 @@ class GameView(arcade.View):
         # Want a mini-map: https://api.arcade.academy/en/latest/advanced/texture_atlas.html
         def rescale_and_draw(sprites: List[arcade.Sprite], scale_multiplier: int):
             for sprite in sprites:
+                sprite_world_wrapped = False
                 sprite.scale *= scale_multiplier
+                if sprite.center_x > WORLD_WIDTH - 2 * self.game_camera.viewport_width:
+                    sprite.center_x -= WORLD_WIDTH - 2 * self.game_camera.viewport_width
+                    sprite_world_wrapped = True
                 sprite.draw()
+                if sprite_world_wrapped:
+                    sprite.center_x += WORLD_WIDTH - 2 * self.game_camera.viewport_width
                 sprite.scale /= scale_multiplier
 
         # I show the repeated terrain in the minimap - I think this makes the most sense
-        proj = 0, WORLD_WIDTH, 0, WORLD_HEIGHT
+        proj = 0, WORLD_WIDTH - 2 * self.game_camera.viewport_width, 0, WORLD_HEIGHT
         with self.minimap_sprite_list.atlas.render_into(self.minimap_texture, projection=proj) as fbo:
             fbo.clear(self.minimap_background_colour)
             self.world.background_shapes.draw()
             self.scene.get_sprite_list('Terrain Left Edge').draw()
             self.scene.get_sprite_list('Terrain Centre').draw()
-            self.scene.get_sprite_list('Terrain Right Edge').draw()
             # Want the lander and the landing pad to stand out, rather than being tiny
             rescale_and_draw([self.lander, self.landing_pad, self.missile], 4)
 
