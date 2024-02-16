@@ -34,9 +34,10 @@ class LandingPad(arcade.SpriteSolidColor):
         self.scene = scene
         self.scene.add_sprite("Landing Pad", self)
         # LandingPad has effectively infinite shield
-        self.shield = Shield(scene=self.scene, owner=self, radius=int(1.5*self.width), power=999)
-        self.shield_sensor = arcade.SpriteCircle(radius=int(4*self.width), color=(0, 0, 0, 200))
-        self.shield_sensor.center_x, self.shield_sensor.center_y = self.center_x, self.center_y
+        # but disabling shield for now - bit complicated to implement, and want the game to evolve a bit first
+        #self.shield = Shield(scene=self.scene, owner=self, radius=int(1.5*self.width), power=999)
+        #self.shield_sensor = arcade.SpriteCircle(radius=int(4*self.width), color=(0, 0, 0, 200))
+        #self.shield_sensor.center_x, self.shield_sensor.center_y = self.center_x, self.center_y
         self.mass = 999  # Effectively, infinitely heavy
         self.velocity_x, self.velocity_y = 0, 0
         self.on_ground = True
@@ -75,21 +76,20 @@ class LandingPad(arcade.SpriteSolidColor):
         # LandingPad has an infinite shield that should auto-activate before anything gets within range
         # Lander can fly in and out of this without problems
         # We use the shield_sensor to know if we need to switch the shield on or off
-        collision = arcade.check_for_collision_with_lists(self.shield_sensor,
-                                                          [self.scene['Missiles'],
-                                                           self.scene['Air Enemies'],
-                                                           self.scene['Explosions']])
-        if collision:
-            self.shield.activate()
-        else:
-            self.shield.deactivate()
+        # collision = arcade.check_for_collision_with_lists(self.shield_sensor,
+        #                                                   [self.scene['Missiles'],
+        #                                                    self.scene['Air Enemies'],
+        #                                                    self.scene['Explosions']])
+        # if collision:
+        #     self.shield.activate()
+        # else:
+        #     self.shield.deactivate()
 
 
     def place_landing_pad_on_world(self):
         # So I need to find a flat space wide enough on the world surface for the pad and it's shield
         # List all rectangles with large enough width and then pick one at random?
 
-        # Currently I'm assuming it is possible to find a location - I should make sure it is!
         wide_enough_rectangles = [r for r in self.world.terrain_centre
                                   if r.width >= self.width]
         chosen_rect = wide_enough_rectangles[random.randrange(len(wide_enough_rectangles))]

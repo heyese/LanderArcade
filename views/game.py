@@ -84,7 +84,7 @@ class GameView(arcade.View):
                            camera_height=self.game_camera.viewport_height,
                            landing_pad_width_limit=landing_pad_width_limit)
         self.lander = Lander(scene=self.scene, world=self.world)
-        landing_pad_width = int(2 * self.lander.width)
+        landing_pad_width = int(4 * self.lander.width)
         if landing_pad_width > landing_pad_width_limit:
             print("Your hardcoded value for the landing pad width limit isn't large enough!")
             return

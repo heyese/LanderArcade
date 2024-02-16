@@ -78,7 +78,8 @@ def check_for_collisions(scene: Scene, camera: Camera):
     # Collisions with the terrain and the landing pad are one-sided collisions.
     # The terrain and landing pad are fixed and not impacted at all.
     # The same is true for collisions with the activated shields of anything on the ground.
-    # LandingPad shield is special - the lander can enter into it regardless of the state of the lander's shield
+    # LandingPad shield is special - the lander can enter into it regardless of the state of the lander's shield.
+    # (I thought this was a good idea, but I might just disable this for now until the game gets going!)
 
     # All other collisions, except those with explosions, are treated using the circular_collision() function above.
     # ie. Effectively treated like two circles hitting each other, with mass and "coefficient of restitution" affecting
@@ -90,7 +91,7 @@ def check_for_collisions(scene: Scene, camera: Camera):
     # (currently) blows up (although this could change, actually - think "end boss-style aircraft").
 
     # Explosions pass through each other without affecting each other.
-    #  As above, an explosion touching a non-shielded object will cause it to blow up.
+    # As above, an explosion touching a non-shielded object will cause it to blow up.
     # An explosion colliding with a shielded object exerts a force which, I think, will only affect the object it's
     # colliding with.
 
@@ -165,7 +166,17 @@ def check_for_collision_with_landing_pad(sprite: Sprite, lander: Lander, landing
         elif sprite not in scene['Explosions'].sprite_list:
             sprite: GameObject
             sprite.die()
-        # TODO: Explosions don't collide correctly with the landing pad
+        elif sprite in scene['Explosions'].sprite_list:
+            explosion: Explosion = sprite
+            if landing_pad.left <= explosion.center_x <= landing_pad.right and explosion.center_y <= landing_pad.top:
+                explosion.change_y = 0
+                explosion.on_ground = True
+            else:
+                explosion.on_ground = False
+            if (landing_pad.top > explosion.center_y and
+                    ((explosion.left <= landing_pad.left - explosion.change_x <= explosion.center_x and explosion.change_x > 0) or
+                     (explosion.right >= landing_pad.right - explosion.change_x >= explosion.center_x and explosion.change_x < 0))):
+                explosion.change_x = 0
     return sprite_collided
 
 
@@ -191,7 +202,6 @@ def check_for_collisions_general(sprite: Sprite, airborne_spritelists: List[Spri
 
         # The lander and landing pad are special in that the lander can pass through the landing pads shield
         # The landing pads shield should also protect it from explosions ...
-        if
 
         # TODO: Code up explosion collisions
         if "Explosion" in {sprite.__class__.__name__, collision.__class__.__name__}:
@@ -219,18 +229,16 @@ def check_for_collisions_general(sprite: Sprite, airborne_spritelists: List[Spri
     return sprite_collided
 
 
-
-
 def check_for_collision_with_terrain(sprite: Sprite, terrain: List[SpriteList], scene: Scene):
     if sprite in scene['Ground Enemies']:
         # Enemies on the ground are always "colliding" with it - this doesn't count
         pass
     elif sprite in scene['Shields'].sprite_list:
         shield: Shield = sprite
-        # If a shield isn't activated, it's also not visible and not really meant to be there
-        # Let's return now before any work is done
         if shield.activated:
             return check_for_shield_collision_with_terrain(shield, terrain, scene)
+        # If a shield isn't activated, it's also not visible and not really meant to be there
+        # Let's return now before any work is done
         return False
     elif sprite in scene['Explosions'].sprite_list:
         sprite: Explosion
@@ -247,6 +255,7 @@ def check_for_collision_with_terrain(sprite: Sprite, terrain: List[SpriteList], 
 def check_for_explosion_collision_with_terrain(explosion: Explosion, terrain: List[SpriteList]):
     # Rather than explosions looking like they're hovering in the air, it makes more sense to just
     # consider the centre points.  So if an explosion is on the ground, you only see the top half of it.
+    # The reason this function is different to the others is that explosions don't bounce.
 
     # So I want the three ground rects - directly underneath, and left and right
     # Since rects are in order from left to right, this shouldn't be hard
