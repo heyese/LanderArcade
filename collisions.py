@@ -198,7 +198,6 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
         if (sprite in scene['Shields'] and not sprite.activated or
                 collision in scene['Shields'] and not collision.activated):
             # When a shield isn't activated, it isn't visible, and doesn't count as a collision
-            considered_collisions.add((sprite, collision))
             continue
 
         # Here I'm considering what happens where one side of the "collision" is an explosion
