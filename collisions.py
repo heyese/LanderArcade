@@ -14,15 +14,18 @@ import random
 
 # The coefficient of restitution epsilon (e), is the ratio of the final to initial relative speed between two objects
 # after they collide. It normally ranges from 0 to 1 where 1 would be a perfectly elastic collision.
+# Default value is 0.5
 coefficient_of_restitution = {
     # Tuple[Class, Class] : coefficient
     frozenset({"Lander", "Missile"}): 0.1,
+    frozenset({'RocketLauncher', 'Lander'}): 0.5,
     frozenset({"Explosion", "Missile"}): 0.1,
     frozenset({"Explosion", "Lander"}): 0.1,
     frozenset({"Shield", "Explosion"}): 0.1,
     frozenset({"Shield", "Shield"}): 1,
     frozenset({"Shield", "Missile"}): 0.1,
     frozenset({"Shield", "Lander"}): 0.8,
+    frozenset({'Shield', 'RocketLauncher'}): 0.5,
 }
 
 
@@ -46,7 +49,7 @@ def unit_vector_from_pos1_to_pos2(pos1: Tuple[float, float], pos2: Tuple[float, 
 # Circular collisions (think I'm going to treat all non-terrain collisions in this way)
 # https://ravnik.eu/collision-of-spheres-in-2d/
 def circular_collision(sprite1: Sprite, sprite2: Sprite) -> Tuple[Tuple[float, float], Tuple[float, float]]:
-    e = coefficient_of_restitution[frozenset({sprite1.__class__.__name__, sprite2.__class__.__name__})]
+    e = coefficient_of_restitution.get(frozenset({sprite1.__class__.__name__, sprite2.__class__.__name__}), 0.5)
     if sprite1.__class__.__name__ == 'Shield':
         sprite1 = sprite1.owner
     if sprite2.__class__.__name__ == 'Shield':
@@ -125,7 +128,6 @@ def check_for_collisions(scene: Scene, camera: Camera):
         is_collision |= check_for_collision_with_landing_pad(sprite, lander=lander, landing_pad=landing_pad, scene=scene)
         is_collision |= check_for_collision_with_terrain(sprite, terrain_spritelists, scene)
         is_collision |= check_for_collisions_general(sprite, general_object_spritelists, scene, considered_collisions)
-        # TODO: Deal with explosion collisions
         # shield colliding with shields is an elastic collision
 
         #is_collision |= check_for_collision_with_ground_enemies(sprite, terrain_spritelists, scene)

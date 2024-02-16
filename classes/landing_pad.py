@@ -30,9 +30,9 @@ class LandingPad(arcade.SpriteSolidColor):
         self.safe_landing_speed = 50
         self._safe_to_land = False  # Property
         # Put the landing pad onto the world ...
-        self.place_landing_pad_on_world()
         self.scene = scene
         self.scene.add_sprite("Landing Pad", self)
+        self.place_landing_pad_on_world()
         # LandingPad has effectively infinite shield
         # but disabling shield for now - bit complicated to implement, and want the game to evolve a bit first
         #self.shield = Shield(scene=self.scene, owner=self, radius=int(1.5*self.width), power=999)
@@ -91,7 +91,9 @@ class LandingPad(arcade.SpriteSolidColor):
         # List all rectangles with large enough width and then pick one at random?
 
         wide_enough_rectangles = [r for r in self.world.terrain_centre
-                                  if r.width >= self.width]
+                                  if r.width >= self.width
+                                  and not arcade.check_for_collision_with_lists(self, [self.scene['Ground Enemies'],
+                                                                                       self.scene['Landing Pad']])]
         chosen_rect = wide_enough_rectangles[random.randrange(len(wide_enough_rectangles))]
         self.center_x = chosen_rect.center_x
         self.bottom = chosen_rect.top

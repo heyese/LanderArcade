@@ -7,6 +7,7 @@ from classes.lander import Lander
 from classes.world import World
 from classes.landing_pad import LandingPad
 from classes.missile import Missile
+from classes.missile_launcher import RocketLauncher
 from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT, SPACE_START, SPACE_END
 import collisions
 
@@ -63,9 +64,10 @@ class GameView(arcade.View):
         # If we draw the engines before their owners, the angles aren't quite right
         self.scene.add_sprite_list("Explosions")
         self.scene.add_sprite_list("Lander")
+        self.scene.add_sprite_list("Landing Pad", use_spatial_hash=True)
         self.scene.add_sprite_list("Missiles")
         self.scene.add_sprite_list("Air Enemies")
-        self.scene.add_sprite_list("Ground Enemies")
+        self.scene.add_sprite_list("Ground Enemies", use_spatial_hash=True)
         self.scene.add_sprite_list("Shields")
         self.scene.add_sprite_list("Disabled Shields")
         self.scene.add_sprite_list('Engines')
@@ -101,9 +103,8 @@ class GameView(arcade.View):
         self.lander.change_y = -random.randint(10, 30) / 60
 
         # Let's try adding a missile
-        self.missile = Missile(scene=self.scene, world=self.world)
-        self.missile.center_y = self.lander.center_y
-        self.missile.center_x = self.lander.center_x + 800
+        for i in range(6):
+            RocketLauncher(scene=self.scene, world=self.world)
 
         # Construct the minimap
         minimap_width = int(0.75 * self.game_camera.viewport_width)
@@ -179,17 +180,18 @@ class GameView(arcade.View):
 
     def update_minimap(self):
         # Want a mini-map: https://api.arcade.academy/en/latest/advanced/texture_atlas.html
-        def rescale_and_draw(sprites: List[arcade.Sprite], scale_multiplier: int):
-            for sprite in sprites:
-                sprite_world_wrapped = False
-                sprite.scale *= scale_multiplier
-                if sprite.center_x > WORLD_WIDTH - 2 * self.game_camera.viewport_width:
-                    sprite.center_x -= WORLD_WIDTH - 2 * self.game_camera.viewport_width
-                    sprite_world_wrapped = True
-                sprite.draw()
-                if sprite_world_wrapped:
-                    sprite.center_x += WORLD_WIDTH - 2 * self.game_camera.viewport_width
-                sprite.scale /= scale_multiplier
+        def rescale_and_draw(sprite_lists: List[arcade.SpriteList], scale_multiplier: int):
+            for sprite_list in sprite_lists:
+                for sprite in sprite_list:
+                    sprite_world_wrapped = False
+                    sprite.scale *= scale_multiplier
+                    if sprite.center_x > WORLD_WIDTH - 2 * self.game_camera.viewport_width:
+                        sprite.center_x -= WORLD_WIDTH - 2 * self.game_camera.viewport_width
+                        sprite_world_wrapped = True
+                    sprite.draw()
+                    if sprite_world_wrapped:
+                        sprite.center_x += WORLD_WIDTH - 2 * self.game_camera.viewport_width
+                    sprite.scale /= scale_multiplier
 
         # I show the repeated terrain in the minimap - I think this makes the most sense
         proj = 0, WORLD_WIDTH - 2 * self.game_camera.viewport_width, 0, WORLD_HEIGHT
@@ -199,7 +201,12 @@ class GameView(arcade.View):
             self.scene.get_sprite_list('Terrain Left Edge').draw()
             self.scene.get_sprite_list('Terrain Centre').draw()
             # Want the lander and the landing pad to stand out, rather than being tiny
-            rescale_and_draw([self.lander, self.landing_pad, self.missile], 4)
+            rescale_and_draw([self.scene[name] for name in ("Lander",
+                                                            "Landing Pad",
+                                                            "Air Enemies",
+                                                            "Missiles",
+                                                            "Ground Enemies",
+                                                            )], 4)
 
     def on_update(self, delta_time: float):
         self.scene.on_update(delta_time=delta_time)
