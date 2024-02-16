@@ -103,10 +103,10 @@ def check_for_collisions(scene: Scene, camera: Camera):
     ]
     general_object_spritelists = [
         scene["Lander"],
+        scene["Shields"],
         scene["Missiles"],
         scene["Air Enemies"],
         scene['Ground Enemies'],
-        scene["Shields"],  # Check owner is airborne
     ]
     lander: Lander = scene['Lander'].sprite_list[0] if scene['Lander'].sprite_list else None
     landing_pad: LandingPad = scene['Landing Pad'].sprite_list[0]
@@ -115,8 +115,8 @@ def check_for_collisions(scene: Scene, camera: Camera):
     for sprite in itertools.chain(scene['Lander'],
                                   scene['Shields'],
                                   scene['Missiles'],
-                                  scene['Ground Enemies'],
                                   scene['Air Enemies'],
+                                  scene['Ground Enemies'],
                                   scene['Explosions'],
                                   ):
 
@@ -180,8 +180,8 @@ def check_for_collision_with_landing_pad(sprite: Sprite, lander: Lander, landing
     return sprite_collided
 
 
-def check_for_collisions_general(sprite: Sprite, airborne_spritelists: List[SpriteList], scene: Scene, considered_collisions: set):
-    collisions = arcade.check_for_collision_with_lists(sprite, airborne_spritelists)
+def check_for_collisions_general(sprite: Sprite, general_object_spritelists: List[SpriteList], scene: Scene, considered_collisions: set):
+    collisions = arcade.check_for_collision_with_lists(sprite, general_object_spritelists)
     sprite_collided = False
     for collision in collisions:
         # Nothing to do if the sprite and the collision object are one and the same,
@@ -198,34 +198,45 @@ def check_for_collisions_general(sprite: Sprite, airborne_spritelists: List[Spri
         if (sprite in scene['Shields'] and not sprite.activated or
                 collision in scene['Shields'] and not collision.activated):
             # When a shield isn't activated, it isn't visible, and doesn't count as a collision
+            considered_collisions.add((sprite, collision))
             continue
 
-        # The lander and landing pad are special in that the lander can pass through the landing pads shield
-        # The landing pads shield should also protect it from explosions ...
-
-        # TODO: Code up explosion collisions
+        # Here I'm considering what happens where one side of the "collision" is an explosion
+        if {"Explosion"} == {sprite.__class__.__name__, collision.__class__.__name__}:
+            # Explosions touching each other does nothing - they've already exploded.  No more exploding to do.
+            continue
         if "Explosion" in {sprite.__class__.__name__, collision.__class__.__name__}:
+            # One side of this collision is an explosion.
+            for obj in [sprite, collision]:
+                if obj.__class__.__name__ == 'Explosion':
+                    # Nothing happens to the explosion itself
+                    continue
+                # But if an object comes into contact with an explsion and doesn't have an activated shield, it blows up
+                # (ie. If you're not a shield and don't have a shield, or you're not a shield and have a shield but it's
+                # deactivated, then you blow up)
+                if (obj.__class__.__name__ != 'Shield' and (getattr(obj, 'shield', None) is None or
+                                                            (shield := getattr(obj, 'shield', None)) is not None
+                                                            and shield.activated is False)):
+                    obj.die()
+                    # No direct velocity change.  ie. no "impact" from collision with an explosion, but it does exert a
+                    # force - this is seen in the force calculations for the object
             continue
 
         sprite_collided = True
-        # Currently I just make ground objects very heavy and don't alter their (zero) velocity
-        # Although I should really ignore their mass and just make objects bounce off, I think.
+        # This is the general collision bit.  I essentially treat a collision like two circles colliding.
+        # The resultant velocities depend on the respective masses, but ground objects don't suddenly start moving.
+        # (Currently I just make ground objects very heavy and don't alter their (zero) velocity,
+        # although I should really ignore their mass and just make objects bounce off, I think.)
         v1, v2 = circular_collision(sprite, collision)
-        if sprite in scene['Shields']:
-            if sprite.owner.on_ground is False:
-                sprite.owner.change_x, sprite.owner.change_y = v1[0] * (1/60), v1[1] * (1/60),
-        else:
-            if sprite.on_ground is False:
-                sprite.change_x, sprite.change_y = v1[0] * (1/60), v1[1] * (1/60)
-            sprite.die()
+        for obj, velocity in [(sprite, v1), (collision, v2)]:
+            if obj in scene['Shields']:
+                if obj.owner.on_ground is False:
+                    obj.owner.change_x, obj.owner.change_y = v1[0] * (1/60), v1[1] * (1/60),
+            else:
+                if obj.on_ground is False:
+                    obj.change_x, obj.change_y = v1[0] * (1/60), v1[1] * (1/60)
+                obj.die()
 
-        if collision in scene['Shields']:
-            if collision.owner.on_ground is False:
-                collision.owner.change_x, collision.owner.change_y = v2[0] * (1/60), v2[1] * (1/60)
-        else:
-            if collision.on_ground is False:
-                collision.change_x, collision.change_y = v2[0] * (1/60), v2[1] * (1/60)
-            collision.die()
     return sprite_collided
 
 
