@@ -7,6 +7,7 @@ from classes.lander import Lander
 from classes.shield import Shield
 from classes.game_object import GameObject
 from classes.explosion import Explosion
+from classes.world import World
 import itertools
 from typing import List
 from pyglet.math import Vec2
@@ -22,7 +23,7 @@ coefficient_of_restitution = {
     frozenset({"Explosion", "Missile"}): 0.1,
     frozenset({"Explosion", "Lander"}): 0.1,
     frozenset({"Shield", "Explosion"}): 0.1,
-    frozenset({"Shield", "Shield"}): 1,
+    frozenset({"Shield", "Shield"}): 3.5,  # For hostages, feels about right
     frozenset({"Shield", "Missile"}): 0.1,
     frozenset({"Shield", "Lander"}): 0.8,
     frozenset({'Shield', 'RocketLauncher'}): 0.5,
@@ -76,7 +77,7 @@ def circular_collision(sprite1: Sprite, sprite2: Sprite) -> Tuple[Tuple[float, f
     return v1, v2
 
 
-def check_for_collisions(scene: Scene, camera: Camera):
+def check_for_collisions(scene: Scene, camera: Camera, world: World):
 
     # Collisions with the terrain and the landing pad are one-sided collisions.
     # The terrain and landing pad are fixed and not impacted at all.
@@ -115,19 +116,20 @@ def check_for_collisions(scene: Scene, camera: Camera):
     landing_pad: LandingPad = scene['Landing Pad'].sprite_list[0]
 
     considered_collisions = set()
+    # The things below can hit each other.
+    # The things missed off (eg. terrain and ground enemies) can only be hit by these things
     for sprite in itertools.chain(scene['Lander'],
                                   scene['Shields'],
                                   scene['Missiles'],
                                   scene['Air Enemies'],
-                                  scene['Ground Enemies'],
                                   scene['Explosions'],
                                   ):
 
         is_collision = False
         # Terrain / Landing pad collisions don't affect the terrain / landing pad - it's only about what hit them
         is_collision |= check_for_collision_with_landing_pad(sprite, lander=lander, landing_pad=landing_pad, scene=scene)
-        is_collision |= check_for_collision_with_terrain(sprite, terrain_spritelists, scene)
-        is_collision |= check_for_collisions_general(sprite, general_object_spritelists, scene, considered_collisions)
+        is_collision |= check_for_collision_with_terrain(sprite, terrain_spritelists, scene, world)
+        is_collision |= check_for_collisions_general(sprite, general_object_spritelists, scene, considered_collisions, lander, camera)
         # shield colliding with shields is an elastic collision
 
         #is_collision |= check_for_collision_with_ground_enemies(sprite, terrain_spritelists, scene)
@@ -140,12 +142,13 @@ def check_for_collisions(scene: Scene, camera: Camera):
             camera.shake(vector,
                          speed=0.5,
                          damping=0.7)
-        # # TODO: check for other collisions
 
 
 def check_for_collision_with_landing_pad(sprite: Sprite, lander: Lander, landing_pad: LandingPad, scene: Scene) -> bool:
     # I have realized it should only ever be the lander that interacts with the landing pad,
     # because it will have its own force field that comes on automatically and will block everything except the lander
+    if sprite in scene['Ground Enemies']:
+        return False
     collision = arcade.check_for_collision(sprite, landing_pad)
     sprite_collided = bool(collision)
     if collision:
@@ -182,7 +185,24 @@ def check_for_collision_with_landing_pad(sprite: Sprite, lander: Lander, landing
     return sprite_collided
 
 
-def check_for_collisions_general(sprite: Sprite, general_object_spritelists: List[SpriteList], scene: Scene, considered_collisions: set):
+def check_for_collisions_general(sprite: Sprite, general_object_spritelists: List[SpriteList], scene: Scene, considered_collisions: set, lander: Lander, camera: Camera):
+    # Unfortunately, I've realized that checking for all these collisions slows the game down.
+    # A weakness of python arcade, that they may well fix in a later version
+    # https://api.arcade.academy/en/2.5.7/arcade_vs_pygame_performance.html#collision-detection
+    # I think my solution will be to simply secretly only check for non-"use_spatial_hash=True" collisions
+    # when the lander can see them.  ie. Non-terrain collisions off screen just won't happen
+    # Alternatively, I could simply decide that missiles can't collide with each other - that would make a significant
+    # difference and probably wouldn't affect the enjoyment of the game very much
+    camera_left = camera.position[0] - int(camera.viewport_width / 2)
+    camera_right = camera.position[0] + int(camera.viewport_width / 2)
+    camera_top = camera.position[1] + int(camera.viewport_height / 2)
+    camera_bottom = camera.position[1] - int(camera.viewport_height / 2)
+    if (sprite.right < camera_left
+            or sprite.left > camera_right
+            or sprite.top < camera_bottom
+            or sprite.bottom > camera_top):
+        return False
+
     collisions = arcade.check_for_collision_with_lists(sprite, general_object_spritelists)
     sprite_collided = False
     for collision in collisions:
@@ -241,10 +261,11 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
     return sprite_collided
 
 
-def check_for_collision_with_terrain(sprite: Sprite, terrain: List[SpriteList], scene: Scene):
-    if sprite in scene['Ground Enemies']:
-        # Enemies on the ground are always "colliding" with it - this doesn't count
-        pass
+def check_for_collision_with_terrain(sprite: Sprite, terrain: List[SpriteList], scene: Scene, world: World):
+    # Trying to find ways to speed up my collision checks.
+    # If the sprite is above the highest mountain, it's definitely not colliding with the terrain ...
+    if sprite.bottom > world.max_terrain_height:
+        return False
     elif sprite in scene['Shields'].sprite_list:
         shield: Shield = sprite
         if shield.activated:

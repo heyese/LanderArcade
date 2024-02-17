@@ -6,8 +6,8 @@ from arcade import Scene
 from classes.lander import Lander
 from classes.world import World
 from classes.landing_pad import LandingPad
-from classes.missile import Missile
-from classes.missile_launcher import RocketLauncher
+from classes.hostage import Hostage
+from classes.missile_launcher import MissileLauncher
 from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT, SPACE_START, SPACE_END
 import collisions
 
@@ -71,6 +71,7 @@ class GameView(arcade.View):
         self.scene.add_sprite_list("Shields")
         self.scene.add_sprite_list("Disabled Shields")
         self.scene.add_sprite_list('Engines')
+        self.scene.add_sprite_list("Hostages", use_spatial_hash=True)
         self.scene.add_sprite_list("Terrain Left Edge", use_spatial_hash=True)
         self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True)
         self.scene.add_sprite_list("Terrain Right Edge", use_spatial_hash=True)
@@ -103,8 +104,12 @@ class GameView(arcade.View):
         self.lander.change_y = -random.randint(10, 30) / 60
 
         # Let's try adding a missile
-        for i in range(6):
-            RocketLauncher(scene=self.scene, world=self.world)
+        for i in range(10):
+            MissileLauncher(scene=self.scene, world=self.world)
+
+        # Add the hostages
+        for i in range(3):
+            Hostage(scene=self.scene, world=self.world)
 
         # Construct the minimap
         minimap_width = int(0.75 * self.game_camera.viewport_width)
@@ -206,6 +211,7 @@ class GameView(arcade.View):
                                                             "Air Enemies",
                                                             "Missiles",
                                                             "Ground Enemies",
+                                                            "Hostages",
                                                             )], 4)
 
     def on_update(self, delta_time: float):
@@ -277,7 +283,7 @@ class GameView(arcade.View):
         self.fps_text.text = f"FPS: {arcade.get_fps():.0f}"
 
         # Check for collisions
-        collisions.check_for_collisions(self.scene, self.game_camera)
+        collisions.check_for_collisions(self.scene, self.game_camera, self.world)
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.lander.engine.angle = self.lander.angle

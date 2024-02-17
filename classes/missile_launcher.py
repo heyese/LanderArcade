@@ -11,13 +11,13 @@ from classes.engine import Engine
 from classes.lander import Lander
 
 
-class RocketLauncher(GameObject):
-    def __init__(self, scene: arcade.Scene, world: World, missile_interval: int = 10):
+class MissileLauncher(GameObject):
+    def __init__(self, scene: arcade.Scene, world: World, missile_interval: int = 100):
         super().__init__(scene=scene,
                          world=world,
                          filename="images/missile_launcher.png",
                          mass=300,
-                         scale=0.2 * SCALING,
+                         scale=0.3 * SCALING,
                          )
         self.scene.add_sprite("Ground Enemies", self)
         self.place_on_world()

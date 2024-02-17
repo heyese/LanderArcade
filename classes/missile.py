@@ -12,11 +12,11 @@ class Missile(GameObject):
                          world=world,
                          filename="images/missile.png",
                          mass=30,
-                         scale=0.2 * SCALING,
+                         scale=0.3 * SCALING,
                          )
         self.scene.add_sprite("Missiles", self)
         # Engine permanently on
-        self.engine = Engine(scene=scene, owner=self, fuel=20)
+        self.engine = Engine(scene=scene, owner=self, fuel=20, force=6000, scale=0.3)
         self.engine.engine_owner_offset = int(1.4 * self.height)
 
     def on_update(self, delta_time: float = 1 / 60):

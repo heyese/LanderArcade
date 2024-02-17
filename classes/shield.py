@@ -1,4 +1,7 @@
 import arcade
+from arcade import scene
+import itertools
+
 from classes.game_object import GameObject
 
 shield_disabled_when_collisions_exist_with = [
@@ -59,7 +62,7 @@ class Shield(arcade.SpriteCircle):
                 return
             # Except for the Landing Pad, Cannot enable shield when an object is already within the perimeter
             # If you try to, it is disabled for a small period
-            if self.owner not in self.scene["Landing Pad"].sprite_list:
+            if self.owner not in itertools.chain(self.scene["Landing Pad"], self.scene["Hostages"]):
                 collisions = arcade.check_for_collision_with_lists(self, [self.scene[i] for i in shield_disabled_when_collisions_exist_with])
                 for obj in collisions:
                     if obj in self.scene["Shields"] and not obj.activated:

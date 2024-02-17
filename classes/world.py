@@ -1,3 +1,5 @@
+import itertools
+
 import arcade
 import random
 from typing import Union, Tuple
@@ -28,7 +30,7 @@ class World:
         self.hill_height = hill_height if hill_height is not None else random.randint(20, 100) / 100
         self.hill_width = hill_width if hill_width is not None else random.randint(20, 100) / 100
         self.friction_coefficient = friction_coefficient if friction_coefficient is not None else random.randint(1, 5)
-
+        self.max_terrain_height = None
         self.camera_width = camera_width
         self.camera_height = camera_height
 
@@ -50,6 +52,8 @@ class World:
         self.scene.add_sprite_list("Terrain Left Edge", use_spatial_hash=True, sprite_list=self.terrain_left_edge)
         self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True, sprite_list=self.terrain_centre)
         self.scene.add_sprite_list("Terrain Right Edge", use_spatial_hash=True, sprite_list=self.terrain_right_edge)
+
+        self.max_terrain_height = max([r.height for r in itertools.chain(self.terrain_left_edge, self.terrain_centre)])
 
     def get_terrain(self, landing_pad_width_limit) -> Tuple[arcade.SpriteList, arcade.SpriteList, arcade.SpriteList]:
         # Generates a set of rectangles that's used as the terrain.
