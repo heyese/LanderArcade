@@ -21,8 +21,25 @@ class Lander(GameObject):
         self.disabled_shield = DisabledShield(scene=scene, owner=self)
         self.max_landing_angle = 20
         self.mouse_location = None  # Set by Game view.  Want Lander to face mouse on every update
-        self.landed: bool = False
+        self._landed: bool = False
         self.trying_to_activate_shield = False
+
+    @property
+    def landed(self):
+        return self._landed
+
+    @landed.setter
+    def landed(self, value: bool):
+        self._landed = value
+        if value:
+            # Refill fuel and recharge shield
+            self.engine.deactivate()
+            self.engine.refuel()
+            self.shield.recharge()
+            self.change_x = 0
+            self.change_y = 0
+            self.angle = 0
+            self.bottom = self.scene['Landing Pad'].sprite_list[0].top
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)

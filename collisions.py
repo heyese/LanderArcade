@@ -244,6 +244,19 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
             continue
 
         sprite_collided = True
+        # Is this collision between two shields, where one is a shielded ground object?
+        # In that case, that shield is essentially treated like the terrain - it is fixed in place,
+        # and the other object bounces off without losing energy.
+        if ({"Shield"} == {sprite.__class__.__name__, collision.__class__.__name__} and
+                True in {sprite.owner.on_ground, collision.owner.on_ground}):
+            if sprite.owner.on_ground:
+                point = (sprite.owner.center_x, sprite.owner.center_y)
+                collision_with_fixed_point(point_x=point[0], point_y=point[1], obj=collision.owner)
+            else:
+                point = (collision.owner.center_x, collision.owner.center_y)
+                collision_with_fixed_point(point_x=point[0], point_y=point[1], obj=sprite.owner)
+            continue
+
         # This is the general collision bit.  I essentially treat a collision like two circles colliding.
         # The resultant velocities depend on the respective masses, but ground objects don't suddenly start moving.
         # (Currently I just make ground objects very heavy and don't alter their (zero) velocity,
@@ -259,6 +272,19 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
                 obj.die()
 
     return sprite_collided
+
+
+def collision_with_fixed_point(*, point_x: int, point_y: int, obj: Sprite):
+    # Point to sprite centre vector (unit vector normal to plane)
+    n_x, n_y = unit_vector_from_pos1_to_pos2((point_x, point_y), (obj.center_x, obj.center_y))
+    # Tangential unit vector along plane
+    t_x, t_y = -n_y, n_x
+    # So want to project the existing movement vectors onto these vectors, then the tangential movement
+    # is preserved and the movement along the normal vector is reversed ...
+    normal_projection = dot((obj.change_x, obj.change_y), (n_x, n_y))
+    tangential_projection = dot((obj.change_x, obj.change_y), (t_x, t_y))
+    obj.change_x = -normal_projection * n_x + tangential_projection * t_x
+    obj.change_y = -normal_projection * n_y + tangential_projection * t_y
 
 
 def check_for_collision_with_terrain(sprite: Sprite, terrain: List[SpriteList], scene: Scene, world: World):
@@ -340,33 +366,24 @@ def check_for_shield_collision_with_rectangle_sprite(shield: Shield, rect: arcad
             corner_x, corner_y = rect.left, rect.top
         else:
             corner_x, corner_y = rect.right, rect.top
-        # Corner to shield centre vector (unit vector normal to plane)
-        n_x, n_y = unit_vector_from_pos1_to_pos2((corner_x, corner_y), (shield.center_x, shield.center_y))
-        # Tangential unit vector along plane
-        t_x, t_y = -n_y, n_x
-        # So want to project the existing movement vectors onto these vectors, then the tangential movement
-        # is preserved and the movement along the normal vector is reversed ...
-        normal_projection = dot((shield.owner.change_x, shield.owner.change_y), (n_x, n_y))
-        tangential_projection = dot((shield.owner.change_x, shield.owner.change_y), (t_x, t_y))
-        shield.owner.change_x = -normal_projection * n_x + tangential_projection * t_x
-        shield.owner.change_y = -normal_projection * n_y + tangential_projection * t_y
-        shield.center_x += -normal_projection * n_x + tangential_projection * t_x
-        shield.center_y += -normal_projection * n_y + tangential_projection * t_y
+
+        collision_with_fixed_point(point_x=corner_x, point_y=corner_y, obj=shield.owner)
+
         # In edge cases, we can get trapped in a rect - ie. after flipping the normal projection of our vector,
         # we're still colliding, so we then flip it again, which obviously doesn't work.
         # So below I keep pushing in the same direction until we're no longer colliding ...
         repeats = 0
-        while arcade.check_for_collision(shield, rect):
-            repeats += 1
-            shield.owner.center_x += (-normal_projection * n_x + tangential_projection * t_x) * repeats
-            shield.owner.center_y += (-normal_projection * n_y + tangential_projection * t_y) * repeats
-            shield.center_x += (-normal_projection * n_x + tangential_projection * t_x) * repeats
-            shield.center_y += (-normal_projection * n_y + tangential_projection * t_y) * repeats
-            if repeats == 10:
-                # Something's gone wrong - we're stuck!
-                # Disable the shield to let the user know something's gone wrong
-                shield.disable()
-                break
+        # while arcade.check_for_collision(shield, rect):
+        #     repeats += 1
+        #     shield.owner.center_x += (-normal_projection * n_x + tangential_projection * t_x) * repeats
+        #     shield.owner.center_y += (-normal_projection * n_y + tangential_projection * t_y) * repeats
+        #     shield.center_x += (-normal_projection * n_x + tangential_projection * t_x) * repeats
+        #     shield.center_y += (-normal_projection * n_y + tangential_projection * t_y) * repeats
+        #     if repeats == 10:
+        #         # Something's gone wrong - we're stuck!
+        #         # Disable the shield to let the user know something's gone wrong
+        #         shield.disable()
+        #         break
 
 
 

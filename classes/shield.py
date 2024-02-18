@@ -17,7 +17,7 @@ shield_disabled_when_collisions_exist_with = [
 
 class Shield(arcade.SpriteCircle):
     """The shield - a sprite that stays centred on the owner and can be activated / deactivated"""
-    def __init__(self, scene: arcade.Scene, owner: arcade.Sprite, radius: int = None, power: int = 100):
+    def __init__(self, scene: arcade.Scene, owner: arcade.Sprite, radius: int = None, charge: int = 100):
         if radius is None:
             radius = int(max(owner.height, owner.width) * 1.5)
         super().__init__(radius=radius,
@@ -25,12 +25,16 @@ class Shield(arcade.SpriteCircle):
                          color=(0, 255, 255, 50))
         self.owner: GameObject = owner
         self.visible = False
-        self.power = power
+        self.initial_charge = charge
+        self.charge = charge
         self.activated = False
         self.scene = scene
         self.scene.add_sprite('Shields', self)
         self.disabled = False
         self.disabled_timer = None
+
+    def recharge(self):
+        self.charge = self.initial_charge
 
     def on_update(self, delta_time: float = 1 / 60):
         # Stay centred on the lander
@@ -38,8 +42,8 @@ class Shield(arcade.SpriteCircle):
         self.center_y = self.owner.center_y
         # If activated, use up some power
         if self.activated:
-            self.power = max(self.power - delta_time, 0)
-            if self.power == 0:
+            self.charge = max(self.charge - delta_time, 0)
+            if self.charge == 0:
                 self.deactivate()
         # If disabled (ie. someone tried to activate it whilst an object was within its perimeter), count down to being un-disabled
         if self.disabled:
@@ -57,7 +61,7 @@ class Shield(arcade.SpriteCircle):
 
     def activate(self):
         if self.disabled is False:
-            if not self.power:
+            if not self.charge:
                 self.disabled = True
                 return
             # Except for the Landing Pad, Cannot enable shield when an object is already within the perimeter

@@ -46,6 +46,7 @@ class GameView(arcade.View):
         # The HUD text
         self.fuel_text = None
         self.shield_text = None
+        self.hostages_text = None
         self.level_text = None
         self.score_text = None
         self.gravity_text = None
@@ -109,7 +110,7 @@ class GameView(arcade.View):
 
         # Add the hostages
         for i in range(3):
-            Hostage(scene=self.scene, world=self.world)
+            Hostage(scene=self.scene, world=self.world, lander=self.lander)
 
         # Construct the minimap
         minimap_width = int(0.75 * self.game_camera.viewport_width)
@@ -128,8 +129,8 @@ class GameView(arcade.View):
             centre_x=(3 * self.window.width + self.minimap_sprite.width) // 4,
             centre_y=self.window.height - self.minimap_sprite.height // 2
         )
-        self.level_text, self.score_text, self.fps_text = self.scaled_and_centred_text(
-            texts=["Level: XXXX", 'Score: XXXX', 'FPS: XXXX'],
+        self.level_text, self.score_text, self.hostages_text, self.fps_text = self.scaled_and_centred_text(
+            texts=["Level: XXXX", 'Score: XXXX', 'Hostages: X', 'FPS: XXXX'],
             width=(self.window.width - self.minimap_sprite.width) // 2,
             height=int(self.minimap_sprite.height),
             centre_x=(self.window.width - self.minimap_sprite.width) // 4,
@@ -269,17 +270,18 @@ class GameView(arcade.View):
             self.pan_camera_to_lander(panning_fraction=0.04)
 
         # Check to see if the level's been completed!
-        if self.lander.landed:
+        if self.lander.landed and len(self.scene['Hostages']) == 0:
             self.window.show_view(NextLevelView(level=self.level, score=self.score))
 
         # Update the minimap
         self.update_minimap()
 
         self.fuel_text.text = f"FUEL: {self.lander.engine.fuel:.0f}"
-        self.shield_text.text = f"SHIELD: {self.lander.shield.power:.0f}"
+        self.shield_text.text = f"SHIELD: {self.lander.shield.charge:.0f}"
         self.level_text.text = f"LEVEL: {self.level:.0f}"
         self.score_text.text = f"SCORE: {self.score:.0f}"
         self.gravity_text.text = f"GRAVITY: {self.world.gravity:.0f}"
+        self.hostages_text.text = f"HOSTAGES: {len(self.scene['Hostages'])}"
         self.fps_text.text = f"FPS: {arcade.get_fps():.0f}"
 
         # Check for collisions
@@ -366,5 +368,8 @@ class GameView(arcade.View):
         # Draw the overlay - minimap, fuel, shield, etc.
         self.overlay_camera.use()
         self.minimap_sprite_list.draw()
-        for text in [self.level_text, self.score_text, self.gravity_text, self.fuel_text, self.shield_text, self.fps_text]:
+        for text in [self.level_text, self.score_text,
+                     self.gravity_text, self.fuel_text,
+                     self.shield_text, self.hostages_text,
+                     self.fps_text]:
             text.draw()

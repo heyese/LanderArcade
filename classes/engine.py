@@ -1,5 +1,6 @@
 import arcade
 import math
+
 from constants import SCALING
 
 
@@ -23,11 +24,15 @@ class Engine(arcade.Sprite):
         self.activated = False
         self.force = force
         self.fuel = fuel
+        self.initial_fuel = fuel
         self.scale = scale * SCALING
         self.burn_rate = 1
         self._boosted = False
         self.engine_owner_offset = engine_owner_offset if engine_owner_offset is not None else self.owner.height
         self.scene.add_sprite('Engines', self)
+
+    def refuel(self):
+        self.fuel = self.initial_fuel
 
     @property
     def boosted(self):
@@ -49,6 +54,17 @@ class Engine(arcade.Sprite):
         if self.fuel:
             self.visible = True
             self.activated = True
+            # Are we trying to take off after having landed?
+            # Want to ensure we don't just immediately land again
+            if self.owner.__class__.__name__ == ('Lander'):
+                from classes.lander import Lander
+                lander: Lander = self.owner
+                if lander.landed:
+                    lander.landed = False
+                    # Tiny bit of a start so we don't stay in contact with the landing pad
+                    # Also requires user to thrust fairly straight upwards, which I think is intuitive.
+                    lander.center_y += 5
+
 
     def deactivate(self):
         self.visible = False
