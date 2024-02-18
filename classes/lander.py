@@ -57,5 +57,3 @@ class Lander(GameObject):
         x_left = self.center_x - length * math.sin(self.max_landing_angle * math.pi / 180)
         x_right = self.center_x + length * math.sin(self.max_landing_angle * math.pi / 180)
         arcade.draw_polygon_filled(point_list=[(x_left, y), (self.center_x, self.center_y), (x_right, y)], color=(*arcade.color.WHITE_SMOKE, 20))
-
-
