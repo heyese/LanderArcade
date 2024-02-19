@@ -1,10 +1,14 @@
+from __future__ import annotations
 import arcade
 import math
 from constants import SCALING, SPACE_END
-from classes.world import World
+import collisions
 from classes.game_object import GameObject
-from classes.shield import Shield, DisabledShield
 from classes.engine import Engine
+from typing import TYPE_CHECKING
+from classes.shield import Shield, DisabledShield
+if TYPE_CHECKING:
+    from classes.world import World
 
 
 class Lander(GameObject):
@@ -23,6 +27,8 @@ class Lander(GameObject):
         self.mouse_location = None  # Set by Game view.  Want Lander to face mouse on every update
         self._landed: bool = False
         self.trying_to_activate_shield = False
+        self._hostages_being_rescued = set()
+        self._tractor_beam_timer: float = 0
 
     @property
     def landed(self):
@@ -43,6 +49,19 @@ class Lander(GameObject):
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)
+        # Are there any hostages that are close enough to rescue?
+        for hostage in self.scene["Hostages"]:
+            distance_to_hostage = collisions.modulus((hostage.center_x - self.center_x, hostage.center_y - self.center_y))
+            if distance_to_hostage <= hostage.rescue_distance:
+                hostage.being_rescued = True
+                self._hostages_being_rescued.add(hostage)
+            elif hostage.being_rescued:
+                hostage.being_rescued = False
+                self._hostages_being_rescued.remove(hostage)
+        if self._hostages_being_rescued:
+            self._tractor_beam_timer += delta_time
+        else:
+            self._tractor_beam_timer = 0
 
     def determine_force_y(self, force_y):
         force_y = super().determine_force_y(force_y)
@@ -57,3 +76,6 @@ class Lander(GameObject):
         x_left = self.center_x - length * math.sin(self.max_landing_angle * math.pi / 180)
         x_right = self.center_x + length * math.sin(self.max_landing_angle * math.pi / 180)
         arcade.draw_polygon_filled(point_list=[(x_left, y), (self.center_x, self.center_y), (x_right, y)], color=(*arcade.color.WHITE_SMOKE, 20))
+
+    def draw_tractor_bream(self):
+        pass

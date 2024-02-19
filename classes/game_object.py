@@ -1,7 +1,10 @@
+from __future__ import annotations
 import arcade
 import math
 from constants import SCALING, SPACE_START, SPACE_END
-from classes.world import World
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from classes.world import World
 
 
 class GameObject(arcade.Sprite):

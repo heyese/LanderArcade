@@ -1,3 +1,11 @@
+from __future__ import annotations
+import arcade
+import random
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from classes.lander import Lander
+    from classes.world import World
+
 
 # I like the idea of having a pad that "opens up" - ie. 3 rectangles, the middle one which is flat that you
 # actually land on, and the other two both at an angle so as to cover the main pad up.
@@ -8,12 +16,6 @@
 # Contact with the side panels would blow the ship up
 
 # Not figured out how to do all that yet, so for now, lets just do a landing pad
-
-import arcade
-import random
-from classes.lander import Lander
-from classes.world import World
-from classes.shield import Shield
 
 
 class LandingPad(arcade.SpriteSolidColor):

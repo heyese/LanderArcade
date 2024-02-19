@@ -1,8 +1,8 @@
+from __future__ import annotations
 import arcade
-from arcade import scene
 import itertools
-
 from classes.game_object import GameObject
+
 
 shield_disabled_when_collisions_exist_with = [
     "Terrain Left Edge",

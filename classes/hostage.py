@@ -1,13 +1,14 @@
+from __future__ import annotations
 import arcade
 import itertools
-
-import collisions
 from constants import SCALING
-from classes.world import World
+import random
 from classes.game_object import GameObject
 from classes.shield import Shield
-from classes.lander import Lander
-import random
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from classes.world import World
+    from classes.lander import Lander
 
 
 class Hostage(GameObject):
@@ -28,12 +29,20 @@ class Hostage(GameObject):
         self.rescued: bool = False
         self.shield.activate()  # Hostage shield is permanently activated
         self.place_on_world()
-        self.rescue_distance = 5 * self.lander.height
+        self.being_rescued: bool = False
+        self.rescue_distance = 15 * self.lander.height
         self.rescue_timer = 5  # seconds
         self._current_timer = self.rescue_timer
 
     def on_update(self, delta_time: float = 1 / 60):
-        self.rescue(delta_time)
+        if self.being_rescued:
+            self._current_timer -= delta_time
+            if self._current_timer <= 0:
+                # Hostage has been rescued!
+                self.remove_from_sprite_lists()
+                self.shield.remove_from_sprite_lists()
+        else:
+            self._current_timer = self.rescue_timer
 
     def place_on_world(self):
         wide_enough_rectangles = [r for r in itertools.chain(self.world.terrain_left_edge,
@@ -56,15 +65,3 @@ class Hostage(GameObject):
             # No space for this missile launcher, so we don't create it
             self.remove_from_sprite_lists()
 
-    def rescue(self, delta_time: float):
-        # If the lander can be close enough to a hostage for an amount of time,
-        # the hostage is beamed aboard!
-        lander_vector = (self.lander.center_x - self.center_x, self.lander.center_y - self.center_y)
-        if collisions.modulus(lander_vector) <= self.rescue_distance:
-            self._current_timer -= delta_time
-            if self._current_timer <= 0:
-                # Hostage has been rescued!
-                self.remove_from_sprite_lists()
-                self.shield.remove_from_sprite_lists()
-        else:
-            self._current_timer = self.rescue_timer

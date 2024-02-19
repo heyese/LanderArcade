@@ -1,5 +1,4 @@
 import itertools
-
 import arcade
 import random
 from typing import Union, Tuple

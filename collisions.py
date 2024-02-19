@@ -1,17 +1,21 @@
+from __future__ import annotations
 import arcade
 from arcade import Sprite, Scene, SpriteList, Camera
 from typing import Tuple
 import math
-from classes.landing_pad import LandingPad
-from classes.lander import Lander
-from classes.shield import Shield
-from classes.game_object import GameObject
-from classes.explosion import Explosion
-from classes.world import World
 import itertools
 from typing import List
 from pyglet.math import Vec2
-import random
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from classes.landing_pad import LandingPad
+    from classes.lander import Lander
+    from classes.shield import Shield
+    from classes.game_object import GameObject
+    from classes.explosion import Explosion
+    from classes.world import World
+
+
 
 # The coefficient of restitution epsilon (e), is the ratio of the final to initial relative speed between two objects
 # after they collide. It normally ranges from 0 to 1 where 1 would be a perfectly elastic collision.
@@ -238,7 +242,11 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
                 if (obj.__class__.__name__ != 'Shield' and (getattr(obj, 'shield', None) is None or
                                                             (shield := getattr(obj, 'shield', None)) is not None
                                                             and shield.activated is False)):
-                    obj.die()
+                    # I've seen examples where the shield collision detection hasn't worked, so that even if the shield
+                    # is enabled it's collision has been missed and then the central sprite has exploded on impact
+                    # So I make what should be a redundant check for an activated shield here
+                    if (shield := getattr(obj, 'shield', None)) and not shield.activated:
+                        obj.die()
                     # No direct velocity change.  ie. no "impact" from collision with an explosion, but it does exert a
                     # force - this is seen in the force calculations for the object
             continue

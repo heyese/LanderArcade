@@ -1,11 +1,11 @@
-
-
+from __future__ import annotations
 import arcade
-from classes.game_object import GameObject
-from classes.world import World
-from constants import SCALING
-from typing import List
 import random
+from classes.game_object import GameObject
+from constants import SCALING
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from classes.world import World
 
 # How on earth are explosions going to work ... ?
 # Explosions will exert a force on mobile objects they come into contact with,

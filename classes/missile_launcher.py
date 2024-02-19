@@ -1,14 +1,13 @@
-from xml.dom.minidom import Entity
-
+from __future__ import annotations
 import arcade
 from constants import SCALING, WORLD_WIDTH
-from classes.world import World
-from classes.game_object import GameObject
-from classes.missile import Missile
 import random
 import itertools
-from classes.engine import Engine
-from classes.lander import Lander
+from classes.game_object import GameObject
+from classes.missile import Missile
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from classes.world import World
 
 
 class MissileLauncher(GameObject):

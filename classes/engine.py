@@ -1,6 +1,5 @@
 import arcade
 import math
-
 from constants import SCALING
 
 
