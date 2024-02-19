@@ -2,10 +2,10 @@ from __future__ import annotations
 import arcade
 from constants import SCALING, WORLD_WIDTH
 from classes.game_object import GameObject
+from classes.engine import Engine
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from classes.world import World
-    from classes.engine import Engine
     from classes.lander import Lander
 
 

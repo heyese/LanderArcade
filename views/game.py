@@ -105,7 +105,7 @@ class GameView(arcade.View):
         self.lander.change_y = -random.randint(10, 30) / 60
 
         # Let's try adding a missile
-        for i in range(10):
+        for i in range(5):
             MissileLauncher(scene=self.scene, world=self.world)
 
         # Add the hostages
@@ -361,6 +361,7 @@ class GameView(arcade.View):
         self.world.background_shapes.draw()  # This is not a sprite, so not covered by scene.draw()
         if self.landing_pad.activated and self.lander.dead is False:
             self.lander.draw_landing_angle_guide()
+        self.lander.draw_tractor_bream()
         # Draw game sprites
         self.scene.draw()
 

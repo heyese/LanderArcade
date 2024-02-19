@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class MissileLauncher(GameObject):
-    def __init__(self, scene: arcade.Scene, world: World, missile_interval: int = 100):
+    def __init__(self, scene: arcade.Scene, world: World, missile_interval: int = 15):
         super().__init__(scene=scene,
                          world=world,
                          filename="images/missile_launcher.png",

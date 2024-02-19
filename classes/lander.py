@@ -49,7 +49,7 @@ class Lander(GameObject):
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)
-        # Are there any hostages that are close enough to rescue?
+        # Create list of the rescuers we are currently rescuing
         for hostage in self.scene["Hostages"]:
             distance_to_hostage = collisions.modulus((hostage.center_x - self.center_x, hostage.center_y - self.center_y))
             if distance_to_hostage <= hostage.rescue_distance:
@@ -58,10 +58,15 @@ class Lander(GameObject):
             elif hostage.being_rescued:
                 hostage.being_rescued = False
                 self._hostages_being_rescued.remove(hostage)
+
+        # If we're still rescuing anyone - animate the tractor beam!
         if self._hostages_being_rescued:
             self._tractor_beam_timer += delta_time
         else:
             self._tractor_beam_timer = 0
+
+    def hostage_rescued(self, hostage):
+        self._hostages_being_rescued.remove(hostage)
 
     def determine_force_y(self, force_y):
         force_y = super().determine_force_y(force_y)
@@ -78,4 +83,13 @@ class Lander(GameObject):
         arcade.draw_polygon_filled(point_list=[(x_left, y), (self.center_x, self.center_y), (x_right, y)], color=(*arcade.color.WHITE_SMOKE, 20))
 
     def draw_tractor_bream(self):
-        pass
+        # When we're rescuing hostages, we're using the tractor beam!
+        period = 1  # seconds
+        alpha_range = (20, 150)
+        if self._tractor_beam_timer:
+            alpha = int(sum(alpha_range) / 2 + math.sin(self._tractor_beam_timer * 2 * math.pi / period) * (alpha_range[1] - alpha_range[0]) / 2)
+            for hostage in self._hostages_being_rescued:
+                points = [(self.center_x, self.center_y), (hostage.left - hostage.width, hostage.bottom), (hostage.right + hostage.width, hostage.bottom)]
+                arcade.draw_polygon_filled(point_list=points, color=(*arcade.color.RUBY_RED, alpha))
+
+

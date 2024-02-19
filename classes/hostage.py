@@ -26,11 +26,10 @@ class Hostage(GameObject):
         self.engine = None
         self.shield = Shield(scene=scene, owner=self, charge=9999)  # Effectively infinite
         self.disabled_shield = None
-        self.rescued: bool = False
         self.shield.activate()  # Hostage shield is permanently activated
         self.place_on_world()
         self.being_rescued: bool = False
-        self.rescue_distance = 15 * self.lander.height
+        self.rescue_distance = 6 * self.lander.height
         self.rescue_timer = 5  # seconds
         self._current_timer = self.rescue_timer
 
@@ -41,6 +40,7 @@ class Hostage(GameObject):
                 # Hostage has been rescued!
                 self.remove_from_sprite_lists()
                 self.shield.remove_from_sprite_lists()
+                self.lander.hostage_rescued(self)
         else:
             self._current_timer = self.rescue_timer
 
