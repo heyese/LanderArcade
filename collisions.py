@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import random
+
 import arcade
 from arcade import Sprite, Scene, SpriteList, Camera
 from typing import Tuple
@@ -214,9 +217,9 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
         # or if one is the shield of the other,
         # or if we've already dealt with this case
         if (sprite == collision
-                or sprite.__class__.__name__ == 'Shield' and sprite.owner == collision
-                or collision.__class__.__name__ == 'Shield' and collision.owner == sprite
-                or (collision, sprite) in considered_collisions):
+                or (sprite.__class__.__name__ == 'Shield' and sprite.owner == collision)
+                or (collision.__class__.__name__ == 'Shield' and collision.owner == sprite)
+                or ((collision, sprite) in considered_collisions)):
             continue
         else:
             considered_collisions.add((sprite, collision))
@@ -236,17 +239,15 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
                 if obj.__class__.__name__ == 'Explosion':
                     # Nothing happens to the explosion itself
                     continue
-                # But if an object comes into contact with an explsion and doesn't have an activated shield, it blows up
+                # But if an object comes into contact with an explosion and doesn't have an activated shield, it blows up
                 # (ie. If you're not a shield and don't have a shield, or you're not a shield and have a shield but it's
                 # deactivated, then you blow up)
-                if (obj.__class__.__name__ != 'Shield' and (getattr(obj, 'shield', None) is None or
-                                                            (shield := getattr(obj, 'shield', None)) is not None
-                                                            and shield.activated is False)):
-                    # I've seen examples where the shield collision detection hasn't worked, so that even if the shield
-                    # is enabled it's collision has been missed and then the central sprite has exploded on impact
-                    # So I make what should be a redundant check for an activated shield here
-                    if (shield := getattr(obj, 'shield', None)) and not shield.activated:
-                        obj.die()
+                if (obj.__class__.__name__ != 'Shield' and (
+                        getattr(obj, 'shield', None) is None or
+                        ((shield := getattr(obj, 'shield', None)) is not None and shield.activated is False))
+
+            ):
+                    obj.die()
                     # No direct velocity change.  ie. no "impact" from collision with an explosion, but it does exert a
                     # force - this is seen in the force calculations for the object
             continue
@@ -437,3 +438,39 @@ def check_for_shield_collision_with_rectangle_sprite(shield: Shield, rect: arcad
 #
 #         self.die()
 
+def place_on_world(sprite: Sprite, world: World, scene: Scene):
+    # Idea here is that I have a sprite I want to place on the terrain, but want to make sure
+    # it doesn't collide with something already there.
+    # Note the sprite lists that make up the items on the terrain below.
+    # I make a list of all the surfaces of the terrain rectangles, then
+    # split up those surfaces that already have an object on them into the free bits,
+    # then filter out every bit that's not wide enough for the sprite, then
+    # pick one of the remaining surface bits at random and place the sprite
+    # somewhere on it at random
+
+    surfaces = [((r.left, r.right), r.top) for r in world.terrain_left_edge.sprite_list + world.terrain_centre.sprite_list]
+    for spr in itertools.chain(*[scene[group].sprite_list for group in ("Landing Pad",
+                                                                        "Ground Enemies",
+                                                                        "Hostages")]):
+        # Find the surface the sprite is on, then split that surface into the two remaining segments
+        for s in surfaces[:]:
+            (x_left, x_right), y = s
+            left = spr.shield.left if getattr(spr, 'shield', None) else spr.left
+            right = spr.shield.right if getattr(spr, 'shield', None) else spr.right
+            if x_left <= left and right <= x_right:
+                surfaces.remove(s)
+                surfaces.extend([((x_left, left), y), ((right, x_right), y)])
+
+    # Surfaces is now a list of the free spaces on top of the terrain.
+    # Any of these that's wide enough will work for whatever we're placing on the world
+    surfaces = [s for s in surfaces if s[0][1] - s[0][0] > sprite.width]
+    if not surfaces:
+        # There are no free spaces on the terrain for the sprite
+        return False
+    # Pick one of the surfaces for the sprite
+    random.shuffle(surfaces)
+    ((x_left, x_right), y) = surfaces[0]
+    # Now we have chosen the surface, we can choose exactly where on the surface.
+    sprite.left = random.randint(x_left, x_right - sprite.width)
+    sprite.bottom = y
+    return True

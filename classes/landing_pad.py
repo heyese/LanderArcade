@@ -1,6 +1,10 @@
 from __future__ import annotations
+
+import itertools
+
 import arcade
 import random
+import collisions
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from classes.lander import Lander
@@ -33,8 +37,13 @@ class LandingPad(arcade.SpriteSolidColor):
         self._safe_to_land = False  # Property
         # Put the landing pad onto the world ...
         self.scene = scene
-        self.scene.add_sprite("Landing Pad", self)
-        self.place_landing_pad_on_world()
+        if collisions.place_on_world(self, world, scene):
+            self.scene.add_sprite("Landing Pad", self)
+        else:
+            # I think I've ensured we can always place the landing pad!  Just need to ensure
+            # we try to place it before any other ground objects
+            raise ValueError("No space on world terrain to place Landing Pad")
+
         # LandingPad has effectively infinite shield
         # but disabling shield for now - bit complicated to implement, and want the game to evolve a bit first
         #self.shield = Shield(scene=self.scene, owner=self, radius=int(1.5*self.width), power=999)
@@ -87,15 +96,3 @@ class LandingPad(arcade.SpriteSolidColor):
         # else:
         #     self.shield.deactivate()
 
-
-    def place_landing_pad_on_world(self):
-        # So I need to find a flat space wide enough on the world surface for the pad and it's shield
-        # List all rectangles with large enough width and then pick one at random?
-
-        wide_enough_rectangles = [r for r in self.world.terrain_centre
-                                  if r.width >= self.width
-                                  and not arcade.check_for_collision_with_lists(self, [self.scene['Ground Enemies'],
-                                                                                       self.scene['Landing Pad']])]
-        chosen_rect = wide_enough_rectangles[random.randrange(len(wide_enough_rectangles))]
-        self.center_x = chosen_rect.center_x
-        self.bottom = chosen_rect.top
