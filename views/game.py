@@ -57,7 +57,6 @@ class GameView(arcade.View):
 
         # Set the background color
         arcade.set_background_color(BACKGROUND_COLOR)
-        # Have a camera shake on impact  (arcade.camera.shake)
 
         self.scene = arcade.Scene()
 
@@ -65,17 +64,17 @@ class GameView(arcade.View):
         # If we draw the engines before their owners, the angles aren't quite right
         self.scene.add_sprite_list("Explosions")
         self.scene.add_sprite_list("Lander")
-        self.scene.add_sprite_list("Landing Pad", use_spatial_hash=True)
         self.scene.add_sprite_list("Missiles")
         self.scene.add_sprite_list("Air Enemies")
-        self.scene.add_sprite_list("Ground Enemies", use_spatial_hash=True)
-        self.scene.add_sprite_list("Shields")
         self.scene.add_sprite_list("Disabled Shields")
         self.scene.add_sprite_list('Engines')
-        self.scene.add_sprite_list("Hostages", use_spatial_hash=True)
         self.scene.add_sprite_list("Terrain Left Edge", use_spatial_hash=True)
         self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True)
         self.scene.add_sprite_list("Terrain Right Edge", use_spatial_hash=True)
+        self.scene.add_sprite_list("Ground Enemies", use_spatial_hash=True)
+        self.scene.add_sprite_list("Hostages", use_spatial_hash=True)
+        self.scene.add_sprite_list("Landing Pad", use_spatial_hash=True)
+        self.scene.add_sprite_list("Shields")
 
         self.level = level  # Ultimately want to use this to develop the game in later levels
         self.score = score
@@ -236,7 +235,13 @@ class GameView(arcade.View):
 
         # First, just deal with sprite positions.  Then consider the camera.
         # Landing pad is effectively terrain.  Shields and Engines move themselves, as centred on owner
-        non_terrain_spritelist_names = ["Lander", "Missiles", "Air Enemies", "Ground Enemies", "Explosions"]
+        non_terrain_spritelist_names = ["Lander",
+                                        "Missiles",
+                                        "Air Enemies",
+                                        "Ground Enemies",
+                                        "Explosions",
+                                        "Hostages"]
+
         non_terrain_spritelists = [self.scene[i] for i in non_terrain_spritelist_names]
         non_terrain_sprites = [s for i in non_terrain_spritelists for s in i]
         # Flip all sprites from one side to the other

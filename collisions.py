@@ -455,15 +455,18 @@ def place_on_world(sprite: Sprite, world: World, scene: Scene):
         # Find the surface the sprite is on, then split that surface into the two remaining segments
         for s in surfaces[:]:
             (x_left, x_right), y = s
-            left = spr.shield.left if getattr(spr, 'shield', None) else spr.left
-            right = spr.shield.right if getattr(spr, 'shield', None) else spr.right
+            left = spr.shield.left if getattr(spr, 'shield', None) is not None else spr.left
+            right = spr.shield.right if getattr(spr, 'shield', None) is not None else spr.right
             if x_left <= left and right <= x_right:
                 surfaces.remove(s)
                 surfaces.extend([((x_left, left), y), ((right, x_right), y)])
 
     # Surfaces is now a list of the free spaces on top of the terrain.
     # Any of these that's wide enough will work for whatever we're placing on the world
-    surfaces = [s for s in surfaces if s[0][1] - s[0][0] > sprite.width]
+
+    # Bit confusing, but want to consider potential sprite shield when thinking of the sprite width
+    sprite_width = sprite.width if not getattr(sprite, 'shield', None) else sprite.shield.width
+    surfaces = [s for s in surfaces if s[0][1] - s[0][0] > sprite_width]
     if not surfaces:
         # There are no free spaces on the terrain for the sprite
         return False
@@ -471,6 +474,6 @@ def place_on_world(sprite: Sprite, world: World, scene: Scene):
     random.shuffle(surfaces)
     ((x_left, x_right), y) = surfaces[0]
     # Now we have chosen the surface, we can choose exactly where on the surface.
-    sprite.left = random.randint(x_left, x_right - sprite.width)
+    sprite.center_x = random.randint(x_left + int(sprite_width / 2), x_right - int(sprite_width / 2))
     sprite.bottom = y
     return True

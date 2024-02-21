@@ -28,13 +28,13 @@ class Hostage(GameObject):
         self.rescue_distance = 6 * self.lander.height
         self.rescue_timer = 5  # seconds
         self._current_timer = self.rescue_timer
+        self.shield = Shield(scene=scene, owner=self, charge=9999)  # Effectively infinite
+        self.disabled_shield = None
         if collisions.place_on_world(self, world, scene):
             # If we can't place the object on the world, we never add it to a sprite list.
             # It's just forgotten about
             self.scene.add_sprite("Hostages", self)
-        self.shield = Shield(scene=scene, owner=self, charge=9999)  # Effectively infinite
-        self.shield.activate()  # Hostage shield is permanently activated
-        self.disabled_shield = None
+            self.shield.activate()  # Hostage shield is permanently activated
 
     def on_update(self, delta_time: float = 1 / 60):
         if self.being_rescued:
