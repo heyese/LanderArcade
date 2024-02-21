@@ -452,14 +452,14 @@ def place_on_world(sprite: Sprite, world: World, scene: Scene):
     for spr in itertools.chain(*[scene[group].sprite_list for group in ("Landing Pad",
                                                                         "Ground Enemies",
                                                                         "Hostages")]):
+        spr = spr if not getattr(spr, 'shield', None) else spr.shield
+
         # Find the surface the sprite is on, then split that surface into the two remaining segments
         for s in surfaces[:]:
             (x_left, x_right), y = s
-            left = spr.shield.left if getattr(spr, 'shield', None) is not None else spr.left
-            right = spr.shield.right if getattr(spr, 'shield', None) is not None else spr.right
-            if x_left <= left and right <= x_right:
+            if x_left <= spr.left and spr.right <= x_right:
                 surfaces.remove(s)
-                surfaces.extend([((x_left, left), y), ((right, x_right), y)])
+                surfaces.extend([((x_left, spr.left), y), ((spr.right, x_right), y)])
 
     # Surfaces is now a list of the free spaces on top of the terrain.
     # Any of these that's wide enough will work for whatever we're placing on the world
@@ -474,6 +474,6 @@ def place_on_world(sprite: Sprite, world: World, scene: Scene):
     random.shuffle(surfaces)
     ((x_left, x_right), y) = surfaces[0]
     # Now we have chosen the surface, we can choose exactly where on the surface.
-    sprite.center_x = random.randint(x_left + int(sprite_width / 2), x_right - int(sprite_width / 2))
+    sprite.center_x = random.randint(int(x_left + sprite_width / 2), int(x_right - sprite_width / 2))
     sprite.bottom = y
     return True

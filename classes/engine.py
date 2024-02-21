@@ -10,8 +10,7 @@ class Engine(arcade.Sprite):
                  fuel: int = 100,
                  force: int = 5000,
                  scale: float = 0.3,
-                 engine_owner_offset: int = None
-):
+                 engine_owner_offset: int = None):
         super().__init__()
         self.scene = scene
         self.textures = [arcade.load_texture("images/thrust_1.png"),
@@ -63,7 +62,6 @@ class Engine(arcade.Sprite):
                     # Tiny bit of a start so we don't stay in contact with the landing pad
                     # Also requires user to thrust fairly straight upwards, which I think is intuitive.
                     lander.center_y += 5
-
 
     def deactivate(self):
         self.visible = False

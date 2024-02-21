@@ -33,8 +33,12 @@ class Hostage(GameObject):
         if collisions.place_on_world(self, world, scene):
             # If we can't place the object on the world, we never add it to a sprite list.
             # It's just forgotten about
+            # When playing, shield position is handled automatically, but we update it here so
+            # that we can take account of it when placing further ground elements
+            self.shield.position = self.position
             self.scene.add_sprite("Hostages", self)
             self.shield.activate()  # Hostage shield is permanently activated
+
 
     def on_update(self, delta_time: float = 1 / 60):
         if self.being_rescued:
