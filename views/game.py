@@ -51,6 +51,7 @@ class GameView(arcade.View):
         self.score_text = None
         self.gravity_text = None
         self.fps_text = None
+        self.pos_text = None
 
     def setup(self, level: int = 1, score: int = 0):
         """Get the game ready to play"""
@@ -121,8 +122,8 @@ class GameView(arcade.View):
         self.minimap_sprite_list = arcade.SpriteList()
         self.minimap_sprite_list.append(self.minimap_sprite)
 
-        self.fuel_text, self.shield_text, self.gravity_text = self.scaled_and_centred_text(
-            texts=["Fuel: XXXX", 'Shield: XXXX', 'Gravity: XXXX'],
+        self.fuel_text, self.shield_text, self.gravity_text, self.pos_text = self.scaled_and_centred_text(
+            texts=["Fuel: XXXX", 'Shield: XXXX', 'Gravity: XXXX', 'Pos: XXXX'],
             width=(self.window.width - self.minimap_sprite.width) // 2,
             height=int(self.minimap_sprite.height),
             centre_x=(3 * self.window.width + self.minimap_sprite.width) // 4,
@@ -278,6 +279,10 @@ class GameView(arcade.View):
         if self.lander.landed and len(self.scene['Hostages']) == 0:
             self.window.show_view(NextLevelView(level=self.level, score=self.score))
 
+        # Parallax scrolling of the backgrounds
+        for background, parallax_factor in self.world.background_layers:
+            background.center_x = self.game_camera.position[0] * parallax_factor
+
         # Update the minimap
         self.update_minimap()
 
@@ -288,6 +293,7 @@ class GameView(arcade.View):
         self.gravity_text.text = f"GRAVITY: {self.world.gravity:.0f}"
         self.hostages_text.text = f"HOSTAGES: {len(self.scene['Hostages'])}"
         self.fps_text.text = f"FPS: {arcade.get_fps():.0f}"
+        self.pos_text.text = f"Pos: {self.game_camera.position[0]:.0f}, {self.game_camera.position[1]:.0f}"
 
         # Check for collisions
         collisions.check_for_collisions(self.scene, self.game_camera, self.world)
@@ -364,6 +370,8 @@ class GameView(arcade.View):
         self.game_camera.use()
         # Draw game non-sprites
         self.world.background_shapes.draw()  # This is not a sprite, so not covered by scene.draw()
+        for background_layer, parallax_factor in self.world.background_layers:
+            background_layer.draw()
         if self.landing_pad.activated and self.lander.dead is False:
             self.lander.draw_landing_angle_guide()
         self.lander.draw_tractor_bream()
@@ -377,5 +385,5 @@ class GameView(arcade.View):
         for text in [self.level_text, self.score_text,
                      self.gravity_text, self.fuel_text,
                      self.shield_text, self.hostages_text,
-                     self.fps_text]:
+                     self.fps_text, self.pos_text]:
             text.draw()

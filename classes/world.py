@@ -42,9 +42,22 @@ class World:
             self.background_shapes.append(star)
             if star_for_world_wrap is not None:
                 self.background_shapes.append(star_for_world_wrap)
-        # Perhaps some kind of background
-        # Just needs to be obviously distinguishable from the foreground, which we need to "land" on
-        # TODO
+
+        self.background_layers: list[tuple[arcade.ShapeElementList, float]] = []  # float is the parallax factor
+        factor = 0.7  # Factor of zero results in same scrolling as foreground
+        colour1 = (random.randint(20, 200), random.randint(20, 200), random.randint(20, 200))
+        colour2 = (colour1[0] + 30, colour1[1] + 30, colour1[2] + 30)
+        self.background_layers.append((self.get_background_triangles(parallax_factor=factor,
+                                                                     colour=colour2,
+                                                                     height_range=(int(WORLD_HEIGHT / 4), int(WORLD_HEIGHT / 3)),
+                                                                     width_range=(int(WORLD_WIDTH / 10), int(WORLD_WIDTH / 6)),
+                                                                     num_triangles=5), factor))
+        factor = 0.3
+        self.background_layers.append((self.get_background_triangles(parallax_factor=factor,
+                                                                     colour=colour1,
+                                                                     height_range=(int(WORLD_HEIGHT / 6), int(WORLD_HEIGHT / 4)),
+                                                                     width_range=(int(WORLD_WIDTH / 15), int(WORLD_WIDTH / 10)),
+                                                                     num_triangles=10), factor))
 
         # The foreground
         self.terrain_left_edge, self.terrain_centre, self.terrain_right_edge = self.get_terrain(self.landing_pad_width_limit)
@@ -53,6 +66,61 @@ class World:
         self.scene.add_sprite_list("Terrain Right Edge", use_spatial_hash=True, sprite_list=self.terrain_right_edge)
 
         self.max_terrain_height = max([r.height for r in itertools.chain(self.terrain_left_edge, self.terrain_centre)])
+
+
+    def get_background_triangles(self, *, parallax_factor: float,
+                                 colour: tuple[int, int, int],
+                                 height_range: tuple[int, int],
+                                 width_range: tuple[int, int],
+                                 num_triangles: int
+                                 ):
+        #  It's made my brain hurt, but I'm trying to work out how wide the parallax background
+        # needs to be so that it wraps when we want it to.
+        # I think a lot of my confusion stems from the use of "background.center_x" on the ShapeElementList.
+        # This seems to set the location of the start of the ShapeElementList - not the centre!!!!!
+        # Knowing that, it all makes sense:
+        # We need the last 2 camera_widths to be the same as the first.
+        # So - when camera[x] = wrapping_point (= WORLD_WIDTH - 2 * camera_width), where are we on the background?
+        # In general, we have: background.center_x = self.game_camera.position[0] * parallax_factor
+        # So at wrapping point: background.center_x = wrapping_point * parallax_factor
+        # But, as I've said above, that's not the center - it's the start.
+        # To get from there to the wrapping_point, we have advanced this far: wrapping_point * (1 - parallax_factor)
+        # So that is the point on the background that we want to do the wrap.
+
+        def get_triangle(*, left, height, width):
+            """Returns a triangle starting at >=x, and not ending >= max_x"""
+            width = min(width, background_wrapping_point - left)
+            triangle = arcade.create_triangles_filled_with_colors(point_list=((left, 0),
+                                                                              (int(left + width/2), height),
+                                                                              (left + width, 0)),
+                                                                  color_list=[colour, colour, colour])
+            triangle2 = arcade.create_triangles_filled_with_colors(point_list=((left+background_wrapping_point, 0),
+                                                                               (int(left+background_wrapping_point + width/2), height),
+                                                                               (left+background_wrapping_point + width, 0)),
+
+                                                                   color_list=[colour, colour, colour])
+
+            return triangle, triangle2
+
+
+        # colour: tuple[int, int, int],
+        # height_range: tuple[int, int],
+        # width_range: tuple[int, int],
+        # num_triangles: int
+        background_triangles = arcade.ShapeElementList()
+        wrapping_point = WORLD_WIDTH - 2 * self.camera_width
+        background_wrapping_point = int(wrapping_point * (1 - parallax_factor))
+
+        for i in range(num_triangles):
+            height = random.randint(*height_range)
+            width = random.randint(*width_range)
+            left = random.randint(0, background_wrapping_point - width_range[0])
+            colour = (colour[0] + random.randint(-10, 10), colour[1] + random.randint(-10, 10), colour[2] + random.randint(-10, 10))
+            triangle, triangle2 = get_triangle(left=left, height=height, width=width)
+            background_triangles.append(triangle)
+            background_triangles.append(triangle2)
+        #random.shuffle(background_triangles)
+        return background_triangles
 
     def get_terrain(self, landing_pad_width_limit) -> Tuple[arcade.SpriteList, arcade.SpriteList, arcade.SpriteList]:
         # Generates a set of rectangles that's used as the terrain.
