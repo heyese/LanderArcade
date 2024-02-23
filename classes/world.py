@@ -44,20 +44,28 @@ class World:
                 self.background_shapes.append(star_for_world_wrap)
 
         self.background_layers: list[tuple[arcade.ShapeElementList, float]] = []  # float is the parallax factor
-        factor = 0.7  # Factor of zero results in same scrolling as foreground
-        colour1 = (random.randint(20, 200), random.randint(20, 200), random.randint(20, 200))
+        colour1 = (random.randint(20, 100), random.randint(20, 100), random.randint(20, 100))
         colour2 = (colour1[0] + 30, colour1[1] + 30, colour1[2] + 30)
+        colour3 = (colour2[0] + 30, colour2[1] + 30, colour2[2] + 30)
+        factor = 0.8  # Factor of zero results in same scrolling as foreground
+        self.background_layers.append((self.get_background_triangles(parallax_factor=factor,
+                                                                     colour=colour3,
+                                                                     height_range=(int(WORLD_HEIGHT / 3), int(WORLD_HEIGHT / 2)),
+                                                                     width_range=(int(WORLD_WIDTH / 10), int(WORLD_WIDTH / 6)),
+                                                                     num_triangles=3), factor))
+        factor = 0.6
         self.background_layers.append((self.get_background_triangles(parallax_factor=factor,
                                                                      colour=colour2,
                                                                      height_range=(int(WORLD_HEIGHT / 4), int(WORLD_HEIGHT / 3)),
-                                                                     width_range=(int(WORLD_WIDTH / 10), int(WORLD_WIDTH / 6)),
-                                                                     num_triangles=5), factor))
-        factor = 0.3
+                                                                     width_range=(int(WORLD_WIDTH / 12), int(WORLD_WIDTH / 8)),
+                                                                     num_triangles=4), factor))
+
+        factor = 0.4
         self.background_layers.append((self.get_background_triangles(parallax_factor=factor,
                                                                      colour=colour1,
                                                                      height_range=(int(WORLD_HEIGHT / 6), int(WORLD_HEIGHT / 4)),
                                                                      width_range=(int(WORLD_WIDTH / 15), int(WORLD_WIDTH / 10)),
-                                                                     num_triangles=10), factor))
+                                                                     num_triangles=7), factor))
 
         # The foreground
         self.terrain_left_edge, self.terrain_centre, self.terrain_right_edge = self.get_terrain(self.landing_pad_width_limit)
@@ -89,24 +97,24 @@ class World:
 
         def get_triangle(*, left, height, width):
             """Returns a triangle starting at >=x, and not ending >= max_x"""
+            def brighten(colour: tuple[int, int, int]):
+                values = [random.randint(50, 100) for _ in range(3)]
+                colour = tuple(min(colour[a] + values[a], 255) for a in range(3))
+                return colour
+
             width = min(width, background_wrapping_point - left)
+
             triangle = arcade.create_triangles_filled_with_colors(point_list=((left, 0),
                                                                               (int(left + width/2), height),
                                                                               (left + width, 0)),
-                                                                  color_list=[colour, colour, colour])
+                                                                  color_list=[colour, brighten(colour), colour])
             triangle2 = arcade.create_triangles_filled_with_colors(point_list=((left+background_wrapping_point, 0),
                                                                                (int(left+background_wrapping_point + width/2), height),
                                                                                (left+background_wrapping_point + width, 0)),
-
-                                                                   color_list=[colour, colour, colour])
+                                                                   color_list=[colour, brighten(colour), colour])
 
             return triangle, triangle2
 
-
-        # colour: tuple[int, int, int],
-        # height_range: tuple[int, int],
-        # width_range: tuple[int, int],
-        # num_triangles: int
         background_triangles = arcade.ShapeElementList()
         wrapping_point = WORLD_WIDTH - 2 * self.camera_width
         background_wrapping_point = int(wrapping_point * (1 - parallax_factor))

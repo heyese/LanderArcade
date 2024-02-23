@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class MissileLauncher(GameObject):
-    def __init__(self, scene: arcade.Scene, world: World, missile_interval: int = 150):
+    def __init__(self, scene: arcade.Scene, world: World, missile_interval: int = 15):
         super().__init__(scene=scene,
                          world=world,
                          filename="images/missile_launcher.png",
@@ -24,7 +24,7 @@ class MissileLauncher(GameObject):
             # It's just forgotten about
             self.scene.add_sprite("Ground Enemies", self)
         self.missile_interval = missile_interval
-        self.current_interval = missile_interval
+        self.current_interval = random.randint(0, missile_interval)
 
     def on_update(self, delta_time: float = 1 / 60):
         self.current_interval -= delta_time
