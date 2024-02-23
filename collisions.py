@@ -397,46 +397,6 @@ def check_for_shield_collision_with_rectangle_sprite(shield: Shield, rect: arcad
 
 
 
-# def check_for_collision(sprite1: Sprite, sprite2: Sprite, scene: Scene) -> bool:
-#     # If the aircraft collides with anything, kill the sprite and create an explosion
-#     collision_with_terrain = arcade.check_for_collision_with_lists(self, [self.scene["Terrain Left Edge"],
-#                                                                           self.scene["Terrain Centre"],
-#                                                                           self.scene["Terrain Right Edge"]])
-#
-#     collision_in_air = arcade.check_for_collision_with_lists(self, [self.scene["Missiles"],
-#                                                                     self.scene["Explosions"]])
-#     # Basically, if two things collide and a force field isn't involved,
-#     # there's an explosion, unless:
-#     #  * it's the lander landing on the landing pad
-#     #  * possibly in the future, it's the lander rescuing someone?
-#     #  * Explosions don't explode when colliding with something else, but the something else does
-#
-#     # In a collision, I explode one party and assume the explosion will kill the other, but if it's quick
-#     # that might not happen.  So I place a marker!
-#     if self.collided is True:
-#         self.die()
-#         return
-#
-#     if collision_in_air or collision_with_terrain:
-#         # In general, with a pair of objects in a collision, both explode. One immediately, and then
-#         # the explosion of the first catches this bit of code in the other.
-#         # Occasionally it's so quick that doesn't happen, so (if it's not a Shield), I tag the other object
-#         # so it knows it must explode as well!
-#         collided_with = collision_in_air[0] if collision_in_air else collision_with_terrain[0]
-#         if collided_with.__class__.__name__ != "Shield":
-#             collided_with.collided = True
-#         if collision_in_air:
-#             v1, v2 = circular_collision(self, collided_with)
-#             self.velocity_x, self.velocity_y = v1
-#             collided_with.velocity_x, collided_with.velocity_y = v2
-#         else:
-#             # If we're the lander and the thing we've collided with is the landing pad,
-#             # just ignore.  The lander code can deal with that
-#             if ((self.__class__ == "Lander" and collided_with.__class__ == 'LandingPad')
-#                     or self.__class__ == "Explosion"):
-#                 return
-#
-#         self.die()
 
 def place_on_world(sprite: Sprite, world: World, scene: Scene):
     # Idea here is that I have a sprite I want to place on the terrain, but want to make sure
