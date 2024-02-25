@@ -17,10 +17,6 @@ from views.next_level import NextLevelView
 from pyglet.math import Vec2
 from uuid import uuid4
 from typing import List
-from typing import NamedTuple
-
-
-# Some kind of structure so that levels get harder as you progress - at least to begin with
 
 
 class GameView(arcade.View):
