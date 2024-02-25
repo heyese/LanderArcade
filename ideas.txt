@@ -1,3 +1,4 @@
+What I've been using to draw my .pngs:
 https://pixelartmaker.com/offshoot/9020b04ca9f4509
 
 Building an .exe:
@@ -12,6 +13,11 @@ move upwards?  At least, I should think about this problem explicitly
 Add an enemy aircraft
 Have a "super missile launcher"
 Want explosions to exert force
+
+Maybe horizontal pale strips for clouds?
+Think it would be easy to implement and would make it easier to see direction of travel
+in area where there aren't necessarily any mountains?
+A kind of set of horizontal bands, unique to each world
 
 Update the game readme
 
