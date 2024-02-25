@@ -44,6 +44,14 @@ class World:
             if star_for_world_wrap is not None:
                 self.background_shapes.append(star_for_world_wrap)
 
+        # I also want horizontal white strips (ie. a bit like clouds)
+        number_of_strips = random.randint(0, 10)
+        vertical_range = [200, 1000]
+        cloud_rectangles = self.get_cloud_rectangles(vertical_range=vertical_range, number_of_strips=number_of_strips)
+        for cloud in cloud_rectangles:
+            self.background_shapes.append(cloud)
+
+        # Background layers are used for a parallax scrolling effect
         self.background_layers: list[tuple[arcade.ShapeElementList, float]] = []  # float is the parallax factor
         colour1 = (random.randint(20, 100), random.randint(20, 100), random.randint(20, 100))
         colour2 = (colour1[0] + 30, colour1[1] + 30, colour1[2] + 30)
@@ -127,6 +135,7 @@ class World:
             width = random.randint(*width_range)
             left = random.randint(0, background_wrapping_point - width_range[0])
             colour = (colour[0] + random.randint(-10, 10), colour[1] + random.randint(-10, 10), colour[2] + random.randint(-10, 10))
+            colour = (max(min(colour[0], 255), 0), max(min(colour[0], 255), 0), max(min(colour[0], 255), 0))
             triangle, triangle2 = get_triangle(left=left, height=height, width=width)
             background_triangles.append(triangle)
             background_triangles.append(triangle2)
@@ -202,3 +211,23 @@ class World:
                   BACKGROUND_COLOR,
                   BACKGROUND_COLOR)
         return arcade.create_rectangle_filled_with_colors(points, colors)
+
+    def get_cloud_rectangles(self, *, vertical_range, number_of_strips) -> list[arcade.Shape]:
+        # A background rectangle, presumably white-ish in colour, that's meant to give the impression of clouds
+        cloud_rectangles = []
+        y_high = vertical_range[0]
+        for i in range(number_of_strips):
+            y_low = random.randint(min(y_high + 30, vertical_range[1]), min(y_high + 200, vertical_range[1]))
+            y_high = random.randint(y_low, y_low + 200)
+            points = ((0, y_low),
+                      (WORLD_WIDTH, y_low),
+                      (WORLD_WIDTH, y_high),
+                      (0, y_high))
+            colors = ((*arcade.color.DUTCH_WHITE, 150),
+                      (*arcade.color.WHITE_SMOKE, 150),
+                      (*arcade.color.WHITE, 150),
+                      (*arcade.color.WHITE_SMOKE, 150))
+            cloud_rectangles.append(arcade.create_rectangle_filled_with_colors(points, colors))
+            if y_high == vertical_range[1]:
+                break
+        return cloud_rectangles

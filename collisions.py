@@ -192,6 +192,13 @@ def check_for_collision_with_landing_pad(sprite: Sprite, lander: Lander, landing
     return sprite_collided
 
 
+def change_pos_of_sprite_and_shield_by_vector(obj: Sprite, x: float, y: float):
+    obj.center_x += x
+    obj.center_y += y
+    obj.shield.center_x += x
+    obj.shield.center_y += y
+
+
 def check_for_collisions_general(sprite: Sprite, general_object_spritelists: List[SpriteList], scene: Scene, considered_collisions: set, lander: Lander, camera: Camera):
     # Unfortunately, I've realized that checking for all these collisions slows the game down.
     # A weakness of python arcade, that they may well fix in a later version
@@ -260,10 +267,23 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
                 True in {sprite.owner.on_ground, collision.owner.on_ground}):
             if sprite.owner.on_ground:
                 point = (sprite.owner.center_x, sprite.owner.center_y)
-                collision_with_fixed_point(point_x=point[0], point_y=point[1], obj=collision.owner)
+                obj_1 = collision.owner, obj_2 = sprite.owner
             else:
                 point = (collision.owner.center_x, collision.owner.center_y)
-                collision_with_fixed_point(point_x=point[0], point_y=point[1], obj=sprite.owner)
+                obj_1, obj_2 = sprite.owner, collision.owner
+            collision_with_fixed_point(point_x=point[0], point_y=point[1], obj=obj_1)
+
+            # Now - have a bug-type scenario sometimes where a shields can get "stuck" together.
+            # ie. We compute the bounce back vector, but it's not enough for the two objects to stop colliding,
+            # so then we immediately detect another collision but then bounce the two objects back a bit closer again!
+            # So at this point, I check to see if the change we've applied is enough, and if not, apply it again.
+            while True:
+                change_pos_of_sprite_and_shield_by_vector(obj=obj_1, x=obj_1.change_x, y=obj_1.change_y)
+                if not arcade.check_for_collision(obj_1.shield, obj_2.shield):
+                    # If we're no longer colliding, then we can undo the last pos change, as it will get applied later.
+                    change_pos_of_sprite_and_shield_by_vector(obj=obj_1, x=-obj_1.change_x, y=-obj_1.change_y)
+                    break
+
             continue
 
         # This is the general collision bit.  I essentially treat a collision like two circles colliding.
@@ -278,7 +298,7 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
             else:
                 if obj.on_ground is False:
                     obj.change_x, obj.change_y = v1[0] * (1/60), v1[1] * (1/60)
-                obj.die()
+                obj_1.die()
 
     return sprite_collided
 
@@ -346,8 +366,8 @@ def check_for_explosion_collision_with_terrain(explosion: Explosion, terrain: Li
 
 
 def check_for_shield_collision_with_terrain(shield: Shield, terrain: List[SpriteList], scene: Scene):
-    # The LandingPad's shield is allowed to clash with the terrain
-    if shield.owner in scene['Landing Pad'].sprite_list:
+    # The LandingPad and Hostages' shields are allowed to clash with the terrain
+    if shield.owner in scene['Landing Pad'].sprite_list + scene['Hostages'].sprite_list:
         return False
     collision_with_terrain = arcade.check_for_collision_with_lists(shield, terrain)
     for rect in collision_with_terrain:
@@ -359,13 +379,15 @@ def check_for_shield_collision_with_terrain(shield: Shield, terrain: List[Sprite
 def check_for_shield_collision_with_rectangle_sprite(shield: Shield, rect: arcade.SpriteSolidColor):
     # 5 possibilities.  Bounce off left side, left corner, top side, right corner or right side.
     # Left or right side
-
+    sprite_collided = False
     if (shield.center_y <= rect.top and
             ((shield.left < rect.left <= shield.right) or (shield.left <= rect.right < shield.right))):
         shield.owner.change_x *= -1
+        sprite_collided = True
     # Top side
     elif (rect.left <= shield.center_x <= rect.right) and shield.bottom <= rect.top:
         shield.owner.change_y *= -1
+        sprite_collided = True
     # Left and right corners
     elif (((shield.left < rect.left <= shield.right) or (shield.left <= rect.right < shield.right))
           and shield.bottom <= rect.top):
@@ -375,27 +397,18 @@ def check_for_shield_collision_with_rectangle_sprite(shield: Shield, rect: arcad
             corner_x, corner_y = rect.left, rect.top
         else:
             corner_x, corner_y = rect.right, rect.top
-
         collision_with_fixed_point(point_x=corner_x, point_y=corner_y, obj=shield.owner)
+        sprite_collided = True
 
-        # In edge cases, we can get trapped in a rect - ie. after flipping the normal projection of our vector,
-        # we're still colliding, so we then flip it again, which obviously doesn't work.
-        # So below I keep pushing in the same direction until we're no longer colliding ...
-        repeats = 0
-        # while arcade.check_for_collision(shield, rect):
-        #     repeats += 1
-        #     shield.owner.center_x += (-normal_projection * n_x + tangential_projection * t_x) * repeats
-        #     shield.owner.center_y += (-normal_projection * n_y + tangential_projection * t_y) * repeats
-        #     shield.center_x += (-normal_projection * n_x + tangential_projection * t_x) * repeats
-        #     shield.center_y += (-normal_projection * n_y + tangential_projection * t_y) * repeats
-        #     if repeats == 10:
-        #         # Something's gone wrong - we're stuck!
-        #         # Disable the shield to let the user know something's gone wrong
-        #         shield.disable()
-        #         break
-
-
-
+    # Check to see if we still have a collision between these two objects.
+    # If we do, keep applying the bounce back vector
+    if sprite_collided:
+        while True:
+            change_pos_of_sprite_and_shield_by_vector(obj=shield.owner, x=shield.owner.change_x, y=shield.owner.change_y)
+            if not arcade.check_for_collision(shield, rect):
+                # If we're no longer colliding, then we can undo the last pos change, as it will get applied later.
+                change_pos_of_sprite_and_shield_by_vector(obj=shield.owner, x=-shield.owner.change_x, y=-shield.owner.change_y)
+                break
 
 
 def place_on_world(sprite: Sprite, world: World, scene: Scene):
