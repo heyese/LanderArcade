@@ -47,7 +47,7 @@ class World:
         colour1 = (random.randint(20, 100), random.randint(20, 100), random.randint(20, 100))
         colour2 = (colour1[0] + 30, colour1[1] + 30, colour1[2] + 30)
         colour3 = (colour2[0] + 30, colour2[1] + 30, colour2[2] + 30)
-        factor = 0.9  # Factor of zero results in same scrolling as foreground
+        factor = 0.8  # Factor of zero results in same scrolling as foreground
         self.background_layers.append((self.get_background_triangles(parallax_factor=factor,
                                                                      colour=colour3,
                                                                      height_range=(int(WORLD_HEIGHT / 3), int(WORLD_HEIGHT / 2)),

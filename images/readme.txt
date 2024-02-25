@@ -13,3 +13,5 @@ Have levels get progressively more difficult
 Add an enemy aircraft
 
 Update the game readme
+
+Landing pad bug where it seems to world wrap - or maybe it's the lander that world wraps, and the landing pad doesn't?

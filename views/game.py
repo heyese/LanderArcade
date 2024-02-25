@@ -241,7 +241,8 @@ class GameView(arcade.View):
                                         "Air Enemies",
                                         "Ground Enemies",
                                         "Explosions",
-                                        "Hostages"]
+                                        "Hostages",
+                                        "Landing Pad"]
 
         non_terrain_spritelists = [self.scene[i] for i in non_terrain_spritelist_names]
         non_terrain_sprites = [s for i in non_terrain_spritelists for s in i]
