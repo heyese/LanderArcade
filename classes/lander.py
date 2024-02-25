@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class Lander(GameObject):
-    def __init__(self, scene: arcade.Scene, world: World):
+    def __init__(self, scene: arcade.Scene, world: World, fuel=100, shield_charge=100):
         super().__init__(scene=scene,
                          world=world,
                          filename="images/lander.png",
@@ -20,8 +20,8 @@ class Lander(GameObject):
                          scale=0.2 * SCALING
                          )
         self.scene.add_sprite("Lander", self)
-        self.engine = Engine(scene=scene, owner=self)
-        self.shield = Shield(scene=scene, owner=self)
+        self.engine = Engine(scene=scene, owner=self, fuel=fuel)
+        self.shield = Shield(scene=scene, owner=self, charge=shield_charge)
         self.disabled_shield = DisabledShield(scene=scene, owner=self)
         self.max_landing_angle = 20
         self.mouse_location = None  # Set by Game view.  Want Lander to face mouse on every update

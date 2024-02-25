@@ -3,6 +3,7 @@ import random
 import arcade
 from arcade import Scene
 
+import constants
 from classes.lander import Lander
 from classes.world import World
 from classes.landing_pad import LandingPad
@@ -16,7 +17,10 @@ from views.next_level import NextLevelView
 from pyglet.math import Vec2
 from uuid import uuid4
 from typing import List
-import itertools
+from typing import NamedTuple
+
+
+# Some kind of structure so that levels get harder as you progress - at least to begin with
 
 
 class GameView(arcade.View):
@@ -33,6 +37,7 @@ class GameView(arcade.View):
         self.world = None
         self.landing_pad = None
         self.level = None
+        self.level_config = None
         self.score = None
 
         # Mini-map related
@@ -79,6 +84,7 @@ class GameView(arcade.View):
 
         self.level = level  # Ultimately want to use this to develop the game in later levels
         self.score = score
+        self.level_config = constants.get_level_config(level)
         # Tied myself up in knots here.  I want to ensure there is a hill wide enough in the world for the
         # landing pad.  But the landing pad width depends on the lander width, and I pass the world in when
         # creating the lander ... Rather than sort that out, for now I'm just hard coding a number that's large
@@ -86,8 +92,13 @@ class GameView(arcade.View):
         landing_pad_width_limit = 200
         self.world = World(scene=self.scene, camera_width=self.game_camera.viewport_width,
                            camera_height=self.game_camera.viewport_height,
-                           landing_pad_width_limit=landing_pad_width_limit)
-        self.lander = Lander(scene=self.scene, world=self.world)
+                           landing_pad_width_limit=landing_pad_width_limit,
+                           max_gravity=self.level_config.max_gravity)
+
+        self.lander = Lander(scene=self.scene,
+                             world=self.world,
+                             fuel=self.level_config.fuel,
+                             shield_charge=self.level_config.shield)
         landing_pad_width = int(2 * self.lander.width)
         if landing_pad_width > landing_pad_width_limit:
             print("Your hardcoded value for the landing pad width limit isn't large enough!")
@@ -104,12 +115,12 @@ class GameView(arcade.View):
         self.lander.change_x = random.randint(-30, 30) / 60
         self.lander.change_y = -random.randint(10, 30) / 60
 
-        # Let's try adding a missile
-        for i in range(5):
+        # Add the missile launchers
+        for i in range(self.level_config.missile_launchers):
             MissileLauncher(scene=self.scene, world=self.world)
 
         # Add the hostages
-        for i in range(3):
+        for i in range(self.level_config.hostages):
             Hostage(scene=self.scene, world=self.world, lander=self.lander)
 
         # Construct the minimap
@@ -319,7 +330,7 @@ class GameView(arcade.View):
             # eventually seem to run out of space.
             # Found this: https://stackoverflow.com/questions/71599404/python-arcade-caches-textures-when-requested-not-to
             # So hopefully this will be fixed in Arcade 2.7
-            self.setup()
+            self.setup(level=self.level)
         if symbol == arcade.key.ESCAPE:
             # pass self, the current view, so we can return to it (ie. when we unpause)
             menu = MenuView(game_view=self)

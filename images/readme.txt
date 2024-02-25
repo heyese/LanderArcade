@@ -8,10 +8,10 @@ So far, single file doesn't seem to work when moved to a new directory?
 When the shield gets 'trapped', perhaps the simplest thing is to manually
 move upwards?  At least, I should think about this problem explicitly
 
-Have levels get progressively more difficult
-(On higher levels, missiles could fire more regularly, as well as there being more missile launchers and aircraft)
+
 Add an enemy aircraft
+Have a "super missile launcher"
+Want explosions to exert force
 
 Update the game readme
 
-Landing pad bug where it seems to world wrap - or maybe it's the lander that world wraps, and the landing pad doesn't?

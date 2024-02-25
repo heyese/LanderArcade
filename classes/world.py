@@ -18,12 +18,13 @@ class World:
                  hill_height: float = None,
                  hill_width: float = None,
                  camera_width: int = None,
-                 camera_height: int = None):
+                 camera_height: int = None,
+                 max_gravity: int = 200):
         self.scene = scene
         self.landing_pad_width_limit = landing_pad_width_limit
         self.sky_color = sky_color if sky_color else random.choices(range(256), k=3)
         self.ground_color = ground_color if ground_color else random.choices(range(256), k=3)
-        self.gravity = gravity if gravity is not None else random.randint(20, 200)
+        self.gravity = gravity if gravity is not None else random.randint(20, max(20, max_gravity))
         self.star_count = star_count if star_count is not None else random.randint(300, 1500)
         # Terrain attributes
         self.hill_height = hill_height if hill_height is not None else random.randint(20, 100) / 100
