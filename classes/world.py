@@ -4,7 +4,7 @@ import random
 from typing import Union, Tuple
 from constants import WORLD_WIDTH, WORLD_HEIGHT, BACKGROUND_COLOR, SPACE_START, SPACE_END
 import copy
-
+from collections import defaultdict
 
 class World:
     def __init__(self,
@@ -45,11 +45,15 @@ class World:
                 self.background_shapes.append(star_for_world_wrap)
 
         # I also want horizontal white strips (ie. a bit like clouds)
-        number_of_strips = random.randint(0, 10)
-        vertical_range = [200, 1000]
+        number_of_strips = random.randint(0, 8)
+        vertical_range = [300, 1000]
         cloud_rectangles = self.get_cloud_rectangles(vertical_range=vertical_range, number_of_strips=number_of_strips)
-        for cloud in cloud_rectangles:
-            self.background_shapes.append(cloud)
+        cloud_rectangle_layers = defaultdict(arcade.ShapeElementList)
+        for i in range(len(cloud_rectangles)):
+            layer = random.randint(1, 3)
+            cloud_rectangle_layers[layer].append(cloud_rectangles[i])
+
+
 
         # Background layers are used for a parallax scrolling effect
         self.background_layers: list[tuple[arcade.ShapeElementList, float]] = []  # float is the parallax factor
@@ -57,21 +61,25 @@ class World:
         colour2 = (colour1[0] + 30, colour1[1] + 30, colour1[2] + 30)
         colour3 = (colour2[0] + 30, colour2[1] + 30, colour2[2] + 30)
         factor = 0.8  # Factor of zero results in same scrolling as foreground
+        self.background_layers.append((cloud_rectangle_layers[1], factor))
         self.background_layers.append((self.get_background_triangles(parallax_factor=factor,
                                                                      colour=colour3,
                                                                      height_range=(int(WORLD_HEIGHT / 3), int(WORLD_HEIGHT / 2)),
                                                                      width_range=(int(WORLD_WIDTH / 12), int(WORLD_WIDTH / 9)),
                                                                      num_triangles=3), factor))
         factor = 0.6
+        self.background_layers.append((cloud_rectangle_layers[2], factor))
         self.background_layers.append((self.get_background_triangles(parallax_factor=factor,
                                                                      colour=colour2,
                                                                      height_range=(int(WORLD_HEIGHT / 4), int(WORLD_HEIGHT / 3)),
                                                                      width_range=(int(WORLD_WIDTH / 12), int(WORLD_WIDTH / 8)),
                                                                      num_triangles=4), factor))
+
         # Find that values below about 5 results in a flicker
         # when the world wraps when going from right to left.
         # Not sure what it is, but it's a tiny thing.
         factor = 0.45
+        self.background_layers.append((cloud_rectangle_layers[3], factor))
         self.background_layers.append((self.get_background_triangles(parallax_factor=factor,
                                                                      colour=colour1,
                                                                      height_range=(int(WORLD_HEIGHT / 6), int(WORLD_HEIGHT / 4)),
@@ -217,17 +225,21 @@ class World:
         cloud_rectangles = []
         y_high = vertical_range[0]
         for i in range(number_of_strips):
-            y_low = random.randint(min(y_high + 30, vertical_range[1]), min(y_high + 200, vertical_range[1]))
-            y_high = random.randint(y_low, y_low + 200)
+            # So more likely to have clouds bunched together at the bottom, which is a nice effect
+            y_low = random.randint(vertical_range[0], min(y_high + 200, vertical_range[1]))
+            y_high = random.randint(y_low, y_low + 100)
             points = ((0, y_low),
                       (WORLD_WIDTH, y_low),
                       (WORLD_WIDTH, y_high),
                       (0, y_high))
-            colors = ((*arcade.color.DUTCH_WHITE, 150),
+            colors = (
+                      (*arcade.color.DUTCH_WHITE, 80),
+                      (*arcade.color.DUTCH_WHITE, 150),
                       (*arcade.color.WHITE_SMOKE, 150),
-                      (*arcade.color.WHITE, 150),
-                      (*arcade.color.WHITE_SMOKE, 150))
+                      (*arcade.color.WHITE_SMOKE, 150),
+            )
             cloud_rectangles.append(arcade.create_rectangle_filled_with_colors(points, colors))
-            if y_high == vertical_range[1]:
+
+            if y_high >= vertical_range[1]:
                 break
         return cloud_rectangles
