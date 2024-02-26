@@ -9,6 +9,7 @@ class MenuView(arcade.View):
         self.game_view = game_view  # When we pause game, I pass an instance of the game_view so we can return to it
         self.manager = arcade.gui.UIManager()
         self.resume_button_added = False
+        self.background = arcade.load_texture("images/title_screen.png")
 
         # Create a vertical BoxGroup to align buttons
         self.v_box = arcade.gui.UIBoxLayout()
@@ -62,4 +63,6 @@ class MenuView(arcade.View):
 
     def on_draw(self):
         self.clear()
+        left, right, bottom, top = arcade.get_viewport()
+        arcade.draw_lrwh_rectangle_textured(left, bottom, right - left, top - bottom, self.background)
         self.manager.draw()
