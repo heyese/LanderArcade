@@ -50,14 +50,15 @@ class Lander(GameObject):
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)
         # Create list of the rescuers we are currently rescuing
-        for hostage in self.scene["Hostages"]:
-            distance_to_hostage = collisions.modulus((hostage.center_x - self.center_x, hostage.center_y - self.center_y))
-            if distance_to_hostage <= hostage.rescue_distance:
-                hostage.being_rescued = True
-                self._hostages_being_rescued.add(hostage)
-            elif hostage.being_rescued:
-                hostage.being_rescued = False
-                self._hostages_being_rescued.remove(hostage)
+        if not self.dead:
+            for hostage in self.scene["Hostages"]:
+                distance_to_hostage = collisions.modulus((hostage.center_x - self.center_x, hostage.center_y - self.center_y))
+                if distance_to_hostage <= hostage.rescue_distance:
+                    hostage.being_rescued = True
+                    self._hostages_being_rescued.add(hostage)
+                elif hostage.being_rescued:
+                    hostage.being_rescued = False
+                    self._hostages_being_rescued.remove(hostage)
 
         # If we're still rescuing anyone - animate the tractor beam!
         if self._hostages_being_rescued:
@@ -92,4 +93,8 @@ class Lander(GameObject):
                 points = [(self.center_x, self.center_y), (hostage.left - hostage.width, hostage.bottom), (hostage.right + hostage.width, hostage.bottom)]
                 arcade.draw_polygon_filled(point_list=points, color=(*arcade.color.RUBY_RED, alpha))
 
-
+    def die(self):
+        super().die()
+        for hostage in self._hostages_being_rescued:
+            hostage.being_rescued = False
+        self._hostages_being_rescued = set()

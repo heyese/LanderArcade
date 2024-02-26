@@ -23,6 +23,5 @@ Update the game readme
 
 Saw a bug where a hostage was at the edge of the minimap but was actually in and not on the terrain ...
 Add some sounds!
-When generating the terrain rectangles, make sure there's not a single super thin one at the end
 With the parallax code - make sure you can add directly to a parallax level, rather than
 having to ensure the clouds are added at the right place!

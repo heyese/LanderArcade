@@ -1,6 +1,7 @@
 import arcade
 import arcade.gui
 from constants import SCALING
+import textwrap
 
 
 class HowToPlayView(arcade.View):
@@ -21,22 +22,51 @@ class HowToPlayView(arcade.View):
             self.clear()
             self.window.show_view(self.menu_view)
 
-        how_to_play_text = """
-        The aim is to land the Lander onto the Landing pad.  You must be going slow enough, be completely over the Landing pad and at a safe angle!\n
+        how_to_play_text = textwrap.dedent("""
+        Thank goodness you're here, pilot!
+        
+        There are a number of hostages, scattered across various different hostile worlds. 
+        Each hostage has a special device which provides them with a shield and a breathable atmosphere, but they 
+        cannot move it and so are stuck where they are on the surface!
+        
+        We need you to get close enough to each of them so that your transporter can beam them aboard your ship.
+        Each world has a secure underground base, accessed via a landing pad - land on the landing pad and any hostages
+        on board will be taken to safety.  Once all hostages have been rescued, you can move on to the next world.
+        
+        Some of these worlds not only have a hostile atmosphere, but also enemies that will fire upon your ship!
+        You have no weapons, but can attack as well as defend yourself by using your trusty shield.
+        
+        You can land on the landing pad before you have rescued all the hostages - the base will immediately refill
+        your fuel and recharge your shield.  Keep an eye on your fuel and shield levels - on different missions, your
+        ship may have different capacities for these vital resources.  Also, some worlds have a stronger gravitational
+        pull than others, so you may find you burn through your fuel quickly.
+        
+        LANDING
+        The landing pads have a status light that activates when you get close, indicating whether or not it is safe 
+        enough to land.  A red status indicates your ship is over the edge, moving too quickly or too tilted - touch 
+        the pad and you will crash and burn ...  A green status indicates your decent is looking good.
+        The ship will provide a helpful visual indicator, showing the angular range you need to keep within for a 
+        successful landing.
+        
+        Your first mission will simply be a landing practice with no hostages to rescue.
+        We have faith in you, pilot!  
+
+        CONTROLS
         Left mouse button / backslash key: Thrust
-        Right mouse button: Shield
+        Right mouse button / Z: Shield
         Shift: Boost the engine (uses fuel at higher rate)
         Escape button: Pause
-        """
+        R: Reset level
+        """)
         text_area = arcade.gui.UITextArea(x=100,
                                           y=200,
-                                          width=500,
-                                          height=500,
+                                          width=1000,
+                                          height=800,
                                           text=how_to_play_text,
                                           text_color=(0, 0, 0, 255))
 
         self.v_box.add(
-            arcade.gui.UITexturePane(text_area.with_space_around(right=20),
+            arcade.gui.UITexturePane(text_area.with_space_around(left=50, right=50),
                           tex=bg_tex,
                           padding=(10, 10, 10, 10)
             ))
