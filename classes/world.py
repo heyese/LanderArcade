@@ -45,8 +45,8 @@ class World:
                 self.background_shapes.append(star_for_world_wrap)
 
         # I also want horizontal white strips (ie. a bit like clouds)
-        number_of_strips = random.randint(0, 8)
-        vertical_range = [300, 1000]
+        number_of_strips = random.randint(3, 8)
+        vertical_range = [int((1/6) * WORLD_HEIGHT), int(0.5 * WORLD_HEIGHT)]
         cloud_rectangles = self.get_cloud_rectangles(vertical_range=vertical_range, number_of_strips=number_of_strips)
         cloud_rectangle_layers = defaultdict(arcade.ShapeElementList)
         for i in range(len(cloud_rectangles)):
@@ -159,6 +159,10 @@ class World:
             if min_x:
                 # We make sure there is at least one spot for the landing pad
                 width = max(min_x, width)
+            # Don't want a really thin hill at one end of the terrain, so check how much space we've left and increase
+            # the size of the current hill if there's only a tiny hill left over
+            if 0 < max_x - x - width < 100 * self.hill_width:
+                width += max_x - x - width
             rect = arcade.SpriteSolidColor(width=width, height=height, color=self.ground_color)
             rect.bottom = 0
             rect.left = x

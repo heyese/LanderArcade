@@ -267,7 +267,7 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
                 True in {sprite.owner.on_ground, collision.owner.on_ground}):
             if sprite.owner.on_ground:
                 point = (sprite.owner.center_x, sprite.owner.center_y)
-                obj_1 = collision.owner, obj_2 = sprite.owner
+                obj_1, obj_2 = collision.owner, sprite.owner
             else:
                 point = (collision.owner.center_x, collision.owner.center_y)
                 obj_1, obj_2 = sprite.owner, collision.owner
@@ -298,7 +298,7 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
             else:
                 if obj.on_ground is False:
                     obj.change_x, obj.change_y = v1[0] * (1/60), v1[1] * (1/60)
-                obj_1.die()
+                obj.die()
 
     return sprite_collided
 
