@@ -9,6 +9,7 @@ class HowToPlayView(arcade.View):
         super().__init__()
         self.menu_view = menu_view  # When we pause game, I pass an instance of the game_view so we can return to it
         self.manager = arcade.gui.UIManager()
+        self.background = arcade.load_texture("images/title_screen.png")
         bg_tex = arcade.load_texture(":resources:gui_basic_assets/window/grey_panel.png")
         # Create a vertical BoxGroup to align buttons
         self.v_box = arcade.gui.UIBoxLayout()
@@ -92,4 +93,6 @@ class HowToPlayView(arcade.View):
 
     def on_draw(self):
         arcade.start_render()
+        left, right, bottom, top = arcade.get_viewport()
+        arcade.draw_lrwh_rectangle_textured(left, bottom, right - left, top - bottom, self.background)
         self.manager.draw()

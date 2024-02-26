@@ -8,20 +8,21 @@ So far, single file doesn't seem to work when moved to a new directory?
 
 When the shield gets 'trapped', perhaps the simplest thing is to manually
 move upwards?  At least, I should think about this problem explicitly
+I've done what I thought was a good solution for this, but sometimes now the ship totally disappears into
+an object, so it's not good enough
 
 
 Add an enemy aircraft
 Have a "super missile launcher"
 Want explosions to exert force
 
-Maybe horizontal pale strips for clouds?
-Think it would be easy to implement and would make it easier to see direction of travel
-in area where there aren't necessarily any mountains?
-A kind of set of horizontal bands, unique to each world
-
-Update the game readme
 
 Saw a bug where a hostage was at the edge of the minimap but was actually in and not on the terrain ...
 Add some sounds!
 With the parallax code - make sure you can add directly to a parallax level, rather than
 having to ensure the clouds are added at the right place!
+
+Try to work out how to avoid the world wrap flicker
+
+Sometimes collision detection isn't very good - I sometimes fly through a missile launcher with my shield on
+Perhaps it's worth doing my own manual check!?  Basically, if the difference between the centres is

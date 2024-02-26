@@ -277,12 +277,18 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
             # ie. We compute the bounce back vector, but it's not enough for the two objects to stop colliding,
             # so then we immediately detect another collision but then bounce the two objects back a bit closer again!
             # So at this point, I check to see if the change we've applied is enough, and if not, apply it again.
+            i = 0
             while True:
+                i += 1
                 change_pos_of_sprite_and_shield_by_vector(obj=obj_1, x=obj_1.change_x, y=obj_1.change_y)
                 if not arcade.check_for_collision(obj_1.shield, obj_2.shield):
                     # If we're no longer colliding, then we can undo the last pos change, as it will get applied later.
                     change_pos_of_sprite_and_shield_by_vector(obj=obj_1, x=-obj_1.change_x, y=-obj_1.change_y)
                     break
+                if i == 10:
+                    raise ValueError("Collision trap.  Rebound vector for obj_1: (x: {obj_1.change_x}, "
+                                     "y: {obj_1.change_y}). obj_1 centre: ({obj_1.center_x}, {obj_1.center_y}). "
+                                     "obj_2 centre: ({obj_2.center_x}, {obj_2.center_y}).")
 
             continue
 
