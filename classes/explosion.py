@@ -90,6 +90,7 @@ class Explosion(GameObject):
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)
+        self.hit_box = self.texture.hit_box_points
         self.timer += delta_time
         # We start off spinning but, as friction reduces the horizontal speed of the explosion to zero, we stop rotating
         self.angle += 0 if not self.velocity_x_initial else delta_time * self.rotation_rate * abs(self.velocity_x/self.velocity_x_initial)

@@ -82,15 +82,16 @@ class GameObject(arcade.Sprite):
             return 0, 0
 
         force_x, force_y = 0, 0
-        # noinspection PyTypeChecker
-        if explosion_collisions := arcade.check_for_collision_with_list(self, self.scene['Explosions']):
-            explosion_collisions: list[Explosion]
-            for explosion in explosion_collisions:
-                # Direction of force is along the vector from the explosion to the game object.
-                unit_vector = collisions.unit_vector_from_pos1_to_pos2((explosion.center_x, explosion.center_y), (self.center_x, self.center_y))
 
-                force_x += explosion.force * collisions.dot((self.change_x, self.change_y), unit_vector) * unit_vector[0]
-                force_y +=explosion.force * collisions.dot((self.change_x, self.change_y), unit_vector) * unit_vector[1]
+        # Explosions change size, meaning their hit box becomes innacurate, and I'm not
+        # immediately sure how to fix that.  SO just doing basic maths to do the same thing
+        for explosion in self.scene["Explosions"]:
+            if collisions.modulus((self.center_x - explosion))
+            # Direction of force is along the vector from the explosion to the game object.
+            unit_vector = collisions.unit_vector_from_pos1_to_pos2((explosion.center_x, explosion.center_y), (self.center_x, self.center_y))
+
+            force_x += explosion.force * collisions.dot((self.change_x, self.change_y), unit_vector) * unit_vector[0]
+            force_y +=explosion.force * collisions.dot((self.change_x, self.change_y), unit_vector) * unit_vector[1]
         return force_x, force_y
 
     def explode(self):
@@ -102,7 +103,7 @@ class GameObject(arcade.Sprite):
                                    mass=self.mass,
                                    scale=self.scale,
                                    radius_initial=int(self.height) // 2,
-                                   radius_final=int(self.height) * 8,  # was 4!
+                                   radius_final=int(self.height) * 20,  # was 4!
                                    lifetime=2,  # seconds
                                    force=400,  # was 20
                                    velocity_x=self.velocity_x,
