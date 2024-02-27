@@ -12,12 +12,13 @@ if TYPE_CHECKING:
 
 
 class Lander(GameObject):
-    def __init__(self, scene: arcade.Scene, world: World, fuel=100, shield_charge=100):
+    def __init__(self, scene: arcade.Scene, camera: arcade.Camera, world: World, fuel=100, shield_charge=100):
         super().__init__(scene=scene,
                          world=world,
                          filename="images/lander.png",
                          mass=20,
-                         scale=0.2 * SCALING
+                         scale=0.2 * SCALING,
+                         camera=camera
                          )
         self.scene.add_sprite("Lander", self)
         self.engine = Engine(scene=scene, owner=self, fuel=fuel)

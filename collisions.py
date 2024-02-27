@@ -199,14 +199,7 @@ def change_pos_of_sprite_and_shield_by_vector(obj: Sprite, x: float, y: float):
     obj.shield.center_y += y
 
 
-def check_for_collisions_general(sprite: Sprite, general_object_spritelists: List[SpriteList], scene: Scene, considered_collisions: set, lander: Lander, camera: Camera):
-    # Unfortunately, I've realized that checking for all these collisions slows the game down.
-    # A weakness of python arcade, that they may well fix in a later version
-    # https://api.arcade.academy/en/2.5.7/arcade_vs_pygame_performance.html#collision-detection
-    # I think my solution will be to simply secretly only check for non-"use_spatial_hash=True" collisions
-    # when the lander can see them.  ie. Non-terrain collisions off screen just won't happen
-    # Alternatively, I could simply decide that missiles can't collide with each other - that would make a significant
-    # difference and probably wouldn't affect the enjoyment of the game very much
+def is_sprite_in_camera_view(sprite: Sprite, camera: Camera):
     camera_left = camera.position[0] - int(camera.viewport_width / 2)
     camera_right = camera.position[0] + int(camera.viewport_width / 2)
     camera_top = camera.position[1] + int(camera.viewport_height / 2)
@@ -215,6 +208,18 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
             or sprite.left > camera_right
             or sprite.top < camera_bottom
             or sprite.bottom > camera_top):
+        return False
+    return True
+
+def check_for_collisions_general(sprite: Sprite, general_object_spritelists: List[SpriteList], scene: Scene, considered_collisions: set, lander: Lander, camera: Camera):
+    # Unfortunately, I've realized that checking for all these collisions slows the game down.
+    # A weakness of python arcade, that they may well fix in a later version
+    # https://api.arcade.academy/en/2.5.7/arcade_vs_pygame_performance.html#collision-detection
+    # I think my solution will be to simply secretly only check for non-"use_spatial_hash=True" collisions
+    # when the lander can see them.  ie. Non-terrain collisions off screen just won't happen
+    # Alternatively, I could simply decide that missiles can't collide with each other - that would make a significant
+    # difference and probably wouldn't affect the enjoyment of the game very much
+    if not is_sprite_in_camera_view(sprite=sprite, camera=camera):
         return False
 
     collisions = arcade.check_for_collision_with_lists(sprite, general_object_spritelists)

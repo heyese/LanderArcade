@@ -12,8 +12,9 @@ if TYPE_CHECKING:
 
 
 class MissileLauncher(GameObject):
-    def __init__(self, scene: arcade.Scene, world: World, missile_interval: int = 15):
+    def __init__(self, scene: arcade.Scene, camera: arcade.Camera, world: World, missile_interval: int = 15):
         super().__init__(scene=scene,
+                         camera=camera,
                          world=world,
                          filename="images/missile_launcher.png",
                          mass=300,
@@ -33,7 +34,7 @@ class MissileLauncher(GameObject):
             self.current_interval = self.missile_interval
 
     def fire_missile(self):
-        missile = Missile(scene=self.scene, world=self.world)
+        missile = Missile(scene=self.scene, world=self.world, camera=self.camera)
         missile.center_x = self.center_x
         missile.center_y = self.top + missile.height
         missile.change_y = 160 * (1/60)

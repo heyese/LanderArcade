@@ -33,6 +33,7 @@ class Explosion(GameObject):
     def __init__(self,
                  scene: arcade.Scene,
                  world: World,
+                 camera: arcade.Camera,
                  mass: int,
                  scale: float,
                  radius_initial: int,
@@ -53,6 +54,7 @@ class Explosion(GameObject):
         file = random.choice(files)
         super().__init__(filename=file,
                          scale=scale * SCALING,
+                         camera=camera,
                          world=world,
                          explodes=False,
                          mass=mass,

@@ -3,14 +3,17 @@ import arcade
 import math
 from constants import SCALING, SPACE_START, SPACE_END
 from typing import TYPE_CHECKING
+import collisions
 if TYPE_CHECKING:
     from classes.world import World
+    from classes.explosion import Explosion
 
 
 class GameObject(arcade.Sprite):
     def __init__(self,
                  scene: arcade.Scene,
                  world: World,
+                 camera: arcade.Camera,
                  filename: str,
                  mass: int,
                  scale: float,
@@ -27,6 +30,7 @@ class GameObject(arcade.Sprite):
                  ):
         super().__init__(filename=filename, scale=scale * SCALING, angle=angle)
         self.scene = scene
+        self.camera = camera
         self.shield = None
         self.disabled_shield = None
         self.engine = None
@@ -58,8 +62,10 @@ class GameObject(arcade.Sprite):
         self.velocity_x = self.change_x / delta_time  # pixels per second!
         self.velocity_y = self.change_y / delta_time
         # Calculate the force being applied
-        force_y = self.determine_force_y(0)
-        force_x = self.determine_force_x(0)
+        force_x, force_y = self.explosion_force()
+        force_y += self.determine_force_y(0)
+        force_x += self.determine_force_x(0)
+        # Force due to explosions
 
         # Calculate changes in coordinates due to force
         # s = ut + (0.5)at^2
@@ -69,17 +75,36 @@ class GameObject(arcade.Sprite):
         self.center_x += self.change_x
         self.center_y += self.change_y
 
+    def explosion_force(self):
+        # Force due to explosions - not applied to ground objects
+        if self.on_ground or not collisions.is_sprite_in_camera_view(sprite=self, camera=self.camera):
+            # Don't go to the trouble of applying explosion forces to sprites that are off screen
+            return 0, 0
+
+        force_x, force_y = 0, 0
+        # noinspection PyTypeChecker
+        if explosion_collisions := arcade.check_for_collision_with_list(self, self.scene['Explosions']):
+            explosion_collisions: list[Explosion]
+            for explosion in explosion_collisions:
+                # Direction of force is along the vector from the explosion to the game object.
+                unit_vector = collisions.unit_vector_from_pos1_to_pos2((explosion.center_x, explosion.center_y), (self.center_x, self.center_y))
+
+                force_x += explosion.force * collisions.dot((self.change_x, self.change_y), unit_vector) * unit_vector[0]
+                force_y +=explosion.force * collisions.dot((self.change_x, self.change_y), unit_vector) * unit_vector[1]
+        return force_x, force_y
+
     def explode(self):
         # Explosions are automatically added to the scene
         from classes.explosion import Explosion
         self.explosion = Explosion(scene=self.scene,
                                    world=self.world,
+                                   camera=self.camera,
                                    mass=self.mass,
                                    scale=self.scale,
                                    radius_initial=int(self.height) // 2,
-                                   radius_final=int(self.height) * 4,
+                                   radius_final=int(self.height) * 8,  # was 4!
                                    lifetime=2,  # seconds
-                                   force=20,
+                                   force=400,  # was 20
                                    velocity_x=self.velocity_x,
                                    velocity_y=self.velocity_y,
                                    center_x=int(self.center_x),

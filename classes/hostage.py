@@ -13,9 +13,10 @@ if TYPE_CHECKING:
 
 
 class Hostage(GameObject):
-    def __init__(self, scene: arcade.Scene, world: World, lander: Lander):
+    def __init__(self, scene: arcade.Scene, world: World, camera: arcade.Camera, lander: Lander):
         super().__init__(scene=scene,
                          world=world,
+                         camera=camera,
                          filename="images/hostage.png",
                          mass=20,
                          scale=0.1 * SCALING,

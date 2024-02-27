@@ -10,9 +10,10 @@ if TYPE_CHECKING:
 
 
 class Missile(GameObject):
-    def __init__(self, scene: arcade.Scene, world: World):
+    def __init__(self, scene: arcade.Scene, world: World, camera: arcade.Camera):
         super().__init__(scene=scene,
                          world=world,
+                         camera=camera,
                          filename="images/missile.png",
                          mass=30,
                          scale=0.3 * SCALING,

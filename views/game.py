@@ -54,7 +54,7 @@ class GameView(arcade.View):
         self.fps_text = None
         self.pos_text = None
 
-    def setup(self, level: int = 1, score: int = 0):
+    def setup(self, level: int = 6, score: int = 0):
         """Get the game ready to play"""
 
         # Set the background color
@@ -94,7 +94,8 @@ class GameView(arcade.View):
         self.lander = Lander(scene=self.scene,
                              world=self.world,
                              fuel=self.level_config.fuel,
-                             shield_charge=self.level_config.shield)
+                             shield_charge=self.level_config.shield,
+                             camera=self.game_camera)
         landing_pad_width = int(2 * self.lander.width)
         if landing_pad_width > landing_pad_width_limit:
             print("Your hardcoded value for the landing pad width limit isn't large enough!")
@@ -113,11 +114,11 @@ class GameView(arcade.View):
 
         # Add the missile launchers
         for i in range(self.level_config.missile_launchers):
-            MissileLauncher(scene=self.scene, world=self.world)
+            MissileLauncher(scene=self.scene, world=self.world, camera=self.game_camera)
 
         # Add the hostages
         for i in range(self.level_config.hostages):
-            Hostage(scene=self.scene, world=self.world, lander=self.lander)
+            Hostage(scene=self.scene, world=self.world, lander=self.lander, camera=self.game_camera)
 
         # Construct the minimap
         minimap_width = int(0.75 * self.game_camera.viewport_width)
