@@ -182,11 +182,11 @@ class World:
             terrain_right_edge.append(right_edge_rect)
             x += left_edge_rect.width
         # Ensure there's a possible spot for the Landing Pad
-        rect = get_rect(x, max_x=WORLD_WIDTH - self.camera_width, min_x=int(landing_pad_width_limit * 1.5))
+        rect = get_rect(x, max_x=WORLD_WIDTH - 2 * self.camera_width, min_x=int(landing_pad_width_limit * 1.5))
         terrain_centre.append(rect)
         x += rect.width
         while x < WORLD_WIDTH - 2 * self.camera_width:
-            rect = get_rect(x, max_x=WORLD_WIDTH - self.camera_width)
+            rect = get_rect(x, max_x=WORLD_WIDTH - 2 * self.camera_width)
             terrain_centre.append(rect)
             x += rect.width
 
