@@ -387,10 +387,9 @@ class GameView(arcade.View):
         # Draw game sprites
         self.scene.draw()
 
-        for explosion in self.scene["Explosions"]:
-            explosion.draw_hit_box((100, 100, 100, 255), 10)
-        for lander in self.scene["Lander"]:
-            lander.draw_hit_box((50, 50, 50, 255), 10)
+        for obj_list in self.scene.sprite_lists:
+            for obj in obj_list:
+                obj.draw_hit_box((100, 100, 100, 255), 10)
 
         # Draw the overlay - minimap, fuel, shield, etc.
         self.overlay_camera.use()

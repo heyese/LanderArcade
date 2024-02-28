@@ -200,10 +200,10 @@ def change_pos_of_sprite_and_shield_by_vector(obj: Sprite, x: float, y: float):
 
 
 def is_sprite_in_camera_view(sprite: Sprite, camera: Camera):
-    camera_left = camera.position[0] - int(camera.viewport_width / 2)
-    camera_right = camera.position[0] + int(camera.viewport_width / 2)
-    camera_top = camera.position[1] + int(camera.viewport_height / 2)
-    camera_bottom = camera.position[1] - int(camera.viewport_height / 2)
+    camera_left = camera.position[0]
+    camera_right = camera.position[0] + camera.viewport_width
+    camera_bottom = camera.position[1]
+    camera_top = camera.position[1] + camera.viewport_height
     if (sprite.right < camera_left
             or sprite.left > camera_right
             or sprite.top < camera_bottom

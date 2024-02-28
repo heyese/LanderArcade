@@ -76,22 +76,24 @@ class GameObject(arcade.Sprite):
         self.center_y += self.change_y
 
     def explosion_force(self):
-        # Force due to explosions - not applied to ground objects
-        if self.on_ground or not collisions.is_sprite_in_camera_view(sprite=self, camera=self.camera):
+        # Force due to explosions - not applied to ground objects or explosions themselves
+        if self.on_ground or not collisions.is_sprite_in_camera_view(sprite=self, camera=self.camera) or self.__class__.__name__ == "Explosion":
             # Don't go to the trouble of applying explosion forces to sprites that are off screen
             return 0, 0
 
         force_x, force_y = 0, 0
-
-        # Explosions change size, meaning their hit box becomes innacurate, and I'm not
-        # immediately sure how to fix that.  SO just doing basic maths to do the same thing
+        # Explosions change size, meaning their hit box becomes inaccurate, and I'm not
+        # immediately sure how to fix that.  So will treat them as circles and use the radius and make my own check
         for explosion in self.scene["Explosions"]:
-            if collisions.modulus((self.center_x - explosion))
-            # Direction of force is along the vector from the explosion to the game object.
-            unit_vector = collisions.unit_vector_from_pos1_to_pos2((explosion.center_x, explosion.center_y), (self.center_x, self.center_y))
-
-            force_x += explosion.force * collisions.dot((self.change_x, self.change_y), unit_vector) * unit_vector[0]
-            force_y +=explosion.force * collisions.dot((self.change_x, self.change_y), unit_vector) * unit_vector[1]
+            explosion: Explosion
+            if collisions.modulus((self.center_x - explosion.center_x, self.center_y - explosion.center_y)) < explosion.radius:
+                # Direction of force is along the vector from the explosion to the game object.
+                if (explosion.center_x - self.center_x) == 0 and (explosion.center_y - self.center_y == 0):
+                    continue
+                unit_vector = collisions.unit_vector_from_pos1_to_pos2((explosion.center_x, explosion.center_y), (self.center_x, self.center_y))
+                angle = math.atan2(unit_vector[1], unit_vector[0])
+                force_x += explosion.force * math.cos(angle)
+                force_y += explosion.force * math.sin(angle)
         return force_x, force_y
 
     def explode(self):
