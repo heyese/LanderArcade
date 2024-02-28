@@ -416,11 +416,8 @@ class GameView(arcade.View):
 
         # This draws all the hit boxes.
         # Slows things down, but can be used to work out what's going on with collisions!
-        for rect in self.scene["Terrain Left Edge"]:
-            rect.draw_hit_box((100, 100, 100, 255), 10)
-
-        for rect in self.scene["Terrain Right Edge"]:
-            rect.draw_hit_box((200, 200, 200, 255), 10)
+        # for rect in self.scene["Terrain Left Edge"]:
+        #     rect.draw_hit_box((100, 100, 100, 255), 10)
 
         # Draw the overlay - minimap, fuel, shield, etc.
         self.overlay_camera.use()
