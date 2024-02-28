@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import math
+
 import arcade
 import random
 from classes.game_object import GameObject
@@ -77,6 +80,7 @@ class Explosion(GameObject):
         self.scene.add_sprite(name="Explosions", sprite=self)
         self.timer = 0
         self.rotation_rate = random.randint(1, 180)  # degrees per second
+        self.root_2 = math.sqrt(2)
 
     @property
     def radius(self) -> float:
@@ -87,13 +91,33 @@ class Explosion(GameObject):
         self._radius = new_radius
         self.height = 2 * new_radius
         self.width = 2 * new_radius
+        # self.top = self.center_y + new_radius
+        # self.bottom = self.center_y - new_radius
+        # self.left = self.center_x - new_radius
+        # self.right = self.change_x + new_radius
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)
-        self.hit_box = self.texture.hit_box_points
+
         self.timer += delta_time
         # We start off spinning but, as friction reduces the horizontal speed of the explosion to zero, we stop rotating
         self.angle += 0 if not self.velocity_x_initial else delta_time * self.rotation_rate * abs(self.velocity_x/self.velocity_x_initial)
         self.radius = self.radius_initial + (self.timer / self.lifetime) * (self.radius_final - self.radius_initial)
+
+        # https://api.arcade.academy/en/stable/api/sprites.html#arcade.Sprite.set_hit_box
+        # As the explosion grows, I need to adjust its hit box so collisions remain accurate
+        # We imagine the explosion is at (0, 0).  So basically, I'm specifying points on a circle here
+
+        points = [[self.radius, 0],
+                  [self.radius / self.root_2, -self.radius / self.root_2],
+                  [0, -self.radius],
+                  [-self.radius / self.root_2, -self.radius / self.root_2],
+                  [-self.radius, 0],
+                  [-self.radius / self.root_2, self.radius / self.root_2],
+                  [0, self.radius],
+                  [self.radius / self.root_2, self.radius / self.root_2]]
+        # Hit box ASSUMES THE SCALE IS 1.0!!
+        scaled_points = [[int(a / self.scale), int(b / self.scale)] for a, b in points]
+        self.hit_box = scaled_points
         if self.timer > self.lifetime:
             self.remove_from_sprite_lists()

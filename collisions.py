@@ -137,9 +137,7 @@ def check_for_collisions(scene: Scene, camera: Camera, world: World):
         is_collision |= check_for_collision_with_landing_pad(sprite, lander=lander, landing_pad=landing_pad, scene=scene)
         is_collision |= check_for_collision_with_terrain(sprite, terrain_spritelists, scene, world)
         is_collision |= check_for_collisions_general(sprite, general_object_spritelists, scene, considered_collisions, lander, camera)
-        # shield colliding with shields is an elastic collision
 
-        #is_collision |= check_for_collision_with_ground_enemies(sprite, terrain_spritelists, scene)
         # Not 100% sold on this, but below, if the lander has collided with something,
         # I cause a little camera shake.  It's fixed amplitude and along the movement vector of the lander,
         # which is not necessarily the same as the vector along which it was hit, so not very sophisticated
@@ -221,7 +219,6 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
     # difference and probably wouldn't affect the enjoyment of the game very much
     if not is_sprite_in_camera_view(sprite=sprite, camera=camera):
         return False
-
     collisions = arcade.check_for_collision_with_lists(sprite, general_object_spritelists)
     sprite_collided = False
     for collision in collisions:
@@ -242,26 +239,18 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
             continue
 
         # Here I'm considering what happens where one side of the "collision" is an explosion
-        if {"Explosion"} == {sprite.__class__.__name__, collision.__class__.__name__}:
-            # Explosions touching each other does nothing - they've already exploded.  No more exploding to do.
-            continue
-        if "Explosion" in {sprite.__class__.__name__, collision.__class__.__name__}:
-            # One side of this collision is an explosion.
-            for obj in [sprite, collision]:
-                if obj.__class__.__name__ == 'Explosion':
-                    # Nothing happens to the explosion itself
-                    continue
-                # But if an object comes into contact with an explosion and doesn't have an activated shield, it blows up
-                # (ie. If you're not a shield and don't have a shield, or you're not a shield and have a shield but it's
-                # deactivated, then you blow up)
-                if (obj.__class__.__name__ != 'Shield' and (
-                        getattr(obj, 'shield', None) is None or
-                        ((shield := getattr(obj, 'shield', None)) is not None and shield.activated is False))
-
-            ):
-                    obj.die()
-                    # No direct velocity change.  ie. no "impact" from collision with an explosion, but it does exert a
-                    # force - this is seen in the force calculations for the object
+        # It can only be the "sprite" side, as I've not put Explosions into general_object_spritelists.
+        if "Explosion" == sprite.__class__.__name__:
+            # But if an object comes into contact with an explosion and doesn't have an activated shield, it blows up
+            # (ie. If you're not a shield and don't have a shield, or you're not a shield and have a shield but it's
+            # deactivated, then you blow up)
+            if (collision.__class__.__name__ != 'Shield' and (
+                    getattr(collision, 'shield', None) is None or
+                    ((shield := getattr(collision, 'shield', None)) is not None and shield.activated is False))):
+                collision: GameObject
+                collision.die()
+            # If you 'collide' with an explosion and you have an activated shield, then the explosion applies a force
+            # to you.  But I don't deal with that here - that is in the on_update() in GameObject.
             continue
 
         sprite_collided = True
