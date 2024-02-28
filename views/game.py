@@ -387,9 +387,11 @@ class GameView(arcade.View):
         # Draw game sprites
         self.scene.draw()
 
-        for obj_list in self.scene.sprite_lists:
-            for obj in obj_list:
-                obj.draw_hit_box((100, 100, 100, 255), 10)
+        # This draws all the hit boxes.
+        # Slows things down, but can be used to work out what's going on with collisions!
+        # for obj_list in self.scene.sprite_lists:
+        #     for obj in obj_list:
+        #         obj.draw_hit_box((100, 100, 100, 255), 10)
 
         # Draw the overlay - minimap, fuel, shield, etc.
         self.overlay_camera.use()

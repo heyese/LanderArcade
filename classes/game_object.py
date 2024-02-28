@@ -63,8 +63,8 @@ class GameObject(arcade.Sprite):
         self.velocity_y = self.change_y / delta_time
         # Calculate the force being applied
         force_x, force_y = self.explosion_force()
-        force_y += self.determine_force_y(0)
-        force_x += self.determine_force_x(0)
+        force_y += self.determine_force_y(force_y)
+        force_x += self.determine_force_x(force_x)
         # Force due to explosions
 
         # Calculate changes in coordinates due to force
@@ -105,9 +105,15 @@ class GameObject(arcade.Sprite):
                                    mass=self.mass,
                                    scale=self.scale,
                                    radius_initial=int(self.height) // 2,
-                                   radius_final=int(self.height) * 20,  # was 4!
+                                   radius_final=int(self.height) * 4,
                                    lifetime=2,  # seconds
-                                   force=400,  # was 20
+                                   # Force here is what's applied to airborne objects that are
+                                   # within the explosion (and presumably shielded!).
+                                   # Say gravity is 100, lander mass is 20, so gravitational force
+                                   # is f = ma -> 2000.
+                                   # So trying to get a feel for what the right value should be,
+                                   # but 4000 is double the kind of average gravitational pull
+                                   force=4000,  # was 20
                                    velocity_x=self.velocity_x,
                                    velocity_y=self.velocity_y,
                                    center_x=int(self.center_x),
