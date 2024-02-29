@@ -16,6 +16,8 @@ an object, so it's not good enough
 
 Add an enemy aircraft
 Have a "super missile launcher"
+Should stars should be on a new parallax layer which is furthest away?
+Bomb thrower!  Parabolic curves, with bombs exploding on a timer.  Flashing rate can indicate how close it is to exploding
 
 Add some sounds!
 https://learn.arcade.academy/en/latest/chapters/20_sounds/sounds.html
@@ -24,13 +26,9 @@ With the parallax code - make sure you can add directly to a parallax level, rat
 having to ensure the clouds are added at the right place!
 
 
-Sometimes collision detection isn't very good - I sometimes fly through a missile launcher with my shield on
-Perhaps it's worth doing my own manual check!?  Just based on distance between centres
-
-Bomb thrower!  Parabolic curves, with bombs exploding on a timer.  Flashing rate can indicate how close it is to exploding
 
 Enemy weapons that temporarily disable the shield
 
 ## Known Bugs
 Background flicker-glitch at world wrap around point
-At terrain edge, seen hostages be placed actually in the terrain and not on top of it
+Explosions go through the terrain - I'm not bothered about this.  Let's call it a feature.
