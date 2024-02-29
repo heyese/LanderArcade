@@ -293,6 +293,7 @@ class GameView(arcade.View):
 
         # Parallax scrolling of the backgrounds
         for parallax_factor, background_layer in self.world.background_layers.items():
+            # This is not the center!!  It's mis-named in the code.  It's the left hand side!
             background_layer.center_x = self.game_camera.position[0] * parallax_factor
 
         # Update the minimap

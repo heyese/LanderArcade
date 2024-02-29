@@ -27,7 +27,8 @@ class World:
         self.sky_color = sky_color if sky_color else random.choices(range(256), k=3)
         self.ground_color = ground_color if ground_color else random.choices(range(256), k=3)
         self.gravity = gravity if gravity is not None else random.randint(20, max(20, max_gravity))
-        self.star_count = star_count if star_count is not None else random.randint(700, 2000)
+        # I play with the below number - it's not an exact count!  But it does set how densely the sky is populated with stars
+        self.star_count = star_count if star_count is not None else random.randint(100, 600)
         # Terrain attributes
         self.hill_height = hill_height if hill_height is not None else random.randint(20, 100) / 100
         self.hill_width = hill_width if hill_width is not None else random.randint(20, 100) / 100
@@ -135,43 +136,47 @@ class World:
         # thought it does now kind of look as though you're going at warp speed and whipping past actual stars
         # rather than simply moving through the sky ...
         parallax_factors = sorted(parallax_factors, reverse=True)  # from furthest away to closest
-        # Want most stars to be furthest away
+        wrapping_point = WORLD_WIDTH - 2 * self.camera_width
         for index, factor in enumerate(parallax_factors):
+            background_wrapping_point = int(wrapping_point * (1 - factor))
+            # Want most stars to be furthest away, hence the division by the index
             for _ in range(int(self.star_count/(index+1))):
-                star, star_for_world_wrap = self.get_star(height_range=(int((2 / 3) * WORLD_HEIGHT), int(1.25 * WORLD_HEIGHT)),
-                                                          brightness_range=(127, 256))
-                self.background_layers[factor].append(star)
-                if star_for_world_wrap is not None:
-                    self.background_layers[factor].append(star_for_world_wrap)
+                # The lander can get up to WORLD_HEIGHT (and even a bit higher if it tries hard enough) - I want
+                # it to still see stars in the space above it.  So I go above WORLD_HEIGHT when generating stars.
+                for star in self.get_star(height_range=(int((2 / 3) * WORLD_HEIGHT), int(1.25 * WORLD_HEIGHT)),
+                                                          brightness_range=(127, 256),
+                                                          background_wrapping_point=background_wrapping_point):
+                    self.background_layers[factor].append(star)
+
             # Let's have fewer stars, less bright, at the top of the atmosphere, below "space"
             # Above covers 0.59 of the world height.
             # Below covers 0.104 of the world height.
             # This gives a ratio which maintains star density
             for _ in range(int(self.star_count * (0.104 / 0.59) / (index+1))):
-                star, star_for_world_wrap = self.get_star(height_range=(int((5 / 9) * WORLD_HEIGHT), int((2 / 3) * WORLD_HEIGHT)),
-                                                          brightness_range=(50, 127))
-                self.background_layers[factor].append(star)
-                if star_for_world_wrap is not None:
-                    self.background_layers[factor].append(star_for_world_wrap)
+                for star in self.get_star(height_range=(int((5 / 9) * WORLD_HEIGHT), int((2 / 3) * WORLD_HEIGHT)),
+                                                          brightness_range=(50, 127),
+                                                          background_wrapping_point=background_wrapping_point):
+                    self.background_layers[factor].append(star)
 
-    def get_star(self, *, height_range: Tuple[int, int], brightness_range: Tuple[int, int]):
+    def get_star(self, *, height_range: Tuple[int, int], brightness_range: Tuple[int, int], background_wrapping_point: int):
         # Stars in the sky ...
-        x = random.randrange(WORLD_WIDTH - 2 * self.camera_width)
-        # The lander can get up to WORLD_HEIGHT (and even a bit higher if it tries hard enough) - I want
-        # it to still see stars in the space above it.  So I go above WORLD_HEIGHT when generating stars.
+        # Kind of gets one star, but also any copies needed to make the wrap around logic work
+        x = random.randrange(background_wrapping_point)
         y = random.randrange(*height_range)
         brightness = random.randrange(*brightness_range)
 
         radius = random.randrange(2, 8)
         color = (brightness, brightness, brightness)
-        star = arcade.create_rectangle_filled(x, y, radius, radius, color, 45)
-        star_copy = None
-        if x < 2 * self.camera_width:
-            # Due to the way we wrap the world around, stars with 2 camera_widths
-            # of the start of the world should be replicated in the last 2 camera_widths
-            world_wrap_distance = WORLD_WIDTH - 2 * self.camera_width
-            star_copy = arcade.create_rectangle_filled(x + world_wrap_distance, y, radius, radius, color, 45)
-        return star, star_copy
+        # If we scroll really slowly, the background_wrapping_point is less than the width of the screen,
+        # so we won't actually fill it up!  So some copies may be needed
+
+        stars = []
+        # TODO: This still isn't quite right
+        while x < self.camera_width:
+            stars.append(arcade.create_rectangle_filled(x, y, radius, radius, color, 45))
+            x += background_wrapping_point
+        stars.append(arcade.create_rectangle_filled(x, y, radius, radius, color, 45))
+        return stars
 
     def get_mountains(self, *, parallax_factor: float,
                       colour: tuple[int, int, int],
