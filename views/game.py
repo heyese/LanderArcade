@@ -56,7 +56,7 @@ class GameView(arcade.View):
         self.pos_text = None
         self.timer = 0
 
-    def setup(self, level: int = 1, score: int = 0):
+    def setup(self, level: int = 6, score: int = 0):
         """Get the game ready to play"""
 
         # Set the background color
@@ -213,7 +213,8 @@ class GameView(arcade.View):
         proj = 0, WORLD_WIDTH - 2 * self.game_camera.viewport_width, 0, WORLD_HEIGHT
         with self.minimap_sprite_list.atlas.render_into(self.minimap_texture, projection=proj) as fbo:
             fbo.clear(self.minimap_background_colour)
-            self.world.background_shapes.draw()
+            # Just drawing the "fixed" parallax layer - don't want the minimap to be cluttered, even though it can be quite pretty
+            self.world.background_layers[1].draw()
             self.scene.get_sprite_list('Terrain Left Edge').draw()
             self.scene.get_sprite_list('Terrain Centre').draw()
             # Want the lander and the landing pad to stand out, rather than being tiny
@@ -291,8 +292,8 @@ class GameView(arcade.View):
             self.window.show_view(NextLevelView(level=self.level, score=self.score))
 
         # Parallax scrolling of the backgrounds
-        for background, parallax_factor in self.world.background_layers:
-            background.center_x = self.game_camera.position[0] * parallax_factor
+        for parallax_factor, background_layer in self.world.background_layers.items():
+            background_layer.center_x = self.game_camera.position[0] * parallax_factor
 
         # Update the minimap
         self.update_minimap()
@@ -404,10 +405,13 @@ class GameView(arcade.View):
         arcade.start_render()
         # Draw the game objects
         self.game_camera.use()
+
         # Draw game non-sprites
-        self.world.background_shapes.draw()  # This is not a sprite, so not covered by scene.draw()
-        for background_layer, parallax_factor in self.world.background_layers:
-            background_layer.draw()
+
+        # Drawing the background layers in order, from furthest back to closest
+        for parallax_factor in sorted(self.world.background_layers.keys(), reverse=True):
+            self.world.background_layers[parallax_factor].draw()
+
         if self.landing_pad.activated and self.lander.dead is False:
             self.lander.draw_landing_angle_guide()
         self.lander.draw_tractor_bream()

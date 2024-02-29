@@ -1,3 +1,4 @@
+import collections
 import itertools
 import arcade
 import random
@@ -34,66 +35,53 @@ class World:
         self.max_terrain_height = None
         self.camera_width = camera_width
         self.camera_height = camera_height
+        # Background parallax layers
+        # key is the parallax factor.  0 (closest) matches foreground, 1 (furthest away possible) is completely static
+        self.background_layers: defaultdict[float, arcade.ShapeElementList] = defaultdict(arcade.ShapeElementList)
 
         # Not everything is a sprite!  But I don't need to detect collisions with everything, so that's ok.
-        # Will have a list of shapes associated with the world that get drawn but can't be interacted with
-        self.background_shapes = arcade.ShapeElementList()
-        self.background_shapes.append(self.get_sky_to_space_fade_rectangle())
-        for _ in range(self.star_count):
-            star, star_for_world_wrap = self.get_star(height_range=(int((2 / 3) * WORLD_HEIGHT), int(1.25 * WORLD_HEIGHT)),
-                                                      brightness_range=(127, 256))
-            self.background_shapes.append(star)
-            if star_for_world_wrap is not None:
-                self.background_shapes.append(star_for_world_wrap)
-        # Let's have fewer stars, less bright, at the top of the atmosphere
-        # Above covers 0.59 of the world height.
-        # Below covers 0.104 of the world height.
-        for _ in range(int(self.star_count * (0.104 / 0.59))):
-            star, star_for_world_wrap = self.get_star(height_range=(int((5 / 9) * WORLD_HEIGHT), int((2 / 3) * WORLD_HEIGHT)),
-                                                      brightness_range=(80, 127))
-            self.background_shapes.append(star)
-            if star_for_world_wrap is not None:
-                self.background_shapes.append(star_for_world_wrap)
+        # Will have a list of shapes associated with the world that get drawn but can't be interacted with, and shove
+        # them into the 'background_layers'
+        self.background_layers[1].append(self.get_sky_to_space_fade_rectangle())
+        # Add the stars
+        self.add_stars(parallax_factors=[0.9, 0.7, 0.5])
+        # Add the clouds - parallax factors chosen to interweave with the mountains
+        self.add_clouds(parallax_factors=[0.9, 0.7, 0.5])
 
-        # I also want horizontal white strips (ie. a bit like clouds)
-        number_of_strips = random.randint(3, 8)
-        vertical_range = [int((1/6) * WORLD_HEIGHT), int(0.5 * WORLD_HEIGHT)]
-        cloud_rectangles = self.get_cloud_rectangles(vertical_range=vertical_range, number_of_strips=number_of_strips)
-        cloud_rectangle_layers = defaultdict(arcade.ShapeElementList)
-        for i in range(len(cloud_rectangles)):
-            layer = random.randint(1, 3)
-            cloud_rectangle_layers[layer].append(cloud_rectangles[i])
+
 
         # Background layers are used for a parallax scrolling effect
-        self.background_layers: list[tuple[arcade.ShapeElementList, float]] = []  # float is the parallax factor
         colour1 = (random.randint(20, 100), random.randint(20, 100), random.randint(20, 100))
         colour2 = (colour1[0] + 30, colour1[1] + 30, colour1[2] + 30)
         colour3 = (colour2[0] + 30, colour2[1] + 30, colour2[2] + 30)
-        factor = 0.8  # Factor of zero results in same scrolling as foreground
-        self.background_layers.append((cloud_rectangle_layers[1], factor))
-        self.background_layers.append((self.get_background_triangles(parallax_factor=factor,
+        parallax_factor = 0.8
+        self.background_layers[parallax_factor] = self.get_mountains(parallax_factor=parallax_factor,
                                                                      colour=colour3,
-                                                                     height_range=(int(WORLD_HEIGHT / 3), int(WORLD_HEIGHT / 2)),
-                                                                     width_range=(int(WORLD_WIDTH / 12), int(WORLD_WIDTH / 9)),
-                                                                     num_triangles=3), factor))
-        factor = 0.6
-        self.background_layers.append((cloud_rectangle_layers[2], factor))
-        self.background_layers.append((self.get_background_triangles(parallax_factor=factor,
+                                                                     height_range=(
+                                                                     int(WORLD_HEIGHT / 3), int(WORLD_HEIGHT / 2)),
+                                                                     width_range=(
+                                                                     int(WORLD_WIDTH / 12), int(WORLD_WIDTH / 9)),
+                                                                     num_triangles=3)
+        parallax_factor = 0.6
+        self.background_layers[parallax_factor] = self.get_mountains(parallax_factor=parallax_factor,
                                                                      colour=colour2,
-                                                                     height_range=(int(WORLD_HEIGHT / 4), int(WORLD_HEIGHT / 3)),
-                                                                     width_range=(int(WORLD_WIDTH / 12), int(WORLD_WIDTH / 8)),
-                                                                     num_triangles=4), factor))
+                                                                     height_range=(
+                                                                     int(WORLD_HEIGHT / 4), int(WORLD_HEIGHT / 3)),
+                                                                     width_range=(
+                                                                     int(WORLD_WIDTH / 12), int(WORLD_WIDTH / 8)),
+                                                                     num_triangles=4)
 
         # Find that values below about 5 results in a flicker
         # when the world wraps when going from right to left.
         # Not sure what it is, but it's a tiny thing.
-        factor = 0.45
-        self.background_layers.append((cloud_rectangle_layers[3], factor))
-        self.background_layers.append((self.get_background_triangles(parallax_factor=factor,
+        parallax_factor = 0.45
+        self.background_layers[parallax_factor] = self.get_mountains(parallax_factor=parallax_factor,
                                                                      colour=colour1,
-                                                                     height_range=(int(WORLD_HEIGHT / 6), int(WORLD_HEIGHT / 4)),
-                                                                     width_range=(int(WORLD_WIDTH / 15), int(WORLD_WIDTH / 10)),
-                                                                     num_triangles=8), factor))
+                                                                     height_range=(
+                                                                     int(WORLD_HEIGHT / 6), int(WORLD_HEIGHT / 4)),
+                                                                     width_range=(
+                                                                     int(WORLD_WIDTH / 15), int(WORLD_WIDTH / 10)),
+                                                                     num_triangles=8)
 
         # The foreground
         self.terrain_left_edge, self.terrain_centre, self.terrain_right_edge = self.get_terrain(self.landing_pad_width_limit)
@@ -103,12 +91,94 @@ class World:
 
         self.max_terrain_height = max([r.height for r in itertools.chain(self.terrain_left_edge, self.terrain_centre)])
 
-    def get_background_triangles(self, *, parallax_factor: float,
-                                 colour: tuple[int, int, int],
-                                 height_range: tuple[int, int],
-                                 width_range: tuple[int, int],
-                                 num_triangles: int
-                                 ):
+    def add_clouds(self, *, parallax_factors: list[float]):
+        def get_cloud_rectangles(*, vertical_range, number_of_strips) -> list[arcade.Shape]:
+            # A background rectangle, presumably white-ish in colour, that's meant to give the impression of clouds
+            cloud_rectangles = []
+            y_high = vertical_range[0]
+            for i in range(number_of_strips):
+                # So more likely to have clouds bunched together at the bottom, which is a nice effect
+                y_low = random.randint(vertical_range[0], min(y_high + 200, vertical_range[1]))
+                y_high = random.randint(y_low, y_low + 100)
+                points = ((0, y_low),
+                          (WORLD_WIDTH, y_low),
+                          (WORLD_WIDTH, y_high),
+                          (0, y_high))
+                colors = (
+                    (*arcade.color.DUTCH_WHITE, 80),
+                    (*arcade.color.DUTCH_WHITE, 150),
+                    (*arcade.color.WHITE_SMOKE, 150),
+                    (*arcade.color.WHITE_SMOKE, 150),
+                )
+                cloud_rectangles.append(arcade.create_rectangle_filled_with_colors(points, colors))
+
+                if y_high >= vertical_range[1]:
+                    break
+            return cloud_rectangles
+
+        # I also want horizontal white strips (ie. a bit like clouds)
+        # The clouds don't actually move in a parallax way, but I do want them to be inbetween other parallax layers ...
+        # So the parallax factor I'm using here is simply for the purpose of ordering when the clouds get drawn.
+        number_of_strips = random.randint(3, 8)
+        vertical_range = [int((1/6) * WORLD_HEIGHT), int(0.5 * WORLD_HEIGHT)]
+        cloud_rectangles = get_cloud_rectangles(vertical_range=vertical_range, number_of_strips=number_of_strips)
+        for cloud in cloud_rectangles:
+            factor = random.choice(parallax_factors)
+            self.background_layers[factor].append(cloud)
+
+    def add_stars(self, *, parallax_factors: list[float]):
+        # Weird thing with the stars.  Initially, they were at the foreground, and as you flew past them
+        # they moved much liked the ground terrain did.  But when I added the parallax layers for the mountains,
+        # with the back mountains being the tallest and most likely to be on screen at the same time as the stars,
+        # it looked quite weird - these mounts would barely move whilst stars zipped past.
+        # I've decided it feels better to have parallax layers for the stars as well to fix this problem - even
+        # thought it does now kind of look as though you're going at warp speed and whipping past actual stars
+        # rather than simply moving through the sky ...
+        parallax_factors = sorted(parallax_factors, reverse=True)  # from furthest away to closest
+        # Want most stars to be furthest away
+        for index, factor in enumerate(parallax_factors):
+            for _ in range(int(self.star_count/(index+1))):
+                star, star_for_world_wrap = self.get_star(height_range=(int((2 / 3) * WORLD_HEIGHT), int(1.25 * WORLD_HEIGHT)),
+                                                          brightness_range=(127, 256))
+                self.background_layers[factor].append(star)
+                if star_for_world_wrap is not None:
+                    self.background_layers[factor].append(star_for_world_wrap)
+            # Let's have fewer stars, less bright, at the top of the atmosphere, below "space"
+            # Above covers 0.59 of the world height.
+            # Below covers 0.104 of the world height.
+            # This gives a ratio which maintains star density
+            for _ in range(int(self.star_count * (0.104 / 0.59) / (index+1))):
+                star, star_for_world_wrap = self.get_star(height_range=(int((5 / 9) * WORLD_HEIGHT), int((2 / 3) * WORLD_HEIGHT)),
+                                                          brightness_range=(50, 127))
+                self.background_layers[factor].append(star)
+                if star_for_world_wrap is not None:
+                    self.background_layers[factor].append(star_for_world_wrap)
+
+    def get_star(self, *, height_range: Tuple[int, int], brightness_range: Tuple[int, int]):
+        # Stars in the sky ...
+        x = random.randrange(WORLD_WIDTH - 2 * self.camera_width)
+        # The lander can get up to WORLD_HEIGHT (and even a bit higher if it tries hard enough) - I want
+        # it to still see stars in the space above it.  So I go above WORLD_HEIGHT when generating stars.
+        y = random.randrange(*height_range)
+        brightness = random.randrange(*brightness_range)
+
+        radius = random.randrange(2, 8)
+        color = (brightness, brightness, brightness)
+        star = arcade.create_rectangle_filled(x, y, radius, radius, color, 45)
+        star_copy = None
+        if x < 2 * self.camera_width:
+            # Due to the way we wrap the world around, stars with 2 camera_widths
+            # of the start of the world should be replicated in the last 2 camera_widths
+            world_wrap_distance = WORLD_WIDTH - 2 * self.camera_width
+            star_copy = arcade.create_rectangle_filled(x + world_wrap_distance, y, radius, radius, color, 45)
+        return star, star_copy
+
+    def get_mountains(self, *, parallax_factor: float,
+                      colour: tuple[int, int, int],
+                      height_range: tuple[int, int],
+                      width_range: tuple[int, int],
+                      num_triangles: int
+                      ):
         #  It's made my brain hurt, but I'm trying to work out how wide the parallax background
         # needs to be so that it wraps when we want it to.
         # I think a lot of my confusion stems from the use of "background.center_x" on the ShapeElementList.
@@ -122,7 +192,7 @@ class World:
         # To get from there to the wrapping_point, we have advanced this far: wrapping_point * (1 - parallax_factor)
         # So that is the point on the background that we want to do the wrap.
 
-        def get_triangle(*, left, height, width):
+        def get_mountain(*, left, height, width):
             """Returns a triangle starting at >=x, and not ending >= max_x"""
             def brighten(colour: tuple[int, int, int]):
                 values = [random.randint(50, 100) for _ in range(3)]
@@ -152,7 +222,7 @@ class World:
             left = random.randint(0, background_wrapping_point - width_range[0])
             colour = (colour[0] + random.randint(-10, 10), colour[1] + random.randint(-10, 10), colour[2] + random.randint(-10, 10))
             colour = (max(min(colour[0], 255), 0), max(min(colour[0], 255), 0), max(min(colour[0], 255), 0))
-            triangle, triangle2 = get_triangle(left=left, height=height, width=width)
+            triangle, triangle2 = get_mountain(left=left, height=height, width=width)
             background_triangles.append(triangle)
             background_triangles.append(triangle2)
         return background_triangles
@@ -203,58 +273,17 @@ class World:
 
         return terrain_left_edge, terrain_centre, terrain_right_edge
 
-    def get_star(self, *, height_range: Tuple[int, int], brightness_range: Tuple[int, int]):
-        # Stars in the sky ...
-        x = random.randrange(WORLD_WIDTH - 2 * self.camera_width)
-        # The lander can get up to WORLD_HEIGHT (and even a bit higher if it tries hard enough) - I want
-        # it to still see stars in the space above it.  So I go above WORLD_HEIGHT when generating stars.
-        y = random.randrange(*height_range)
-        brightness = random.randrange(*brightness_range)
-
-        radius = random.randrange(2, 8)
-        color = (brightness, brightness, brightness)
-        star = arcade.create_rectangle_filled(x, y, radius, radius, color, 45)
-        star_copy = None
-        if x < 2 * self.camera_width:
-            # Due to the way we wrap the world around, stars with 2 camera_widths
-            # of the start of the world should be replicated in the last 2 camera_widths
-            world_wrap_distance = WORLD_WIDTH - 2 * self.camera_width
-            star_copy = arcade.create_rectangle_filled(x + world_wrap_distance, y, radius, radius, color, 45)
-        return star, star_copy
-
     def get_sky_to_space_fade_rectangle(self) -> arcade.Shape:
         # A rectangle from bottom to 2/3rds screen height, with increasing transparency from bottom to top,
         # so that the sky fades into space ...
-        points = ((0, 0),
+        # Because of the way the parallax background layers work, I've made this really
+        # wide so it covers the whole minimap
+        points = ((-WORLD_WIDTH, 0),
                   (WORLD_WIDTH, 0),
                   (WORLD_WIDTH, SPACE_START),
-                  (0, SPACE_START))
+                  (-WORLD_WIDTH, SPACE_START))
         colors = ((*self.sky_color, 255),
                   (*self.sky_color, 255),
                   BACKGROUND_COLOR,
                   BACKGROUND_COLOR)
         return arcade.create_rectangle_filled_with_colors(points, colors)
-
-    def get_cloud_rectangles(self, *, vertical_range, number_of_strips) -> list[arcade.Shape]:
-        # A background rectangle, presumably white-ish in colour, that's meant to give the impression of clouds
-        cloud_rectangles = []
-        y_high = vertical_range[0]
-        for i in range(number_of_strips):
-            # So more likely to have clouds bunched together at the bottom, which is a nice effect
-            y_low = random.randint(vertical_range[0], min(y_high + 200, vertical_range[1]))
-            y_high = random.randint(y_low, y_low + 100)
-            points = ((0, y_low),
-                      (WORLD_WIDTH, y_low),
-                      (WORLD_WIDTH, y_high),
-                      (0, y_high))
-            colors = (
-                      (*arcade.color.DUTCH_WHITE, 80),
-                      (*arcade.color.DUTCH_WHITE, 150),
-                      (*arcade.color.WHITE_SMOKE, 150),
-                      (*arcade.color.WHITE_SMOKE, 150),
-            )
-            cloud_rectangles.append(arcade.create_rectangle_filled_with_colors(points, colors))
-
-            if y_high >= vertical_range[1]:
-                break
-        return cloud_rectangles
