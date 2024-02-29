@@ -72,8 +72,9 @@ class Lander(GameObject):
 
     def determine_force_y(self, force_y):
         force_y = super().determine_force_y(force_y)
-        if self.above_space:
-            # If someone tries to fly off into deep space, bring them back before they get lost ...
+        if self.above_space and self.change_y > 0:
+            # We want to stop people flying off into deep space, but I don't want to fling them wildly
+            # back at the ground.  So we only apply the force while we're gaining altitude
             force_y -= self.mass * 5 * (self.center_y - SPACE_END)
         return force_y
 

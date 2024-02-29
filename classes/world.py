@@ -6,6 +6,7 @@ from constants import WORLD_WIDTH, WORLD_HEIGHT, BACKGROUND_COLOR, SPACE_START, 
 import copy
 from collections import defaultdict
 
+
 class World:
     def __init__(self,
                  scene: arcade.Scene,
@@ -25,7 +26,7 @@ class World:
         self.sky_color = sky_color if sky_color else random.choices(range(256), k=3)
         self.ground_color = ground_color if ground_color else random.choices(range(256), k=3)
         self.gravity = gravity if gravity is not None else random.randint(20, max(20, max_gravity))
-        self.star_count = star_count if star_count is not None else random.randint(300, 1500)
+        self.star_count = star_count if star_count is not None else random.randint(700, 2000)
         # Terrain attributes
         self.hill_height = hill_height if hill_height is not None else random.randint(20, 100) / 100
         self.hill_width = hill_width if hill_width is not None else random.randint(20, 100) / 100
@@ -39,7 +40,17 @@ class World:
         self.background_shapes = arcade.ShapeElementList()
         self.background_shapes.append(self.get_sky_to_space_fade_rectangle())
         for _ in range(self.star_count):
-            star, star_for_world_wrap = self.get_star()
+            star, star_for_world_wrap = self.get_star(height_range=(int((2 / 3) * WORLD_HEIGHT), int(1.25 * WORLD_HEIGHT)),
+                                                      brightness_range=(127, 256))
+            self.background_shapes.append(star)
+            if star_for_world_wrap is not None:
+                self.background_shapes.append(star_for_world_wrap)
+        # Let's have fewer stars, less bright, at the top of the atmosphere
+        # Above covers 0.59 of the world height.
+        # Below covers 0.104 of the world height.
+        for _ in range(int(self.star_count * (0.104 / 0.59))):
+            star, star_for_world_wrap = self.get_star(height_range=(int((5 / 9) * WORLD_HEIGHT), int((2 / 3) * WORLD_HEIGHT)),
+                                                      brightness_range=(80, 127))
             self.background_shapes.append(star)
             if star_for_world_wrap is not None:
                 self.background_shapes.append(star_for_world_wrap)
@@ -52,8 +63,6 @@ class World:
         for i in range(len(cloud_rectangles)):
             layer = random.randint(1, 3)
             cloud_rectangle_layers[layer].append(cloud_rectangles[i])
-
-
 
         # Background layers are used for a parallax scrolling effect
         self.background_layers: list[tuple[arcade.ShapeElementList, float]] = []  # float is the parallax factor
@@ -93,7 +102,6 @@ class World:
         self.scene.add_sprite_list("Terrain Right Edge", use_spatial_hash=True, sprite_list=self.terrain_right_edge)
 
         self.max_terrain_height = max([r.height for r in itertools.chain(self.terrain_left_edge, self.terrain_centre)])
-
 
     def get_background_triangles(self, *, parallax_factor: float,
                                  colour: tuple[int, int, int],
@@ -195,12 +203,15 @@ class World:
 
         return terrain_left_edge, terrain_centre, terrain_right_edge
 
-    def get_star(self):
+    def get_star(self, *, height_range: Tuple[int, int], brightness_range: Tuple[int, int]):
         # Stars in the sky ...
         x = random.randrange(WORLD_WIDTH - 2 * self.camera_width)
-        y = random.randrange(int((2 / 3) * WORLD_HEIGHT), WORLD_HEIGHT)
+        # The lander can get up to WORLD_HEIGHT (and even a bit higher if it tries hard enough) - I want
+        # it to still see stars in the space above it.  So I go above WORLD_HEIGHT when generating stars.
+        y = random.randrange(*height_range)
+        brightness = random.randrange(*brightness_range)
+
         radius = random.randrange(2, 8)
-        brightness = random.randrange(127, 256)
         color = (brightness, brightness, brightness)
         star = arcade.create_rectangle_filled(x, y, radius, radius, color, 45)
         star_copy = None
