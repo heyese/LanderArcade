@@ -26,5 +26,10 @@ https://learn.arcade.academy/en/latest/chapters/20_sounds/sounds.html
 
 ## Known Bugs
 Mountains on the minimap do a weird switch, so that when at the left side, on the minimap they are in the wrong places
+Think this is because of the mini-map wrap trickery I do with the sprites.
+The parallax backgrounds are centred based on the game camera view, which depends on where the lander is.
+But I do specific wrapping of the lander in the minimap.
+I should try without this - ie. have minimap go from camera_width to WORLD_WIDTH-camera_width
+
 Background flicker-glitch at world wrap around point - fix this
 Explosions go through the terrain - I'm not bothered about this.  Let's call it a feature.
