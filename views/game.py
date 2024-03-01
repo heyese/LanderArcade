@@ -225,7 +225,7 @@ class GameView(arcade.View):
                                                             "Missiles",
                                                             "Ground Enemies",
                                                             "Hostages",
-                                                            )], 5)
+                                                            )], 6)
 
     def on_update(self, delta_time: float):
         self.scene.on_update(delta_time=delta_time)
@@ -292,11 +292,6 @@ class GameView(arcade.View):
         if self.lander.landed and len(self.scene['Hostages']) == 0:
             self.window.show_view(NextLevelView(level=self.level, score=self.score))
 
-        # Parallax scrolling of the backgrounds
-        for parallax_factor, background_layer in self.world.background_layers.items():
-            # This is not the center!!  It's mis-named in the code.  It's the left hand side!
-            background_layer.center_x = self.game_camera.position[0] * parallax_factor
-
         # Update the minimap
         self.update_minimap()
 
@@ -311,6 +306,11 @@ class GameView(arcade.View):
 
         # Check for collisions
         collisions.check_for_collisions(self.scene, self.game_camera, self.world)
+
+        # Parallax scrolling of the backgrounds
+        # I find the updating the backgrounds in the on_update() function causes a slight flicker as you cross the
+        # camera_width boundary - but that goes away if I move the update to the on_draw() function!
+        # I've not worked out why, but there you go.  Parallax background position updates are done alongside the draw().
 
         # # Just for testing - let's have a regular explosion
         # self.timer += delta_time
@@ -411,8 +411,14 @@ class GameView(arcade.View):
         # Draw game non-sprites
 
         # Drawing the background layers in order, from furthest back to closest
-        for parallax_factor in sorted(self.world.background_layers.keys(), reverse=True):
-            self.world.background_layers[parallax_factor].draw()
+        for parallax_factor, background_layer in self.world.background_layers.items():
+            # This is not the center!!  It's mis-named in the code.  It's the left hand side!
+            # Also - not I'm doing an update here, really, as well as a draw.  I find that if I move the
+            # update into the on_update() function, I get a slight flicker when we cross the camera_width boundary.
+            # Not sure what's happening between that function and this, but if I do the update alongside the draw here
+            # it's rock solid ...
+            background_layer.center_x = self.game_camera.position[0] * parallax_factor
+            background_layer.draw()
 
         if self.landing_pad.activated and self.lander.dead is False:
             self.lander.draw_landing_angle_guide()

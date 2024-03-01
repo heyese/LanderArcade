@@ -72,7 +72,7 @@ class World:
                                                                      height_range=(
                                                                      int(WORLD_HEIGHT / 4), int(WORLD_HEIGHT / 3)),
                                                                      width_range=(
-                                                                     int(WORLD_WIDTH / 12), int(WORLD_WIDTH / 8)),
+                                                                     int(WORLD_WIDTH / 11), int(WORLD_WIDTH / 8)),
                                                                      num_triangles=4)
 
         parallax_factor = 0.45
@@ -81,7 +81,7 @@ class World:
                                                                      height_range=(
                                                                      int(WORLD_HEIGHT / 6), int(WORLD_HEIGHT / 4)),
                                                                      width_range=(
-                                                                     int(WORLD_WIDTH / 15), int(WORLD_WIDTH / 10)),
+                                                                     int(WORLD_WIDTH / 10), int(WORLD_WIDTH / 7)),
                                                                      num_triangles=8)
 
         # The foreground
@@ -225,12 +225,12 @@ class World:
 
         background_triangles = arcade.ShapeElementList()
         wrapping_point = WORLD_WIDTH - 2 * self.camera_width
-        background_wrapping_point = int(wrapping_point * (1 - parallax_factor))
+        background_wrapping_point = wrapping_point * (1 - parallax_factor)
 
         for i in range(num_triangles):
             height = random.randint(*height_range)
             width = random.randint(*width_range)
-            left = random.randint(0, background_wrapping_point - width_range[0])
+            left = random.randint(0, int(background_wrapping_point - width_range[0]))
             colour = (colour[0] + random.randint(-10, 10), colour[1] + random.randint(-10, 10), colour[2] + random.randint(-10, 10))
             colour = (max(min(colour[0], 255), 0), max(min(colour[0], 255), 0), max(min(colour[0], 255), 0))
             triangles = get_mountain(left=left, height=height, width=width)
