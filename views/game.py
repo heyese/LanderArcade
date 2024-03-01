@@ -56,7 +56,7 @@ class GameView(arcade.View):
         self.pos_text = None
         self.timer = 0
 
-    def setup(self, level: int = 6, score: int = 0):
+    def setup(self, level: int = 1, score: int = 0):
         """Get the game ready to play"""
 
         # Set the background color

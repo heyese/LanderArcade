@@ -1,4 +1,3 @@
-import collections
 import itertools
 import arcade
 import random
@@ -135,6 +134,27 @@ class World:
         # I've decided it feels better to have parallax layers for the stars as well to fix this problem - even
         # thought it does now kind of look as though you're going at warp speed and whipping past actual stars
         # rather than simply moving through the sky ...
+
+        def get_star(*, height_range: Tuple[int, int], brightness_range: Tuple[int, int],
+                     background_wrapping_point: int):
+            # Stars in the sky ...
+            # Kind of gets one star, but also any copies needed to make the wrap around logic work
+            x = random.randrange(background_wrapping_point)
+            y = random.randrange(*height_range)
+            brightness = random.randrange(*brightness_range)
+
+            radius = random.randrange(2, 8)
+            color = (brightness, brightness, brightness)
+            # If we scroll really slowly, the background_wrapping_point is less than the width of the screen,
+            # so we won't actually fill it up!  So some copies may be needed
+
+            stars = []
+            # I think this makes sense ... !!
+            while x * factor < self.camera_width + background_wrapping_point:
+                stars.append(arcade.create_rectangle_filled(x, y, radius, radius, color, 45))
+                x += background_wrapping_point
+            return stars
+
         parallax_factors = sorted(parallax_factors, reverse=True)  # from furthest away to closest
         wrapping_point = WORLD_WIDTH - 2 * self.camera_width
         for index, factor in enumerate(parallax_factors):
@@ -143,7 +163,7 @@ class World:
             for _ in range(int(self.star_count/(index+1))):
                 # The lander can get up to WORLD_HEIGHT (and even a bit higher if it tries hard enough) - I want
                 # it to still see stars in the space above it.  So I go above WORLD_HEIGHT when generating stars.
-                for star in self.get_star(height_range=(int((2 / 3) * WORLD_HEIGHT), int(1.25 * WORLD_HEIGHT)),
+                for star in get_star(height_range=(int((2 / 3) * WORLD_HEIGHT), int(1.25 * WORLD_HEIGHT)),
                                                           brightness_range=(127, 256),
                                                           background_wrapping_point=background_wrapping_point):
                     self.background_layers[factor].append(star)
@@ -153,30 +173,10 @@ class World:
             # Below covers 0.104 of the world height.
             # This gives a ratio which maintains star density
             for _ in range(int(self.star_count * (0.104 / 0.59) / (index+1))):
-                for star in self.get_star(height_range=(int((5 / 9) * WORLD_HEIGHT), int((2 / 3) * WORLD_HEIGHT)),
+                for star in get_star(height_range=(int((5 / 9) * WORLD_HEIGHT), int((2 / 3) * WORLD_HEIGHT)),
                                                           brightness_range=(50, 127),
                                                           background_wrapping_point=background_wrapping_point):
                     self.background_layers[factor].append(star)
-
-    def get_star(self, *, height_range: Tuple[int, int], brightness_range: Tuple[int, int], background_wrapping_point: int):
-        # Stars in the sky ...
-        # Kind of gets one star, but also any copies needed to make the wrap around logic work
-        x = random.randrange(background_wrapping_point)
-        y = random.randrange(*height_range)
-        brightness = random.randrange(*brightness_range)
-
-        radius = random.randrange(2, 8)
-        color = (brightness, brightness, brightness)
-        # If we scroll really slowly, the background_wrapping_point is less than the width of the screen,
-        # so we won't actually fill it up!  So some copies may be needed
-
-        stars = []
-        # TODO: This still isn't quite right
-        while x < self.camera_width:
-            stars.append(arcade.create_rectangle_filled(x, y, radius, radius, color, 45))
-            x += background_wrapping_point
-        stars.append(arcade.create_rectangle_filled(x, y, radius, radius, color, 45))
-        return stars
 
     def get_mountains(self, *, parallax_factor: float,
                       colour: tuple[int, int, int],
@@ -198,24 +198,26 @@ class World:
         # So that is the point on the background that we want to do the wrap.
 
         def get_mountain(*, left, height, width):
-            """Returns a triangle starting at >=x, and not ending >= max_x"""
+            """Returns a triangle starting at >=x, and not ending >= max_x.  Also returns
+            any necessary copies needed to make the wrap around logic work"""
             def brighten(colour: tuple[int, int, int]):
                 values = [random.randint(50, 100) for _ in range(3)]
                 colour = tuple(min(colour[a] + values[a], 255) for a in range(3))
                 return colour
 
             width = min(width, background_wrapping_point - left)
-            brightenend_colour = brighten(colour)
-            triangle = arcade.create_triangles_filled_with_colors(point_list=((left, 0),
-                                                                              (int(left + width/2), height),
-                                                                              (left + width, 0)),
-                                                                  color_list=[colour, brightenend_colour, colour])
-            triangle2 = arcade.create_triangles_filled_with_colors(point_list=((left+background_wrapping_point, 0),
-                                                                               (int(left+background_wrapping_point + width/2), height),
-                                                                               (left+background_wrapping_point + width, 0)),
-                                                                   color_list=[colour, brightenend_colour, colour])
+            brightened_colour = brighten(colour)
 
-            return triangle, triangle2
+
+            triangles = []
+            while left * parallax_factor < self.camera_width + background_wrapping_point:
+                triangles.append(arcade.create_triangles_filled_with_colors(point_list=((left, 0),
+                                                                                        (int(left + width / 2), height),
+                                                                                        (left + width, 0)),
+                                                                            color_list=[colour, brightened_colour,
+                                                                                        colour]))
+                left += background_wrapping_point
+            return triangles
 
         background_triangles = arcade.ShapeElementList()
         wrapping_point = WORLD_WIDTH - 2 * self.camera_width
@@ -227,9 +229,9 @@ class World:
             left = random.randint(0, background_wrapping_point - width_range[0])
             colour = (colour[0] + random.randint(-10, 10), colour[1] + random.randint(-10, 10), colour[2] + random.randint(-10, 10))
             colour = (max(min(colour[0], 255), 0), max(min(colour[0], 255), 0), max(min(colour[0], 255), 0))
-            triangle, triangle2 = get_mountain(left=left, height=height, width=width)
-            background_triangles.append(triangle)
-            background_triangles.append(triangle2)
+            triangles = get_mountain(left=left, height=height, width=width)
+            for t in triangles:
+                background_triangles.append(t)
         return background_triangles
 
     def get_terrain(self, landing_pad_width_limit) -> Tuple[arcade.SpriteList, arcade.SpriteList, arcade.SpriteList]:
