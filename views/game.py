@@ -197,29 +197,27 @@ class GameView(arcade.View):
     def update_minimap(self):
         # Want a mini-map: https://api.arcade.academy/en/latest/advanced/texture_atlas.html
 
-
         def rescale_and_draw(sprite_lists: List[arcade.SpriteList], scale_multiplier: int):
             for sprite_list in sprite_lists:
                 for sprite in sprite_list:
-                    sprite_world_wrapped = False
+                    sprite_minimap_wrapped = False
                     sprite.scale *= scale_multiplier
-                    if sprite.center_x > WORLD_WIDTH - 2 * self.game_camera.viewport_width:
+                    if sprite.center_x > WORLD_WIDTH - self.game_camera.viewport_width:
                         sprite.center_x -= WORLD_WIDTH - 2 * self.game_camera.viewport_width
-                        sprite_world_wrapped = True
+                        sprite_minimap_wrapped = True
                     sprite.draw()
-                    if sprite_world_wrapped:
+                    if sprite_minimap_wrapped:
                         sprite.center_x += WORLD_WIDTH - 2 * self.game_camera.viewport_width
                     sprite.scale /= scale_multiplier
 
         # I show the repeated terrain in the minimap - I think this makes the most sense
-        proj = 0, WORLD_WIDTH - 2 * self.game_camera.viewport_width, 0, WORLD_HEIGHT
+        proj = self.game_camera.viewport_width, WORLD_WIDTH - self.game_camera.viewport_width, 0, WORLD_HEIGHT
         with self.minimap_sprite_list.atlas.render_into(self.minimap_texture, projection=proj) as fbo:
             fbo.clear(self.minimap_background_colour)
             for parallax_factor in sorted(self.world.background_layers.keys(), reverse=True):
                 self.world.background_layers[parallax_factor].draw()
-
-            self.scene.get_sprite_list('Terrain Left Edge').draw()
-            self.scene.get_sprite_list('Terrain Centre').draw()
+            for name in ('Terrain Left Edge', 'Terrain Centre', 'Terrain Right Edge'):
+                self.scene.get_sprite_list(name).draw()
             # Want the lander and the landing pad to stand out, rather than being tiny
             rescale_and_draw([self.scene[name] for name in ("Lander",
                                                             "Landing Pad",
@@ -227,7 +225,7 @@ class GameView(arcade.View):
                                                             "Missiles",
                                                             "Ground Enemies",
                                                             "Hostages",
-                                                            )], 4)
+                                                            )], 5)
 
     def on_update(self, delta_time: float):
         self.scene.on_update(delta_time=delta_time)
