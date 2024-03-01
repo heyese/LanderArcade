@@ -196,6 +196,8 @@ class GameView(arcade.View):
 
     def update_minimap(self):
         # Want a mini-map: https://api.arcade.academy/en/latest/advanced/texture_atlas.html
+
+
         def rescale_and_draw(sprite_lists: List[arcade.SpriteList], scale_multiplier: int):
             for sprite_list in sprite_lists:
                 for sprite in sprite_list:
@@ -213,9 +215,9 @@ class GameView(arcade.View):
         proj = 0, WORLD_WIDTH - 2 * self.game_camera.viewport_width, 0, WORLD_HEIGHT
         with self.minimap_sprite_list.atlas.render_into(self.minimap_texture, projection=proj) as fbo:
             fbo.clear(self.minimap_background_colour)
-            # Just drawing the "fixed" parallax layer - don't want the minimap to be cluttered, even though it can be quite pretty
-            for layer in sorted(self.world.background_layers.keys(), reverse=True):
-                self.world.background_layers[layer].draw()
+            for parallax_factor in sorted(self.world.background_layers.keys(), reverse=True):
+                self.world.background_layers[parallax_factor].draw()
+
             self.scene.get_sprite_list('Terrain Left Edge').draw()
             self.scene.get_sprite_list('Terrain Centre').draw()
             # Want the lander and the landing pad to stand out, rather than being tiny

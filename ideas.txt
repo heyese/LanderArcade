@@ -25,5 +25,6 @@ https://learn.arcade.academy/en/latest/chapters/20_sounds/sounds.html
 
 
 ## Known Bugs
+Mountains on the minimap do a weird switch, so that when at the left side, on the minimap they are in the wrong places
 Background flicker-glitch at world wrap around point - fix this
 Explosions go through the terrain - I'm not bothered about this.  Let's call it a feature.

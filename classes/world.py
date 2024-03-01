@@ -64,6 +64,8 @@ class World:
                                                                      width_range=(
                                                                      int(WORLD_WIDTH / 12), int(WORLD_WIDTH / 9)),
                                                                      num_triangles=3)
+        # There's something that goes wrong with the minimap at the left hand side with the mountains on
+        # parallax factors < 0.75
         parallax_factor = 0.6
         self.background_layers[parallax_factor] = self.get_mountains(parallax_factor=parallax_factor,
                                                                      colour=colour2,
@@ -73,9 +75,6 @@ class World:
                                                                      int(WORLD_WIDTH / 12), int(WORLD_WIDTH / 8)),
                                                                      num_triangles=4)
 
-        # Find that values below about 5 results in a flicker
-        # when the world wraps when going from right to left.
-        # Not sure what it is, but it's a tiny thing.
         parallax_factor = 0.45
         self.background_layers[parallax_factor] = self.get_mountains(parallax_factor=parallax_factor,
                                                                      colour=colour1,
