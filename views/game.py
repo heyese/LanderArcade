@@ -214,7 +214,8 @@ class GameView(arcade.View):
         with self.minimap_sprite_list.atlas.render_into(self.minimap_texture, projection=proj) as fbo:
             fbo.clear(self.minimap_background_colour)
             # Just drawing the "fixed" parallax layer - don't want the minimap to be cluttered, even though it can be quite pretty
-            self.world.background_layers[1].draw()
+            for layer in sorted(self.world.background_layers.keys(), reverse=True):
+                self.world.background_layers[layer].draw()
             self.scene.get_sprite_list('Terrain Left Edge').draw()
             self.scene.get_sprite_list('Terrain Centre').draw()
             # Want the lander and the landing pad to stand out, rather than being tiny

@@ -1,4 +1,6 @@
 import itertools
+import math
+
 import arcade
 import random
 from typing import Union, Tuple
@@ -100,10 +102,10 @@ class World:
                 # So more likely to have clouds bunched together at the bottom, which is a nice effect
                 y_low = random.randint(vertical_range[0], min(y_high + 200, vertical_range[1]))
                 y_high = random.randint(y_low, y_low + 100)
-                points = ((0, y_low),
+                points = ((-WORLD_WIDTH, y_low),
                           (WORLD_WIDTH, y_low),
                           (WORLD_WIDTH, y_high),
-                          (0, y_high))
+                          (-WORLD_WIDTH, y_high))
                 colors = (
                     (*arcade.color.DUTCH_WHITE, 80),
                     (*arcade.color.DUTCH_WHITE, 150),
@@ -149,8 +151,10 @@ class World:
             # so we won't actually fill it up!  So some copies may be needed
 
             stars = []
+            n = math.ceil((WORLD_WIDTH - x) / background_wrapping_point)
+            x = x - n * background_wrapping_point
             # I think this makes sense ... !!
-            while x * factor < self.camera_width + background_wrapping_point:
+            while x < WORLD_WIDTH:
                 stars.append(arcade.create_rectangle_filled(x, y, radius, radius, color, 45))
                 x += background_wrapping_point
             return stars
@@ -208,9 +212,10 @@ class World:
             width = min(width, background_wrapping_point - left)
             brightened_colour = brighten(colour)
 
-
+            n = math.ceil((WORLD_WIDTH - left) / background_wrapping_point)
+            left = left - n * background_wrapping_point
             triangles = []
-            while left * parallax_factor < self.camera_width + background_wrapping_point:
+            while left < WORLD_WIDTH:
                 triangles.append(arcade.create_triangles_filled_with_colors(point_list=((left, 0),
                                                                                         (int(left + width / 2), height),
                                                                                         (left + width, 0)),
