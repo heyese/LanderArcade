@@ -45,7 +45,7 @@ class HowToPlayView(arcade.View):
         LANDING
         The landing pads have a status light that activates when you get close, indicating whether or not it is safe 
         enough to land.  A red status indicates your ship is over the edge, moving too quickly or too tilted - touch 
-        the pad and you will crash and burn ...  A green status indicates your decent is looking good.
+        the pad and you will crash and burn ...  A green status indicates your descent is looking good.
         The ship will provide a helpful visual indicator, showing the angular range you need to keep within for a 
         successful landing.
         
