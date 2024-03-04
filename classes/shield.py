@@ -1,6 +1,5 @@
 from __future__ import annotations
 import arcade
-import itertools
 from classes.game_object import GameObject
 from pathlib import Path
 
@@ -43,6 +42,9 @@ class Shield(arcade.SpriteCircle):
         self.shield_activate = arcade.load_sound(Path('sounds/shield_activated.mp3'))
         self.shield_disabled = arcade.load_sound(Path('sounds/shield_disabled.mp3'))
         self.shield_continuous = arcade.load_sound(Path('sounds/shield_continuous.mp3'))
+        # This keeps track of the "media player" that is playing the current sound
+        # Each time I play a sound, I think it returns a different player!
+        self.media_player = None
 
     def recharge(self):
         self.charge = self.initial_charge
@@ -53,10 +55,16 @@ class Shield(arcade.SpriteCircle):
         self.center_y = self.owner.center_y
         # If activated, use up some power
         if self.activated:
+            # Play necessary sounds
+            if not self.media_player or not (self.shield_activate.is_playing(self.media_player)
+                                             or self.shield_continuous.is_playing(self.media_player)):
+                # Play the shield_continuous sound here, but I don't like the one I currently have
+                pass
             self.charge = max(self.charge - delta_time, 0)
             if self.charge == 0:
                 self.deactivate()
-        # If disabled (ie. someone tried to activate it whilst an object was within its perimeter), count down to being un-disabled
+        # If disabled (ie. someone tried to activate it whilst an object was within its perimeter),
+        # count down to being un-disabled
         if self.disabled:
             if self.disabled_timer is None:
                 self.disabled_timer = 0.5  # seconds
@@ -71,28 +79,37 @@ class Shield(arcade.SpriteCircle):
                         self.activate()
 
     def activate(self):
+        if self.disabled:
+            return
         if self.disabled is False:
             if not self.charge:
                 self.disabled = True
                 return
-            # Except for the Landing Pad, Cannot enable shield when an object is already within the perimeter
+            # Cannot enable shield when an object is already within the perimeter
             # If you try to, it is disabled for a small period
-            if self.owner not in itertools.chain(self.scene["Landing Pad"], self.scene["Hostages"]):
+            # Except for Hostages who always have an enabled shield.
+            if self.owner not in self.scene["Hostages"]:
                 collisions = arcade.check_for_collision_with_lists(self, [self.scene[i] for i in shield_disabled_when_collisions_exist_with])
                 for obj in collisions:
                     if obj in self.scene["Shields"] and not obj.activated:
                         # Collisions with de-activated shields don't count
                         continue
                     self.disabled = True
-                    self.sound_enabled and arcade.play_sound(self.shield_disabled)
+                    self.media_player = self.play_sound(self.shield_disabled, volume=0.3)
                     return
+            # Shield is being activated
             self.visible = True
             self.activated = True
-            self.sound_enabled and arcade.play_sound(self.shield_activate)
+            self.media_player = self.play_sound(self.shield_activate, volume=0.3)
 
     def deactivate(self):
         self.visible = False
         self.activated = False
+
+    def play_sound(self, *args, **kwargs):
+        if self.sound_enabled:
+            return arcade.play_sound(*args, **kwargs)
+        return None
 
 
 class DisabledShield(arcade.SpriteCircle):

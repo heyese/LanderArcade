@@ -1,7 +1,7 @@
 import arcade
 import math
 from constants import SCALING
-
+from pathlib import Path
 
 class Engine(arcade.Sprite):
     def __init__(self,
@@ -10,7 +10,8 @@ class Engine(arcade.Sprite):
                  fuel: int = 100,
                  force: int = 5000,
                  scale: float = 0.3,
-                 engine_owner_offset: int = None):
+                 engine_owner_offset: int = None,
+                 sound_enabled: bool = False):
         super().__init__()
         self.scene = scene
         self.textures = [arcade.load_texture("images/thrust_1.png"),
@@ -28,6 +29,14 @@ class Engine(arcade.Sprite):
         self._boosted = False
         self.engine_owner_offset = engine_owner_offset if engine_owner_offset is not None else self.owner.height
         self.scene.add_sprite('Engines', self)
+
+        # Engine sounds
+        self.sound_enabled = sound_enabled
+        self.engine_activated_sound = arcade.load_sound(Path('sounds/engine.mp3'))
+        self.standard_engine_volume = 0.5
+        self.boosted_engine_volume = 1
+        self.current_engine_volume = self.standard_engine_volume
+        self.media_player = None
 
     def refuel(self):
         self.fuel = self.initial_fuel
@@ -71,9 +80,14 @@ class Engine(arcade.Sprite):
         if on is True:
             if self.fuel and not self.boosted:
                 self.boosted = True
+                self.current_engine_volume = self.boosted_engine_volume
         else:
             if self.boosted:
                 self.boosted = False
+                self.current_engine_volume = self.standard_engine_volume
+        # Volume of the engine changes when we engage / disengage the boost
+        if self.media_player and self.engine_activated_sound.is_playing(self.media_player):
+            self.engine_activated_sound.set_volume(self.current_engine_volume, self.media_player)
 
     def on_update(self, delta_time: float = 1 / 60):
         # Stay centred and oriented on the owner
@@ -85,5 +99,19 @@ class Engine(arcade.Sprite):
         # If activated, use up some fuel
         if self.activated:
             self.fuel = max(self.fuel - self.burn_rate * delta_time, 0)
+            # We don't play a sound WHEN the engine in activated specifically, as it plays continuously, so it's here
+            if (not self.media_player
+                    or not self.engine_activated_sound.is_playing(self.media_player)
+                    # Line below is so it repeats without a gap
+                    or self.engine_activated_sound.get_stream_position(self.media_player) > 0.78):
+                self.media_player = self.play_sound(self.engine_activated_sound, volume=self.current_engine_volume)
+
             if self.fuel == 0:
                 self.deactivate()
+        elif self.media_player and self.engine_activated_sound.is_playing(self.media_player):
+            self.engine_activated_sound.stop(self.media_player)
+
+    def play_sound(self, *args, **kwargs):
+        if self.sound_enabled:
+            return arcade.play_sound(*args, **kwargs)
+        return None

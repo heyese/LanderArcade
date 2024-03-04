@@ -16,11 +16,15 @@ an object, so it's not good enough
 
 Add an enemy aircraft
 Have a "super missile launcher"
-Should stars should be on a new parallax layer which is furthest away?
 Bomb thrower!  Parabolic curves, with bombs exploding on a timer.  Flashing rate can indicate how close it is to exploding
 Enemy weapons that temporarily disable the shield
 
 Add some sounds!
+Need sounds for:
+    Explosions - lots of different sounds
+    Consider external engines, shields and explosions.  Volume can depend on distance from lander and the pan can depend
+    on its position
+Think better to change to the shield continuous sound
 https://learn.arcade.academy/en/latest/chapters/20_sounds/sounds.html
 
 

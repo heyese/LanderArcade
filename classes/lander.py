@@ -21,7 +21,7 @@ class Lander(GameObject):
                          camera=camera
                          )
         self.scene.add_sprite("Lander", self)
-        self.engine = Engine(scene=scene, owner=self, fuel=fuel)
+        self.engine = Engine(scene=scene, owner=self, fuel=fuel, sound_enabled=True)
         self.shield = Shield(scene=scene, owner=self, charge=shield_charge, sound_enabled=True)
         self.disabled_shield = DisabledShield(scene=scene, owner=self)
         self.max_landing_angle = 20

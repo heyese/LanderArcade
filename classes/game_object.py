@@ -27,6 +27,7 @@ class GameObject(arcade.Sprite):
                  above_space: bool = False,
                  explodes: bool = True,
                  owner=None,
+                 sound_enabled: bool = False
                  ):
         super().__init__(filename=filename, scale=scale * SCALING, angle=angle)
         self.scene = scene
@@ -53,6 +54,7 @@ class GameObject(arcade.Sprite):
         self.collided = False
         self.explodes = explodes
         self.owner = owner
+        self.sound_enabled = sound_enabled
 
     def on_update(self, delta_time: float = 1 / 60):
         # Are we in space or not?
@@ -150,3 +152,7 @@ class GameObject(arcade.Sprite):
                 s.remove_from_sprite_lists()
         if self.explodes:
             self.explode()
+
+    def play_sound(self, *kwargs):
+        if self.sound_enabled:
+            arcade.play_sound(*kwargs)

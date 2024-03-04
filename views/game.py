@@ -18,6 +18,7 @@ from views.next_level import NextLevelView
 from pyglet.math import Vec2
 from uuid import uuid4
 from typing import List
+from pathlib import Path
 
 
 class GameView(arcade.View):
@@ -55,6 +56,9 @@ class GameView(arcade.View):
         self.fps_text = None
         self.pos_text = None
         self.timer = 0
+
+        # Sounds
+        self.level_complete = arcade.load_sound(Path('sounds/level_complete.mp3'))
 
     def setup(self, level: int = 1, score: int = 0):
         """Get the game ready to play"""
@@ -290,6 +294,7 @@ class GameView(arcade.View):
 
         # Check to see if the level's been completed!
         if self.lander.landed and len(self.scene['Hostages']) == 0:
+            arcade.play_sound(self.level_complete)
             self.window.show_view(NextLevelView(level=self.level, score=self.score))
 
         # Update the minimap

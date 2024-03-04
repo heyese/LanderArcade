@@ -5,6 +5,7 @@ import random
 import arcade
 from arcade import Sprite, Scene, SpriteList, Camera
 from typing import Tuple
+from pathlib import Path
 import math
 import itertools
 from typing import List
@@ -18,6 +19,15 @@ if TYPE_CHECKING:
     from classes.explosion import Explosion
     from classes.world import World
 
+
+# SHIELD_BOUNCE = arcade.load_sound(Path('sounds/bounce_4.mp3'))
+# BOUNCE_1 = arcade.load_sound(Path('sounds/bounce_1.mp3'))
+# BOUNCE_2 = arcade.load_sound(Path('sounds/bounce_2.mp3'))
+# BOUNCE_3 = arcade.load_sound(Path('sounds/bounce_3.mp3'))
+# BOUNCE_4 = arcade.load_sound(Path('sounds/bounce_4.mp3'))
+# BOUNCES = [BOUNCE_1, BOUNCE_2, BOUNCE_3, BOUNCE_4]
+
+BOUNCE_SOUNDS = [arcade.load_sound(Path(bounce_sound)) for bounce_sound in Path('sounds').glob('bounce_*.mp3')]
 
 
 # The coefficient of restitution epsilon (e), is the ratio of the final to initial relative speed between two objects
@@ -284,6 +294,8 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
                                      "y: {obj_1.change_y}). obj_1 centre: ({obj_1.center_x}, {obj_1.center_y}). "
                                      "obj_2 centre: ({obj_2.center_x}, {obj_2.center_y}).")
 
+            # Two shields have bounced
+            arcade.play_sound(random.choice(BOUNCE_SOUNDS))
             continue
 
         # This is the general collision bit.  I essentially treat a collision like two circles colliding.
@@ -373,6 +385,7 @@ def check_for_shield_collision_with_terrain(shield: Shield, terrain: List[Sprite
     for rect in collision_with_terrain:
         rect: arcade.SpriteSolidColor
         check_for_shield_collision_with_rectangle_sprite(shield=shield, rect=rect)
+
     return bool(collision_with_terrain)
 
 
@@ -400,6 +413,8 @@ def check_for_shield_collision_with_rectangle_sprite(shield: Shield, rect: arcad
         collision_with_fixed_point(point_x=corner_x, point_y=corner_y, obj=shield.owner)
         sprite_collided = True
 
+    if sprite_collided:
+        arcade.play_sound(random.choice(BOUNCE_SOUNDS))
     # Check to see if we still have a collision between these two objects.
     # If we do, keep applying the bounce back vector
     if sprite_collided:
