@@ -2,6 +2,7 @@ from __future__ import annotations
 import arcade
 import itertools
 from classes.game_object import GameObject
+from pathlib import Path
 
 
 shield_disabled_when_collisions_exist_with = [
@@ -17,7 +18,11 @@ shield_disabled_when_collisions_exist_with = [
 
 class Shield(arcade.SpriteCircle):
     """The shield - a sprite that stays centred on the owner and can be activated / deactivated"""
-    def __init__(self, scene: arcade.Scene, owner: arcade.Sprite, radius: int = None, charge: int = 100):
+    def __init__(self, scene: arcade.Scene,
+                 owner: arcade.Sprite,
+                 radius: int = None,
+                 charge: int = 100,
+                 sound_enabled: bool = False):
         if radius is None:
             radius = int(max(owner.height, owner.width) * 1.5)
         super().__init__(radius=radius,
@@ -32,6 +37,12 @@ class Shield(arcade.SpriteCircle):
         self.scene.add_sprite('Shields', self)
         self.disabled = False
         self.disabled_timer = None
+
+        # Shield sounds
+        self.sound_enabled = sound_enabled
+        self.shield_activate = arcade.load_sound(Path('sounds/shield_activated.mp3'))
+        self.shield_disabled = arcade.load_sound(Path('sounds/shield_disabled.mp3'))
+        self.shield_continuous = arcade.load_sound(Path('sounds/shield_continuous.mp3'))
 
     def recharge(self):
         self.charge = self.initial_charge
@@ -73,17 +84,15 @@ class Shield(arcade.SpriteCircle):
                         # Collisions with de-activated shields don't count
                         continue
                     self.disabled = True
+                    self.sound_enabled and arcade.play_sound(self.shield_disabled)
                     return
             self.visible = True
             self.activated = True
+            self.sound_enabled and arcade.play_sound(self.shield_activate)
 
     def deactivate(self):
         self.visible = False
         self.activated = False
-
-    def disable(self):
-        self.deactivate()
-        self.disabled = True
 
 
 class DisabledShield(arcade.SpriteCircle):

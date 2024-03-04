@@ -22,7 +22,7 @@ class Lander(GameObject):
                          )
         self.scene.add_sprite("Lander", self)
         self.engine = Engine(scene=scene, owner=self, fuel=fuel)
-        self.shield = Shield(scene=scene, owner=self, charge=shield_charge)
+        self.shield = Shield(scene=scene, owner=self, charge=shield_charge, sound_enabled=True)
         self.disabled_shield = DisabledShield(scene=scene, owner=self)
         self.max_landing_angle = 20
         self.mouse_location = None  # Set by Game view.  Want Lander to face mouse on every update
