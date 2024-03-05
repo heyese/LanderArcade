@@ -24,6 +24,7 @@ Need sounds for:
     Explosions - lots of different sounds
     Consider external engines, shields and explosions.  Volume can depend on distance from lander and the pan can depend
     on its position
+    Safe / unsafe to land sounds?
 Think better to change to the shield continuous sound
 https://learn.arcade.academy/en/latest/chapters/20_sounds/sounds.html
 
@@ -36,3 +37,5 @@ wrap seamlessly in the minimap (ie. at "WORLD_WDITH - camera_width" and "camera_
 (ie. when the lander flips from one side to the other) - this feels right to me.
 
 Explosions go through the terrain - I'm not bothered about this.  Let's call it a feature.
+Still have a bug where sometimes collisions go crazy and the lander disappears somewhere - easy thing to do is not let
+y <= 0.

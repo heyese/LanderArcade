@@ -416,7 +416,8 @@ class GameView(arcade.View):
         # Draw game non-sprites
 
         # Drawing the background layers in order, from furthest back to closest
-        for parallax_factor, background_layer in self.world.background_layers.items():
+        for parallax_factor in sorted(self.world.background_layers.keys(), reverse=True):
+            background_layer = self.world.background_layers[parallax_factor]
             # This is not the center!!  It's mis-named in the code.  It's the left hand side!
             # Also - not I'm doing an update here, really, as well as a draw.  I find that if I move the
             # update into the on_update() function, I get a slight flicker when we cross the camera_width boundary.
