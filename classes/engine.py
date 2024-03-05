@@ -2,6 +2,7 @@ import arcade
 import math
 from constants import SCALING
 from pathlib import Path
+import sounds
 
 class Engine(arcade.Sprite):
     def __init__(self,
@@ -104,14 +105,12 @@ class Engine(arcade.Sprite):
                     or not self.engine_activated_sound.is_playing(self.media_player)
                     # Line below is so it repeats without a gap
                     or self.engine_activated_sound.get_stream_position(self.media_player) > 0.78):
-                self.media_player = self.play_sound(self.engine_activated_sound, volume=self.current_engine_volume)
+                self.media_player = sounds.play_sound(self.sound_enabled,
+                                                      self.engine_activated_sound,
+                                                      volume=self.current_engine_volume)
 
             if self.fuel == 0:
                 self.deactivate()
         elif self.media_player and self.engine_activated_sound.is_playing(self.media_player):
             self.engine_activated_sound.stop(self.media_player)
 
-    def play_sound(self, *args, **kwargs):
-        if self.sound_enabled:
-            return arcade.play_sound(*args, **kwargs)
-        return None

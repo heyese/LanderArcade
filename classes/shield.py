@@ -2,6 +2,7 @@ from __future__ import annotations
 import arcade
 from classes.game_object import GameObject
 from pathlib import Path
+import sounds
 
 
 shield_disabled_when_collisions_exist_with = [
@@ -95,21 +96,16 @@ class Shield(arcade.SpriteCircle):
                         # Collisions with de-activated shields don't count
                         continue
                     self.disabled = True
-                    self.media_player = self.play_sound(self.shield_disabled, volume=0.3)
+                    self.media_player = sounds.play_sound(self.sound_enabled, self.shield_disabled, volume=0.3)
                     return
             # Shield is being activated
             self.visible = True
             self.activated = True
-            self.media_player = self.play_sound(self.shield_activate, volume=0.3)
+            self.media_player = sounds.play_sound(self.sound_enabled, self.shield_activate, volume=0.3)
 
     def deactivate(self):
         self.visible = False
         self.activated = False
-
-    def play_sound(self, *args, **kwargs):
-        if self.sound_enabled:
-            return arcade.play_sound(*args, **kwargs)
-        return None
 
 
 class DisabledShield(arcade.SpriteCircle):

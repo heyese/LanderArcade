@@ -26,7 +26,15 @@ Need sounds for:
     on its position
     Safe / unsafe to land sounds?
 Think better to change to the shield continuous sound
+
+Could have a doppler effect on missiles passing the lander: https://gamedev.stackexchange.com/questions/23583/how-do-i-simulate-the-doppler-effect-in-a-game
+I have access to speed - which I think is effectively pitch: https://pyglet.readthedocs.io/en/latest/modules/media.html
+I think the doppler effect idea - whilst very cool - is over ambitious.  I don't think I can alter the speed of
+a sound whilst it is actually playing (whereas I can with the volume).  So for missiles that zip past the lander, where
+there wouldn't actually be that many repeats in the sound, I don't think it would work.
+
 https://learn.arcade.academy/en/latest/chapters/20_sounds/sounds.html
+
 
 
 ## Known Bugs

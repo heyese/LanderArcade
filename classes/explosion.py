@@ -7,6 +7,7 @@ import random
 from classes.game_object import GameObject
 from constants import SCALING
 from typing import TYPE_CHECKING
+from pathlib import Path
 if TYPE_CHECKING:
     from classes.world import World
 
@@ -31,6 +32,7 @@ if TYPE_CHECKING:
 # backwards.  There should be a significant transfer of energy on impact
 # But then might the object fly away faster than the explosion increases in size?  Does this matter?
 
+EXPLOSION_SOUNDS = [arcade.load_sound(Path(bounce_sound)) for bounce_sound in Path('sounds').glob('explosion_*.mp3')]
 
 class Explosion(GameObject):
     def __init__(self,

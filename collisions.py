@@ -219,6 +219,7 @@ def is_sprite_in_camera_view(sprite: Sprite, camera: Camera):
         return False
     return True
 
+
 def check_for_collisions_general(sprite: Sprite, general_object_spritelists: List[SpriteList], scene: Scene, considered_collisions: set, lander: Lander, camera: Camera):
     # Unfortunately, I've realized that checking for all these collisions slows the game down.
     # A weakness of python arcade, that they may well fix in a later version
