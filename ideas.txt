@@ -39,7 +39,3 @@ wrap seamlessly in the minimap (ie. at "WORLD_WDITH - camera_width" and "camera_
 Explosions go through the terrain - I'm not bothered about this.  Let's call it a feature.
 Still have a bug where sometimes collisions go crazy and the lander disappears somewhere - easy thing to do is not let
 y <= 0.
-
-Landing pad, like the terrain, should always be on the minimap.  Looks as though when it's < camera_width, it doesn't
-get drawn as being > WORLD_WIDTH - camera_width.  What about the other sprites?  Yep - they are the same.  They
-disappear from the minimap when they are > WORLD_WIDTH - camera_width.

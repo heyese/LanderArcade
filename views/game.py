@@ -204,14 +204,20 @@ class GameView(arcade.View):
         def rescale_and_draw(sprite_lists: List[arcade.SpriteList], scale_multiplier: int):
             for sprite_list in sprite_lists:
                 for sprite in sprite_list:
-                    sprite_minimap_wrapped = False
                     sprite.scale *= scale_multiplier
+                    # In the game, if the lander is at either end of the map, I keep other sprites in that same area,
+                    # so that they stay on the screen.
+                    # ie. I let other sprites be sprite < self.game_camera.viewport_width and sprite > WORLD_WIDTH - self.game_camera.viewport_width
+                    # But for the mini-map, I always want them to wrap at the "correct" time
                     if sprite.center_x > WORLD_WIDTH - self.game_camera.viewport_width:
                         sprite.center_x -= WORLD_WIDTH - 2 * self.game_camera.viewport_width
-                        sprite_minimap_wrapped = True
-                    sprite.draw()
-                    if sprite_minimap_wrapped:
+                    elif sprite.center_x < self.game_camera.viewport_width:
                         sprite.center_x += WORLD_WIDTH - 2 * self.game_camera.viewport_width
+                    sprite.draw()
+                    if sprite.center_x < self.game_camera.viewport_width:
+                        sprite.center_x += WORLD_WIDTH - 2 * self.game_camera.viewport_width
+                    elif sprite.center_x > WORLD_WIDTH - self.game_camera.viewport_width:
+                        sprite.center_x -= WORLD_WIDTH - 2 * self.game_camera.viewport_width
                     sprite.scale /= scale_multiplier
 
         # I show the repeated terrain in the minimap - I think this makes the most sense
