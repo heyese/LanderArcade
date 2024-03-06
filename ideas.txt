@@ -52,3 +52,8 @@ Explosions go through the terrain - I'm not bothered about this.  Let's call it 
 Still have a bug where sometimes collisions go crazy and the lander disappears somewhere - easy thing to do is not let
 y <= 0, but more careful thinking about this will obviously help.  Basically (and roughly), unless there is a terrain
 rect underneath the lander, the answer will never be to go further down!
+
+Not sure if this should be a problem, but on my current utterly ancient laptop, it can slightly struggle.
+When it occasionally stutters (frame rate drops), the ship can suddenly speed up.  It feels like it's more than gravity
+acting over the longer loop time - something else is happening, I think.
+But my laptop is 8 years old - I'll see if this still happens when I get my new one tomorrow.
