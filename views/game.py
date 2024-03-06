@@ -9,9 +9,9 @@ from classes.world import World
 from classes.landing_pad import LandingPad
 from classes.hostage import Hostage
 from classes.missile_launcher import MissileLauncher
-from classes.explosion import Explosion
-from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT, SPACE_START, SPACE_END, SCALING
+from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT, SPACE_START, SPACE_END
 import collisions
+import sounds
 
 from views.menu import MenuView
 from views.next_level import NextLevelView
@@ -102,6 +102,11 @@ class GameView(arcade.View):
                              fuel=self.level_config.fuel,
                              shield_charge=self.level_config.shield,
                              camera=self.game_camera)
+        # Not sure of the best pattern to do this, but most of the sound functions depend on the lander.  I don't
+        # want to always be having to pass it in - I want the object accessible in general in the module
+        # So I set it here, just after having created it!
+        sounds.lander = self.lander
+
         landing_pad_width = int(2 * self.lander.width)
         if landing_pad_width > landing_pad_width_limit:
             print("Your hardcoded value for the landing pad width limit isn't large enough!")

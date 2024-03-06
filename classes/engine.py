@@ -1,13 +1,18 @@
+from __future__ import annotations
 import arcade
 import math
 from constants import SCALING
 from pathlib import Path
 import sounds
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from classes.game_object import GameObject
+
 
 class Engine(arcade.Sprite):
     def __init__(self,
                  scene: arcade.Scene,
-                 owner: arcade.Sprite,
+                 owner: GameObject,
                  fuel: int = 100,
                  force: int = 5000,
                  scale: float = 0.3,
@@ -107,10 +112,13 @@ class Engine(arcade.Sprite):
                     or self.engine_activated_sound.get_stream_position(self.media_player) > 0.78):
                 self.media_player = sounds.play_sound(self.sound_enabled,
                                                       self.engine_activated_sound,
-                                                      volume=self.current_engine_volume)
+                                                      volume=self.current_engine_volume * sounds.get_volume_multiplier(
+                                                          self.position),
+                                                      pan=sounds.get_pan(self.position),
+                                                      speed=sounds.get_speed(self.position, (
+                                                          self.owner.velocity_x, self.owner.velocity_y)))
 
             if self.fuel == 0:
                 self.deactivate()
         elif self.media_player and self.engine_activated_sound.is_playing(self.media_player):
             self.engine_activated_sound.stop(self.media_player)
-

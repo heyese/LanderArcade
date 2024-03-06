@@ -5,8 +5,8 @@ from constants import SCALING, SPACE_END
 import collisions
 from classes.game_object import GameObject
 from classes.engine import Engine
-from typing import TYPE_CHECKING
 from classes.shield import Shield, DisabledShield
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from classes.world import World
 
