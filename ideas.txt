@@ -32,6 +32,9 @@ I have access to speed - which I think is effectively pitch: https://pyglet.read
 I think the doppler effect idea - whilst very cool - is over ambitious.  I don't think I can alter the speed of
 a sound whilst it is actually playing (whereas I can with the volume).  So for missiles that zip past the lander, where
 there wouldn't actually be that many repeats in the sound, I don't think it would work.
+Actually, I can stop a sound, recording at what point I was at, and start again from that point at a different speed.
+Just need to test out whether that works seemlessly or ends up being a mess.
+Would be easy to test - just try stopping and starting the existing engine sounds on every update, say.
 
 https://learn.arcade.academy/en/latest/chapters/20_sounds/sounds.html
 
@@ -45,5 +48,7 @@ wrap seamlessly in the minimap (ie. at "WORLD_WDITH - camera_width" and "camera_
 (ie. when the lander flips from one side to the other) - this feels right to me.
 
 Explosions go through the terrain - I'm not bothered about this.  Let's call it a feature.
+
 Still have a bug where sometimes collisions go crazy and the lander disappears somewhere - easy thing to do is not let
-y <= 0.
+y <= 0, but more careful thinking about this will obviously help.  Basically (and roughly), unless there is a terrain
+rect underneath the lander, the answer will never be to go further down!
