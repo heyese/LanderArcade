@@ -214,15 +214,13 @@ class GameView(arcade.View):
                     # so that they stay on the screen.
                     # ie. I let other sprites be sprite < self.game_camera.viewport_width and sprite > WORLD_WIDTH - self.game_camera.viewport_width
                     # But for the mini-map, I always want them to wrap at the "correct" time
+                    old_center_x = sprite.center_x
                     if sprite.center_x > WORLD_WIDTH - self.game_camera.viewport_width:
                         sprite.center_x -= WORLD_WIDTH - 2 * self.game_camera.viewport_width
                     elif sprite.center_x < self.game_camera.viewport_width:
                         sprite.center_x += WORLD_WIDTH - 2 * self.game_camera.viewport_width
                     sprite.draw()
-                    if sprite.center_x < self.game_camera.viewport_width:
-                        sprite.center_x += WORLD_WIDTH - 2 * self.game_camera.viewport_width
-                    elif sprite.center_x > WORLD_WIDTH - self.game_camera.viewport_width:
-                        sprite.center_x -= WORLD_WIDTH - 2 * self.game_camera.viewport_width
+                    sprite.center_x = old_center_x
                     sprite.scale /= scale_multiplier
 
         # I show the repeated terrain in the minimap - I think this makes the most sense
@@ -263,7 +261,8 @@ class GameView(arcade.View):
 
         # First, just deal with sprite positions.  Then consider the camera.
         # Landing pad is effectively terrain.  Shields and Engines move themselves, as centred on owner
-        non_terrain_spritelist_names = ["Lander",
+        non_terrain_spritelist_names = [
+                                        "Lander",  # Important lander is first in the list
                                         "Missiles",
                                         "Air Enemies",
                                         "Ground Enemies",
@@ -282,12 +281,12 @@ class GameView(arcade.View):
                 s.center_x -= WORLD_WIDTH - 2 * screen_width
         # But if the lander is in the first or last 2 viewport_widths, we ensure the lander can see them
         if self.lander.center_x < 2 * screen_width:
-            for s in [s for s in non_terrain_sprites
-                      if WORLD_WIDTH - 2 * screen_width <= s.right]:
+            for s in [i for i in non_terrain_sprites
+                      if WORLD_WIDTH - 2 * screen_width <= i.center_x + i.width / 2]:
                 s.center_x -= WORLD_WIDTH - 2 * screen_width
         elif WORLD_WIDTH - 2 * screen_width <= self.lander.center_x:
-            for s in [s for s in non_terrain_sprites
-                      if 2 * screen_width >= s.left]:
+            for s in [i for i in non_terrain_sprites
+                      if 2 * screen_width >= i.center_x - i.width / 2]:
                 s.center_x += WORLD_WIDTH - 2 * screen_width
 
         # If we've wrapped the lander to the other side of the world, we move the camera instantly
