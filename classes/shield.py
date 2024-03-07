@@ -38,6 +38,9 @@ class Shield(arcade.SpriteCircle):
         self.disabled = False
         self.disabled_timer = None
 
+        self.velocity_x = self.owner.velocity_x
+        self.velocity_y = self.owner.velocity_y
+
         # Shield sounds
         self.sound_enabled = sound_enabled
         self.shield_activate = arcade.load_sound(Path('sounds/shield_activated.mp3'))
@@ -51,6 +54,10 @@ class Shield(arcade.SpriteCircle):
         self.charge = self.initial_charge
 
     def on_update(self, delta_time: float = 1 / 60):
+        # These don't actually make a difference - just so we can reference them in functions
+        self.velocity_x = self.owner.velocity_x
+        self.velocity_y = self.owner.velocity_y
+
         # Stay centred on the lander
         self.center_x = self.owner.center_x
         self.center_y = self.owner.center_y
@@ -96,12 +103,12 @@ class Shield(arcade.SpriteCircle):
                         # Collisions with de-activated shields don't count
                         continue
                     self.disabled = True
-                    self.media_player = sounds.play_sound(self.sound_enabled, self.shield_disabled, volume=0.3)
+                    self.media_player = arcade.play_sound(self.shield_disabled, volume=0.3)
                     return
             # Shield is being activated
             self.visible = True
             self.activated = True
-            self.media_player = sounds.play_sound(self.sound_enabled, self.shield_activate, volume=0.3)
+            self.media_player = arcade.play_sound(self.shield_activate, volume=0.3)
 
     def deactivate(self):
         self.visible = False

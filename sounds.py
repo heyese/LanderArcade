@@ -55,17 +55,27 @@ def get_speed(sound_position: tuple[float, float], sound_velocity: tuple[float, 
     return 1
 
 
-def play_sound(sound_enabled: bool,
-               sound: arcade.Sound,
-               *,
-               volume: float = 1.0,
-               pan: float = 0.0,
-               looping: bool = False,
-               speed: float = 1.0, ):
-    if sound_enabled:
-        return arcade.play_sound(sound,
-                                 volume=volume,
-                                 pan=pan,
-                                 looping=looping,
-                                 speed=speed)
-    return None
+def play_or_update_sound(*, delta_time: float, sound: arcade.Sound, obj):
+
+    # We don't play a sound WHEN the engine in activated specifically, as it plays continuously,
+    # so it's triggered by on_update()
+    mp = obj.media_player
+    if (not mp
+            or not sound.is_playing(mp)
+            # Line below is so it repeats without a gap - messy, but seems necessary?  \@/
+            or (pos := sound.get_stream_position(mp)) > sound.get_length() - 5 * delta_time):
+        obj.media_player = arcade.play_sound(sound,
+                                             volume=obj.max_volume * get_volume_multiplier(obj.position),
+                                             pan=get_pan(obj.position),
+                                             speed=get_speed(obj.position, (obj.velocity_x, obj.velocity_y)))
+    # Testing the below out - the pan effect only works if we regularly update it.
+    # So I'm testing out updating attributes every obj.sound_attributes_update_interval ...
+    elif mp and obj.engine_sound.is_playing(mp) and obj.sound_timer > obj.sound_attributes_update_interval:
+        obj.sound_timer = 0
+        pos = sound.get_stream_position(mp)
+        sound.stop(mp)
+        obj.media_player = arcade.play_sound(sound,
+                                             volume=obj.max_volume * get_volume_multiplier(obj.position),
+                                             pan=get_pan(obj.position),
+                                             speed=get_speed(obj.position, (obj.velocity_x, obj.velocity_y)))
+        obj.media_player.seek(pos)

@@ -34,6 +34,7 @@ if TYPE_CHECKING:
 
 EXPLOSION_SOUNDS = [arcade.load_sound(Path(bounce_sound)) for bounce_sound in Path('sounds').glob('explosion_*.mp3')]
 
+
 class Explosion(GameObject):
     def __init__(self,
                  scene: arcade.Scene,
@@ -83,6 +84,9 @@ class Explosion(GameObject):
         self.timer = 0
         self.rotation_rate = random.randint(1, 180)  # degrees per second
         self.root_2 = math.sqrt(2)
+        self.explosion_sounds = EXPLOSION_SOUNDS
+        self.sound_timer = 0
+
 
     @property
     def radius(self) -> float:

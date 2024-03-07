@@ -23,8 +23,7 @@ class Missile(GameObject):
         # Engine permanently on
         self.engine = Engine(scene=scene, owner=self, fuel=20, force=6000, scale=0.3, sound_enabled=True,
                              engine_activated_sound=arcade.load_sound(Path('sounds/engine.mp3')),
-                             standard_engine_volume=0.3,
-                             boosted_engine_volume=0.6)
+                             max_volume=0.3)
         self.engine.engine_owner_offset = int(1.4 * self.height)
 
     def on_update(self, delta_time: float = 1 / 60):
