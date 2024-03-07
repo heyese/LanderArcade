@@ -58,3 +58,5 @@ Not sure if this should be a problem, but on my current utterly ancient laptop, 
 When it occasionally stutters (frame rate drops), the ship can suddenly speed up.  It feels like it's more than gravity
 acting over the longer loop time - something else is happening, I think.
 But my laptop is 8 years old - I'll see if this still happens when I get my new one tomorrow.
+
+Some pyglet media problem where sometimes it tries to delete a media player that's already been deleted.

@@ -9,7 +9,8 @@ from classes.world import World
 from classes.landing_pad import LandingPad
 from classes.hostage import Hostage
 from classes.missile_launcher import MissileLauncher
-from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT, SPACE_START, SPACE_END
+from classes.explosion import Explosion
+from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT, SPACE_START, SPACE_END, SCALING
 import collisions
 
 from views.menu import MenuView
@@ -60,7 +61,7 @@ class GameView(arcade.View):
         # Sounds
         self.level_complete = arcade.load_sound(Path('sounds/level_complete.mp3'))
 
-    def setup(self, level: int = 3, score: int = 0):
+    def setup(self, level: int = 1, score: int = 0):
         """Get the game ready to play"""
 
         # Set the background color
@@ -327,7 +328,7 @@ class GameView(arcade.View):
         # camera_width boundary - but that goes away if I move the update to the on_draw() function!
         # I've not worked out why, but there you go.  Parallax background position updates are done alongside the draw().
 
-        # # Just for testing - let's have a regular explosion
+        # Just for testing - let's have a regular explosion
         # self.timer += delta_time
         # if self.timer > 10:
         #     self.timer = 0

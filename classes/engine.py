@@ -118,10 +118,11 @@ class Engine(arcade.Sprite):
         # If activated, use up some fuel
         if self.activated:
             self.fuel = max(self.fuel - self.burn_rate * delta_time, 0)
-            sounds.play_or_update_sound(delta_time=delta_time, sound=self.engine_sound, obj=self)
+            sounds.play_or_update_sound(delta_time=delta_time, sound=self.engine_sound, loop=True, obj=self)
             if self.fuel == 0:
                 self.deactivate()
         elif self.media_player and self.engine_sound.is_playing(self.media_player):
             self.engine_sound.stop(self.media_player)
+            self.media_player = None
 
 

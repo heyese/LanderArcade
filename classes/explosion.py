@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import math
-
 import arcade
 import random
 from classes.game_object import GameObject
 from constants import SCALING
+import sounds
 from typing import TYPE_CHECKING
 from pathlib import Path
 if TYPE_CHECKING:
@@ -84,9 +84,9 @@ class Explosion(GameObject):
         self.timer = 0
         self.rotation_rate = random.randint(1, 180)  # degrees per second
         self.root_2 = math.sqrt(2)
-        self.explosion_sounds = EXPLOSION_SOUNDS
-        self.sound_timer = 0
 
+        # Sound related
+        self.explosion_sound = random.choice(EXPLOSION_SOUNDS)
 
     @property
     def radius(self) -> float:
@@ -104,8 +104,11 @@ class Explosion(GameObject):
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)
-
         self.timer += delta_time
+        self.sound_timer += delta_time
+
+        sounds.play_or_update_sound(delta_time=delta_time, sound=self.explosion_sound, obj=self)
+
         # We start off spinning but, as friction reduces the horizontal speed of the explosion to zero, we stop rotating
         self.angle += 0 if not self.velocity_x_initial else delta_time * self.rotation_rate * abs(self.velocity_x/self.velocity_x_initial)
         self.radius = self.radius_initial + (self.timer / self.lifetime) * (self.radius_final - self.radius_initial)

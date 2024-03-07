@@ -56,6 +56,11 @@ class GameObject(arcade.Sprite):
         self.explodes = explodes
         self.owner = owner
 
+        # Sound related
+        self.media_player = None
+        self.sound_timer = 0
+        self.max_volume = 1
+        self.sound_attributes_update_interval = 0.2
 
     def on_update(self, delta_time: float = 1 / 60):
         # Are we in space or not?

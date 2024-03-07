@@ -103,12 +103,12 @@ class Shield(arcade.SpriteCircle):
                         # Collisions with de-activated shields don't count
                         continue
                     self.disabled = True
-                    self.media_player = arcade.play_sound(self.shield_disabled, volume=0.3)
+                    self.media_player = self.sound_enabled and arcade.play_sound(self.shield_disabled, volume=0.3)
                     return
             # Shield is being activated
             self.visible = True
             self.activated = True
-            self.media_player = arcade.play_sound(self.shield_activate, volume=0.3)
+            self.media_player = self.sound_enabled and arcade.play_sound(self.shield_activate, volume=0.3)
 
     def deactivate(self):
         self.visible = False
