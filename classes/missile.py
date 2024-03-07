@@ -3,6 +3,7 @@ import arcade
 from constants import SCALING, WORLD_WIDTH
 from classes.game_object import GameObject
 from classes.engine import Engine
+from pathlib import Path
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from classes.world import World
@@ -20,7 +21,10 @@ class Missile(GameObject):
                          )
         self.scene.add_sprite("Missiles", self)
         # Engine permanently on
-        self.engine = Engine(scene=scene, owner=self, fuel=20, force=6000, scale=0.3, sound_enabled=True)
+        self.engine = Engine(scene=scene, owner=self, fuel=20, force=6000, scale=0.3, sound_enabled=True,
+                             engine_activated_sound=arcade.load_sound(Path('sounds/engine.mp3')),
+                             standard_engine_volume=0.3,
+                             boosted_engine_volume=0.6)
         self.engine.engine_owner_offset = int(1.4 * self.height)
 
     def on_update(self, delta_time: float = 1 / 60):

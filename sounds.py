@@ -25,10 +25,9 @@ def get_pan(position):
     if not lander and camera:
         return 0
     # This just depends on position.X, not the Y values
-    # I suddenly kind of wonder if, when an object is on the left, we should pan fully on the left.  And the same
-    # for the right.  In the 2D sense, that feels appropriate - but I don't think it's what I want.
-    # I think I want it to be fully on the left, and then gradually change to zero when they have the same x coordinates,
-    # and then pan to the right.
+    # I can't adjust the pan of a sound mid-sound.  I think this probably makes in not very useful
+    # for continuous noises that last several seconds that I play on a loop (eg. an engine).
+    # Something can cross the screen and it's pan might only get updated a few times
     pan = min(max(-1, (position[0] - lander.center_x) / camera.viewport_width), 1)
     return pan
 
