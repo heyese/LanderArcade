@@ -11,7 +11,6 @@ from classes.hostage import Hostage
 from classes.missile_launcher import MissileLauncher
 from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT, SPACE_START, SPACE_END
 import collisions
-import sounds
 
 from views.menu import MenuView
 from views.next_level import NextLevelView
@@ -29,6 +28,7 @@ class GameView(arcade.View):
 
         # Want to leave space at the top of the screen for the mini-map
         self.game_camera = arcade.Camera(viewport_height=int((5/6) * self.window.height))
+        constants.GAME_OBJECTS["camera"] = self.game_camera
         self.overlay_camera = arcade.Camera()
         self.scene = None
         self.lander = None
@@ -60,7 +60,7 @@ class GameView(arcade.View):
         # Sounds
         self.level_complete = arcade.load_sound(Path('sounds/level_complete.mp3'))
 
-    def setup(self, level: int = 6, score: int = 0):
+    def setup(self, level: int = 3, score: int = 0):
         """Get the game ready to play"""
 
         # Set the background color
@@ -105,7 +105,7 @@ class GameView(arcade.View):
         # Not sure of the best pattern to do this, but most of the sound functions depend on the lander.  I don't
         # want to always be having to pass it in - I want the object accessible in general in the module
         # So I set it here, just after having created it!
-        sounds.lander = self.lander
+        constants.GAME_OBJECTS["lander"] = self.lander
 
         landing_pad_width = int(2 * self.lander.width)
         if landing_pad_width > landing_pad_width_limit:

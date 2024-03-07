@@ -1,5 +1,10 @@
+from __future__ import annotations
 import arcade
 from typing import NamedTuple
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from classes.lander import Lander
+
 
 # Constants
 SCREEN_TITLE = "Lander Arcade"
@@ -9,6 +14,16 @@ WORLD_HEIGHT = 2500
 SPACE_END = int((5 / 7) * WORLD_HEIGHT)
 SPACE_START = int((2/3) * WORLD_HEIGHT)
 BACKGROUND_COLOR = arcade.color.BLACK
+
+# Have to admit this feels wrong, but I often want to easily get a hold of the lander or the game camera
+# And it feels weird to have to pass them around absolutely everywhere ...
+# So I'm going to see what issues I run into by simply putting them here, and setting them in the constants
+# module namespace as soon as they're defined (they get defined for each level in game.py).
+GAME_OBJECTS = {
+    "lander": None,
+    "camera": None
+}
+
 
 
 class Levels(NamedTuple):

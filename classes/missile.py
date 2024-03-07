@@ -20,7 +20,7 @@ class Missile(GameObject):
                          )
         self.scene.add_sprite("Missiles", self)
         # Engine permanently on
-        self.engine = Engine(scene=scene, owner=self, fuel=20, force=6000, scale=0.3)
+        self.engine = Engine(scene=scene, owner=self, fuel=20, force=6000, scale=0.3, sound_enabled=True)
         self.engine.engine_owner_offset = int(1.4 * self.height)
 
     def on_update(self, delta_time: float = 1 / 60):
