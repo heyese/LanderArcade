@@ -19,12 +19,13 @@ Have a "super missile launcher"
 Bomb thrower!  Parabolic curves, with bombs exploding on a timer.  Flashing rate can indicate how close it is to exploding
 Enemy weapons that temporarily disable the shield
 
-Add some sounds!
-Need sounds for:
-    Safe / unsafe to land sounds?
-    Beaming up hostage sounds
-Think better to change to the shield continuous sound
-Could maybe have a different missile engine sound to the lander engine sound?
+
+Think better to change to the shield continuous sound - might have changed my mind about this now!
+Maybe add a shield for switching shield off?
+Add doppler effect for missile engines - and possibly everything, actually
+Maybe stretch the explosion sounds to match the length of the explosion?  Would mean big long lasting explosions
+have satisfyingly deep sounds?
+
 
 Could have a doppler effect on missiles passing the lander: https://gamedev.stackexchange.com/questions/23583/how-do-i-simulate-the-doppler-effect-in-a-game
 I have access to speed - which I think is effectively pitch: https://pyglet.readthedocs.io/en/latest/modules/media.html

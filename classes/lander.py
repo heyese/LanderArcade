@@ -41,7 +41,7 @@ class Lander(GameObject):
         self.teleport_ongoing_player = None
         self.recharged = arcade.load_sound(Path('sounds/recharged.mp3'))
         self.recharged_player = None
-        self.max_volume = 0.7
+        self.max_volume = 0.4
         # I have a timer so I can control how long sounds play for before I adjust their attributes
         self.sound_timer = 0
         # Num seconds after which sound attributes are updated.  If I do this every frame, sound is crackly and it doesn't work well.
