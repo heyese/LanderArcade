@@ -39,6 +39,8 @@ class Lander(GameObject):
         self.teleport_complete_player = None
         self.teleport_ongoing = arcade.load_sound(Path('sounds/teleport_ongoing.mp3'))
         self.teleport_ongoing_player = None
+        self.recharged = arcade.load_sound(Path('sounds/recharged.mp3'))
+        self.recharged_player = None
         self.max_volume = 0.7
         # I have a timer so I can control how long sounds play for before I adjust their attributes
         self.sound_timer = 0
@@ -61,6 +63,9 @@ class Lander(GameObject):
             self.change_y = 0
             self.angle = 0
             self.bottom = self.scene['Landing Pad'].sprite_list[0].top
+            self.recharged_player = sounds.play_or_update_sound(sound=self.recharged,
+                                                                player=self.recharged_player,
+                                                                obj=self)
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)

@@ -58,3 +58,8 @@ acting over the longer loop time - something else is happening, I think.
 But my laptop is 8 years old - I'll see if this still happens when I get my new one tomorrow.
 
 Some pyglet media problem where sometimes it tries to delete a media player that's already been deleted.
+
+Think I've got a bug where if the sound I'm playing is very short, and I don't want it to loop, but it's accompanying
+a long thing (eg. long explosion), then I call it twice.  (Just one of the explosions is quite short and I see this.)
+It's to do with the sounds "or not sound.is_playing(player)" line, but I want that there for when sounds legitimately
+stop and then start again (eg. teleporting, when you go out and then back in range).
