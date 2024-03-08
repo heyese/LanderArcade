@@ -5,7 +5,7 @@ Building an .exe:
 ~/PycharmProjects/LanderArcade
 $ python -m nuitka --onefile main.py --include-data-dir=images=images --windows-icon-from-ico=images/lander.png --disable-console
 # Above doesn't seem to work, but with below should just need to zip the directory produced
-$ python -m nuitka --standalone main.py --include-data-dir=images=images --windows-icon-from-ico=images/lander.png --disable-console
+$ python -m nuitka --standalone main.py --include-data-dir=images=images --include-data-dir=sounds=sounds --windows-icon-from-ico=images/lander.png --disable-console
 So far, single file doesn't seem to work when moved to a new directory?
 
 When the shield gets 'trapped', perhaps the simplest thing is to manually
