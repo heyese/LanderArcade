@@ -1,8 +1,10 @@
 from __future__ import annotations
 import arcade
 import math
+import sounds
 from constants import SCALING, SPACE_END
 import collisions
+from pathlib import Path
 from classes.game_object import GameObject
 from classes.engine import Engine
 from classes.shield import Shield, DisabledShield
@@ -30,6 +32,18 @@ class Lander(GameObject):
         self.trying_to_activate_shield = False
         self._hostages_being_rescued = set()
         self._tractor_beam_timer: float = 0
+
+        # Sound related
+        self.sound_enabled = True
+        self.teleport_complete = arcade.load_sound(Path('sounds/teleport_complete.mp3'))
+        self.teleport_complete_player = None
+        self.teleport_ongoing = arcade.load_sound(Path('sounds/teleport_ongoing.mp3'))
+        self.teleport_ongoing_player = None
+        self.max_volume = 0.7
+        # I have a timer so I can control how long sounds play for before I adjust their attributes
+        self.sound_timer = 0
+        # Num seconds after which sound attributes are updated.  If I do this every frame, sound is crackly and it doesn't work well.
+        self.sound_attributes_update_interval = 10  # Not really needed
 
     @property
     def landed(self):
@@ -64,11 +78,20 @@ class Lander(GameObject):
         # If we're still rescuing anyone - animate the tractor beam!
         if self._hostages_being_rescued:
             self._tractor_beam_timer += delta_time
+            self.teleport_ongoing_player = sounds.play_or_update_sound(sound=self.teleport_ongoing,
+                                                                       player=self.teleport_ongoing_player,
+                                                                       delta_time=delta_time,
+                                                                       loop=True,
+                                                                       obj=self)
         else:
             self._tractor_beam_timer = 0
+            self.teleport_ongoing_player and self.teleport_ongoing.stop(self.teleport_ongoing_player)
 
     def hostage_rescued(self, hostage):
         self._hostages_being_rescued.remove(hostage)
+        self.teleport_ongoing_player and self.teleport_ongoing.stop(self.teleport_ongoing_player)
+        self.teleport_complete_player = sounds.play_or_update_sound(sound=self.teleport_complete,
+                                                                    player=self.teleport_complete_player, obj=self)
 
     def determine_force_y(self, force_y):
         force_y = super().determine_force_y(force_y)

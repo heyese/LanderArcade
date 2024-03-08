@@ -107,7 +107,10 @@ class Explosion(GameObject):
         self.timer += delta_time
         self.sound_timer += delta_time
 
-        sounds.play_or_update_sound(delta_time=delta_time, sound=self.explosion_sound, obj=self)
+        self.media_player = sounds.play_or_update_sound(delta_time=delta_time,
+                                                        sound=self.explosion_sound,
+                                                        player=self.media_player,
+                                                        obj=self)
 
         # We start off spinning but, as friction reduces the horizontal speed of the explosion to zero, we stop rotating
         self.angle += 0 if not self.velocity_x_initial else delta_time * self.rotation_rate * abs(self.velocity_x/self.velocity_x_initial)

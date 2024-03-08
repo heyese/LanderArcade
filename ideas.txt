@@ -21,12 +21,10 @@ Enemy weapons that temporarily disable the shield
 
 Add some sounds!
 Need sounds for:
-    Explosions - lots of different sounds
-    Consider external engines, shields and explosions.  Volume can depend on distance from lander and the pan can depend
-    on its position
     Safe / unsafe to land sounds?
+    Beaming up hostage sounds
 Think better to change to the shield continuous sound
-Could maybe have a different missile engine sound to the lander engine sound
+Could maybe have a different missile engine sound to the lander engine sound?
 
 Could have a doppler effect on missiles passing the lander: https://gamedev.stackexchange.com/questions/23583/how-do-i-simulate-the-doppler-effect-in-a-game
 I have access to speed - which I think is effectively pitch: https://pyglet.readthedocs.io/en/latest/modules/media.html
