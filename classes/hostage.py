@@ -40,7 +40,6 @@ class Hostage(GameObject):
             self.scene.add_sprite("Hostages", self)
             self.shield.activate()  # Hostage shield is permanently activated
 
-
     def on_update(self, delta_time: float = 1 / 60):
         if self.being_rescued:
             self._current_timer -= delta_time

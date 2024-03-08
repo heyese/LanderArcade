@@ -63,3 +63,5 @@ Think I've got a bug where if the sound I'm playing is very short, and I don't w
 a long thing (eg. long explosion), then I call it twice.  (Just one of the explosions is quite short and I see this.)
 It's to do with the sounds "or not sound.is_playing(player)" line, but I want that there for when sounds legitimately
 stop and then start again (eg. teleporting, when you go out and then back in range).
+
+No longer play recharged sound when level is completed, but I have realized it plays continuously whilst you're landed.

@@ -63,9 +63,11 @@ class Lander(GameObject):
             self.change_y = 0
             self.angle = 0
             self.bottom = self.scene['Landing Pad'].sprite_list[0].top
-            self.recharged_player = sounds.play_or_update_sound(sound=self.recharged,
-                                                                player=self.recharged_player,
-                                                                obj=self)
+            # Don't play recharged sound when the level is completed
+            if self.scene["Hostages"]:
+                self.recharged_player = sounds.play_or_update_sound(sound=self.recharged,
+                                                                    player=self.recharged_player,
+                                                                    obj=self)
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)
