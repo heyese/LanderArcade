@@ -15,44 +15,43 @@ if TYPE_CHECKING:
 
 class MissileLauncher(GameObject):
     def __init__(self, scene: arcade.Scene, camera: arcade.Camera, world: World, missile_interval: int = 15,
-                 scale: float = 0.3 * SCALING, mass: int = 300, shield: bool = True):
+                 scale: float = 0.3 * SCALING, mass: int = 300, shield: bool = False):
         super().__init__(scene=scene,
                          camera=camera,
                          world=world,
                          filename="images/missile_launcher.png",
                          mass=mass,
                          scale=scale,
+                         on_ground=True,
+                         max_volume=0.3
                          )
 
         self.missile_interval = missile_interval
         self.current_interval = random.randint(0, missile_interval)
         if shield:
             # Effectively infinite shield
-            self.shield = Shield(scene=scene, owner=self, charge=999999, sound_enabled=True)
+            self.shield = Shield(scene=scene, owner=self, charge=999999, sound_enabled=True, max_volume=0.1)
             self.shield_disabled_for_missile_fire_interval = max(missile_interval // 5, 2)
         else:
             self.shield = None
+
         if collisions.place_on_world(self, world, scene):
             # If we can't place the object on the world, we never add it to a sprite list.
             # It's just forgotten about
             self.scene.add_sprite("Ground Enemies", self)
-        if shield:
-            self.shield.activate()
-
-
 
     def on_update(self, delta_time: float = 1 / 60):
         self.current_interval -= delta_time
         # If there's a shield, we switch it off before firing and back on again afterwards
         if (self.shield is not None
-                and self.current_interval <= self.shield_disabled_for_missile_fire_interval
+                and self.current_interval <= self.shield_disabled_for_missile_fire_interval / 2
                 and self.shield.activated):
             self.shield.deactivate()
         if self.current_interval <= 0:
             self.fire_missile()
             self.current_interval = self.missile_interval
         if (self.shield is not None
-                and self.current_interval <= self.missile_interval - self.shield_disabled_for_missile_fire_interval
+                and self.shield_disabled_for_missile_fire_interval / 2 < self.current_interval <= self.missile_interval - (self.shield_disabled_for_missile_fire_interval / 2)
                 and not self.shield.activated):
             self.shield.activate()
 
@@ -76,11 +75,12 @@ class SuperMissileLauncher(MissileLauncher):
                          mass=mass,
                          scale=scale,
                          missile_interval=missile_interval,
+                         shield=True,
                          )
 
     def fire_missile(self):
         missile = Missile(scene=self.scene, world=self.world, camera=self.camera,
-                          mass=50,
+                          mass=100,
                           scale=0.4 * SCALING,
                           # Engine related
                           engine_fuel=60,

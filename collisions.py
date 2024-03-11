@@ -4,6 +4,7 @@ import random
 
 import arcade
 from arcade import Sprite, Scene, SpriteList, Camera
+import constants
 from typing import Tuple
 from pathlib import Path
 import math
@@ -116,19 +117,10 @@ def check_for_collisions(scene: Scene, camera: Camera, world: World):
     # An explosion colliding with a shielded object exerts a force which, I think, will only affect the object it's
     # colliding with.
 
-    terrain_spritelists = [
-        # Purposefully ordered left to right, for explosion collision logic
-        scene["Terrain Left Edge"],
-        scene["Terrain Centre"],
-        scene["Terrain Right Edge"],
-    ]
-    general_object_spritelists = [
-        scene["Lander"],
-        scene["Shields"],
-        scene["Missiles"],
-        scene["Air Enemies"],
-        scene['Ground Enemies'],
-    ]
+    terrain_spritelists = [scene[name] for name in constants.TERRAIN_SPRITELISTS]
+
+    general_object_spritelists = [scene[name] for name in constants.GENERAL_OBJECT_SPRITELISTS]
+
     lander: Lander = scene['Lander'].sprite_list[0] if scene['Lander'].sprite_list else None
     landing_pad: LandingPad = scene['Landing Pad'].sprite_list[0]
 
@@ -379,8 +371,8 @@ def check_for_explosion_collision_with_terrain(explosion: Explosion, terrain: Li
 
 
 def check_for_shield_collision_with_terrain(shield: Shield, terrain: List[SpriteList], scene: Scene):
-    # The LandingPad and Hostages' shields are allowed to clash with the terrain
-    if shield.owner in scene['Landing Pad'].sprite_list + scene['Hostages'].sprite_list:
+    # The LandingPad and Hostages' and Ground Enemies shields are allowed to clash with the terrain
+    if shield.owner in itertools.chain(*[scene[name].sprite_list for name in constants.ALLOWED_TERRAIN_SHIELD_COLLISIONS_SPRITELISTS]):
         return False
     collision_with_terrain = arcade.check_for_collision_with_lists(shield, terrain)
     for rect in collision_with_terrain:
@@ -438,22 +430,21 @@ def place_on_world(sprite: Sprite, world: World, scene: Scene):
     # somewhere on it at random
 
     surfaces = [((r.left, r.right), r.top) for r in world.terrain_left_edge.sprite_list + world.terrain_centre.sprite_list]
-    for spr in itertools.chain(*[scene[group].sprite_list for group in ("Landing Pad",
-                                                                        "Ground Enemies",
-                                                                        "Hostages")]):
-        spr = spr if not getattr(spr, 'shield', None) else spr.shield
+    for spr in itertools.chain(*[scene[group].sprite_list for group in constants.PLACE_ON_WORLD_SPRITELISTS]):
+        spr_width = spr.width if not getattr(spr, 'shield', None) else spr.shield.width
 
         # Find the surface the sprite is on, then split that surface into the two remaining segments
         for s in surfaces[:]:
             (x_left, x_right), y = s
-            if x_left <= spr.left and spr.right <= x_right:
+            if x_left <= spr.center_x - spr_width / 2 and x_right >= spr.center_x + spr_width / 2:
                 surfaces.remove(s)
-                surfaces.extend([((x_left, spr.left), y), ((spr.right, x_right), y)])
+                surfaces.extend([((x_left, spr.center_x - spr_width / 2), y), ((spr.center_x + spr_width / 2, x_right), y)])
 
     # Surfaces is now a list of the free spaces on top of the terrain.
     # Any of these that's wide enough will work for whatever we're placing on the world
 
     # Bit confusing, but want to consider potential sprite shield when thinking of the sprite width
+    # But since the object hasn't been placed yet, can't use shield.left, shield.right - have to consider the width
     sprite_width = sprite.width if not getattr(sprite, 'shield', None) else sprite.shield.width
     surfaces = [s for s in surfaces if s[0][1] - s[0][0] > sprite_width]
     if not surfaces:

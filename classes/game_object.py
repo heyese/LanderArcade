@@ -29,6 +29,7 @@ class GameObject(arcade.Sprite):
                  explodes: bool = True,
                  owner=None,
                  sound_enabled: bool = False,
+                 max_volume: float = 1,
 
                  # Explosion related
                  explosion_initial_radius_multiplier: float = 0.5,
@@ -65,7 +66,7 @@ class GameObject(arcade.Sprite):
         # Sound related
         self.media_player = None
         self.sound_timer = 0
-        self.max_volume = 1
+        self.max_volume = max_volume
         self.sound_attributes_update_interval = 0.2
 
         # Explosion related
@@ -165,8 +166,8 @@ class GameObject(arcade.Sprite):
 
     def die(self):
         self.dead = True
-        for s in [self, self.shield, self.engine, self.disabled_shield]:
-            if s is not None:
-                s.remove_from_sprite_lists()
+        self.remove_from_sprite_lists()
+        self.shield and self.shield.disabled_shield.remove_from_sprite_lists() and self.shield.remove_from_sprite_lists()
+        self.engine and self.engine.remove_from_sprite_lists()
         if self.explodes:
             self.explode()

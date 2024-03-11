@@ -25,7 +25,8 @@ class Shield(arcade.SpriteCircle):
                  owner: arcade.Sprite,
                  radius: int = None,
                  charge: int = 100,
-                 sound_enabled: bool = False):
+                 sound_enabled: bool = False,
+                 max_volume: float = 0.3):
         if radius is None:
             radius = int(max(owner.height, owner.width) * 1.5)
         super().__init__(radius=radius,
@@ -42,6 +43,8 @@ class Shield(arcade.SpriteCircle):
         self.disabled_timer = None
         self.disabled_shield = DisabledShield(scene=scene, owner=self.owner)
 
+        self.center_x = self.owner.center_x
+        self.center_y = self.owner.center_y
         self.velocity_x = self.owner.velocity_x
         self.velocity_y = self.owner.velocity_y
 
@@ -50,6 +53,7 @@ class Shield(arcade.SpriteCircle):
         self.shield_activate = arcade.load_sound(Path('sounds/shield_activated.mp3'))
         self.shield_disabled = arcade.load_sound(Path('sounds/shield_disabled.mp3'))
         self.shield_continuous = arcade.load_sound(Path('sounds/shield_continuous.mp3'))
+        self.max_volume = max_volume
         # This keeps track of the "media player" that is playing the current sound
         # Each time I play a sound, I think it returns a different player!
         self.media_player = None
@@ -114,12 +118,14 @@ class Shield(arcade.SpriteCircle):
                         # collisions with your own shield are obviously allowed
                         continue
                     self.disabled = True
-                    self.media_player = self.sound_enabled and arcade.play_sound(self.shield_disabled, volume=0.3)
+                    self.media_player = self.sound_enabled and arcade.play_sound(self.shield_disabled,
+                                                                                 volume=self.max_volume)
                     return
             # Shield is being activated
             self.visible = True
             self.activated = True
-            self.media_player = self.sound_enabled and arcade.play_sound(self.shield_activate, volume=0.3)
+            self.media_player = self.sound_enabled and arcade.play_sound(self.shield_activate,
+                                                                         volume=self.max_volume)
 
     def deactivate(self):
         self.visible = False
