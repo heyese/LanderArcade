@@ -17,7 +17,7 @@ class Missile(GameObject):
                  engine_force: int = 6000,
                  engine_scale: float = 0.3 * SCALING,
                  engine_max_volume: float = 0.3,
-
+                 filename: str = "images/missile.png",
                  explosion_initial_radius_multiplier: float = 0.5,
                  explosion_final_radius_multiplier: float = 4,
                  explosion_lifetime: float = 2,  # seconds
@@ -25,7 +25,7 @@ class Missile(GameObject):
         super().__init__(scene=scene,
                          world=world,
                          camera=camera,
-                         filename="images/missile.png",
+                         filename=filename,
                          mass=mass,
                          scale=scale,
 

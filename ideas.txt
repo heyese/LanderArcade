@@ -15,14 +15,12 @@ an object, so it's not good enough
 
 
 Add an enemy aircraft
-Have a "super missile launcher"
 Bomb thrower!  Parabolic curves, with bombs exploding on a timer.  Flashing rate can indicate how close it is to exploding
 Enemy weapons that temporarily disable the shield
-Later levels, allow missile launchers to have shields
 
 
 Think better to change to the shield continuous sound - might have changed my mind about this now!
-Maybe add a shield for switching shield off?
+Maybe add a sound for switching shield off?
 Add doppler effect for missile engines - and possibly everything, actually
 Maybe stretch the explosion sounds to match the length of the explosion?  Would mean big long lasting explosions
 have satisfyingly deep sounds?

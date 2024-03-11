@@ -87,6 +87,7 @@ class SuperMissileLauncher(MissileLauncher):
                           engine_force=12000,
                           engine_scale=0.5 * SCALING,
                           engine_max_volume=0.4,
+                          filename="images/super_missile.png",
                           # Explosion related
                           explosion_final_radius_multiplier=8,
                           explosion_force=6000,
