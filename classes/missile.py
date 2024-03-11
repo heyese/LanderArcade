@@ -11,19 +11,40 @@ if TYPE_CHECKING:
 
 
 class Missile(GameObject):
-    def __init__(self, scene: arcade.Scene, world: World, camera: arcade.Camera):
+    def __init__(self, scene: arcade.Scene, world: World, camera: arcade.Camera,
+                 mass: int = 30, scale: float = 0.3 * SCALING,
+                 engine_fuel: int = 20,
+                 engine_force: int = 6000,
+                 engine_scale: float = 0.3 * SCALING,
+                 engine_max_volume: float = 0.3,
+
+                 explosion_initial_radius_multiplier: float = 0.5,
+                 explosion_final_radius_multiplier: float = 4,
+                 explosion_lifetime: float = 2,  # seconds
+                 explosion_force: int = 4000):
         super().__init__(scene=scene,
                          world=world,
                          camera=camera,
                          filename="images/missile.png",
-                         mass=30,
-                         scale=0.3 * SCALING,
+                         mass=mass,
+                         scale=scale,
+
+                         # Explosion related
+                         explosion_initial_radius_multiplier=explosion_initial_radius_multiplier,
+                         explosion_final_radius_multiplier=explosion_final_radius_multiplier,
+                         explosion_force=explosion_force,
+                         explosion_lifetime=explosion_lifetime
                          )
         self.scene.add_sprite("Missiles", self)
         # Engine permanently on
-        self.engine = Engine(scene=scene, owner=self, fuel=20, force=6000, scale=0.3, sound_enabled=True,
+        self.engine = Engine(scene=scene,
+                             owner=self,
+                             fuel=engine_fuel,
+                             force=engine_force,
+                             scale=engine_scale,
+                             sound_enabled=True,
                              engine_activated_sound=arcade.load_sound(Path('sounds/engine.mp3')),
-                             max_volume=0.3)
+                             max_volume=engine_max_volume)
         self.engine.engine_owner_offset = int(1.4 * self.height)
 
     def on_update(self, delta_time: float = 1 / 60):

@@ -18,6 +18,7 @@ Add an enemy aircraft
 Have a "super missile launcher"
 Bomb thrower!  Parabolic curves, with bombs exploding on a timer.  Flashing rate can indicate how close it is to exploding
 Enemy weapons that temporarily disable the shield
+Later levels, allow missile launchers to have shields
 
 
 Think better to change to the shield continuous sound - might have changed my mind about this now!

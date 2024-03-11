@@ -28,7 +28,13 @@ class GameObject(arcade.Sprite):
                  above_space: bool = False,
                  explodes: bool = True,
                  owner=None,
-                 sound_enabled: bool = False
+                 sound_enabled: bool = False,
+
+                 # Explosion related
+                 explosion_initial_radius_multiplier: float = 0.5,
+                 explosion_final_radius_multiplier: float = 4,
+                 explosion_lifetime: float = 2,  # seconds
+                 explosion_force: int = 4000,  # was 20
                  ):
         super().__init__(filename=filename, scale=scale * SCALING, angle=angle)
         self.scene = scene
@@ -62,6 +68,12 @@ class GameObject(arcade.Sprite):
         self.max_volume = 1
         self.sound_attributes_update_interval = 0.2
 
+        # Explosion related
+        self.explosion_radius_initial = int(self.height * explosion_initial_radius_multiplier)
+        self.explosion_radius_final = int(self.height * explosion_final_radius_multiplier)
+        self.explosion_lifetime = explosion_lifetime  # seconds
+        self.explosion_force = explosion_force
+
     def on_update(self, delta_time: float = 1 / 60):
         # Are we in space or not?
         self.in_space = True if self.center_y >= SPACE_START else False
@@ -70,7 +82,7 @@ class GameObject(arcade.Sprite):
         self.velocity_x = self.change_x / delta_time  # pixels per second!
         self.velocity_y = self.change_y / delta_time
         # Calculate the force being applied
-        force_x, force_y = self.explosion_force()
+        force_x, force_y = self.apply_explosion_force()
         force_y += self.determine_force_y(force_y)
         force_x += self.determine_force_x(force_x)
         # Force due to explosions
@@ -83,7 +95,7 @@ class GameObject(arcade.Sprite):
         self.center_x += self.change_x
         self.center_y += self.change_y
 
-    def explosion_force(self):
+    def apply_explosion_force(self):
         # Force due to explosions - not applied to ground objects or explosions themselves
         if self.on_ground or not collisions.is_sprite_in_camera_view(sprite=self, camera=self.camera) or self.__class__.__name__ == "Explosion":
             # Don't go to the trouble of applying explosion forces to sprites that are off screen
@@ -112,16 +124,16 @@ class GameObject(arcade.Sprite):
                                    camera=self.camera,
                                    mass=self.mass,
                                    scale=self.scale,
-                                   radius_initial=int(self.height) // 2,
-                                   radius_final=int(self.height) * 4,
-                                   lifetime=2,  # seconds
+                                   radius_initial=self.explosion_radius_initial,
+                                   radius_final=self.explosion_radius_final,
+                                   lifetime=self.explosion_lifetime,  # seconds
                                    # Force here is what's applied to airborne objects that are
                                    # within the explosion (and presumably shielded!).
                                    # Say gravity is 100, lander mass is 20, so gravitational force
                                    # is f = ma -> 2000.
                                    # So trying to get a feel for what the right value should be,
                                    # but 4000 is double the kind of average gravitational pull
-                                   force=4000,  # was 20
+                                   force=self.explosion_force,  # was 20
                                    velocity_x=self.velocity_x,
                                    velocity_y=self.velocity_y,
                                    center_x=int(self.center_x),

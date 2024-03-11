@@ -6,14 +6,17 @@ import sounds
 
 
 shield_disabled_when_collisions_exist_with = [
-    "Terrain Left Edge",
-    "Terrain Centre",
-    "Terrain Right Edge",
+    "Lander",
     "Missiles",
     "Shields",  # only activated shields
     "Ground Enemies",
     "Air Enemies",
     "Explosions"]
+
+terrain = [
+    "Terrain Left Edge",
+    "Terrain Centre",
+    "Terrain Right Edge", ]
 
 
 class Shield(arcade.SpriteCircle):
@@ -37,6 +40,7 @@ class Shield(arcade.SpriteCircle):
         self.scene.add_sprite('Shields', self)
         self.disabled = False
         self.disabled_timer = None
+        self.disabled_shield = DisabledShield(scene=scene, owner=self.owner)
 
         self.velocity_x = self.owner.velocity_x
         self.velocity_y = self.owner.velocity_y
@@ -94,13 +98,20 @@ class Shield(arcade.SpriteCircle):
                 self.disabled = True
                 return
             # Cannot enable shield when an object is already within the perimeter
-            # If you try to, it is disabled for a small period
-            # Except for Hostages who always have an enabled shield.
+            # If you try to, it is disabled for a small period.
+            # Except that ground objects are allowed to have their shields collide with the terrain.
+            # And except for Hostages who always have an activated shield, regardless.
             if self.owner not in self.scene["Hostages"]:
                 collisions = arcade.check_for_collision_with_lists(self, [self.scene[i] for i in shield_disabled_when_collisions_exist_with])
+                if self.owner not in self.scene["Ground Enemies"]:
+                    terrain_collisions = arcade.check_for_collision_with_lists(self, [self.scene[i] for i in terrain])
+                    collisions += terrain_collisions
                 for obj in collisions:
                     if obj in self.scene["Shields"] and not obj.activated:
                         # Collisions with de-activated shields don't count
+                        continue
+                    if self.owner == obj or self is obj:
+                        # collisions with your own shield are obviously allowed
                         continue
                     self.disabled = True
                     self.media_player = self.sound_enabled and arcade.play_sound(self.shield_disabled, volume=0.3)

@@ -8,7 +8,7 @@ from classes.lander import Lander
 from classes.world import World
 from classes.landing_pad import LandingPad
 from classes.hostage import Hostage
-from classes.missile_launcher import MissileLauncher
+from classes.missile_launcher import MissileLauncher, SuperMissileLauncher
 from classes.explosion import Explosion
 from constants import BACKGROUND_COLOR, WORLD_WIDTH, WORLD_HEIGHT, SPACE_START, SPACE_END, SCALING
 import collisions
@@ -61,7 +61,7 @@ class GameView(arcade.View):
         # Sounds
         self.level_complete = arcade.load_sound(Path('sounds/level_complete.mp3'))
 
-    def setup(self, level: int = 1, score: int = 0):
+    def setup(self, level: int = 3, score: int = 0):
         """Get the game ready to play"""
 
         # Set the background color
@@ -127,6 +127,9 @@ class GameView(arcade.View):
         # Add the missile launchers
         for i in range(self.level_config.missile_launchers):
             MissileLauncher(scene=self.scene, world=self.world, camera=self.game_camera)
+
+        for i in range(self.level_config.super_missile_launchers):
+            SuperMissileLauncher(scene=self.scene, world=self.world, camera=self.game_camera)
 
         # Add the hostages
         for i in range(self.level_config.hostages):

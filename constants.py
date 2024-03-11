@@ -1,6 +1,7 @@
 from __future__ import annotations
 import arcade
 from typing import NamedTuple
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from classes.lander import Lander
@@ -25,13 +26,15 @@ GAME_OBJECTS = {
 }
 
 
-
-class Levels(NamedTuple):
+@dataclass
+class Levels:
     hostages: int
     missile_launchers: int
     fuel: int
     shield: int
     max_gravity: int
+    super_missile_launchers: int = 0
+
 
 # With hostages and missile lauchers, I'm saying 'up to' these values
 # There might not be enough space to place them all on the terrain
@@ -39,8 +42,9 @@ level_1 = Levels(hostages=0, missile_launchers=0, fuel=200, shield=200, max_grav
 level_2 = Levels(hostages=1, missile_launchers=0, fuel=200, shield=200, max_gravity=70)
 level_3 = Levels(hostages=2, missile_launchers=2, fuel=150, shield=150, max_gravity=100)
 level_4 = Levels(hostages=3, missile_launchers=2, fuel=150, shield=150, max_gravity=140)
-level_5 = Levels(hostages=3, missile_launchers=5, fuel=150, shield=150, max_gravity=190)
-level_6 = Levels(hostages=3, missile_launchers=10, fuel=100, shield=100, max_gravity=200)  # 200 is max gravity
+level_5 = Levels(hostages=3, missile_launchers=4, super_missile_launchers=1, fuel=150, shield=150, max_gravity=190)
+level_6 = Levels(hostages=3, missile_launchers=7, super_missile_launchers=2, fuel=100, shield=100, max_gravity=200)  # 200 is max gravity
+level_7 = Levels(hostages=3, missile_launchers=10, super_missile_launchers=2, fuel=80, shield=80, max_gravity=200)
 # Future levels just match the latest one
 
 LEVELS = {
