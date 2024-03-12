@@ -156,8 +156,9 @@ class GameObject(arcade.Sprite):
         return force_x
 
     def determine_force_y(self, force_y):
-        if not self.in_space:
+        if not self.in_space and not getattr(self, "landed", None):
             # When not in the allowed(!) region of space, there's the world's gravity ...
+            # (Unless we're the lander and we've actually landed)
             force_y -= self.mass * self.world.gravity
         # Force due to engine
         if self.engine is not None and self.engine.activated:

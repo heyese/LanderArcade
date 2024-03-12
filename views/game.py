@@ -61,7 +61,7 @@ class GameView(arcade.View):
         # Sounds
         self.level_complete = arcade.load_sound(Path('sounds/level_complete.mp3'))
 
-    def setup(self, level: int = 1, score: int = 0):
+    def setup(self, level: int = 6, score: int = 0):
         """Get the game ready to play"""
 
         # Set the background color

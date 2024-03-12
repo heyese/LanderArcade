@@ -52,19 +52,24 @@ class Lander(GameObject):
 
     @landed.setter
     def landed(self, value: bool):
-        self._landed = value
+        if self._landed is not value:
+            self._landed = value
+            if value:
+                # Don't play recharged sound when the level is completed
+                if self.scene["Hostages"]:
+                    self.recharged_player = arcade.play_sound(sound=self.recharged, volume=self.max_volume)
+                # Refill fuel and recharge shield
+                self.engine.deactivate()
+                self.engine.refuel()
+                self.shield.recharge()
         if value:
-            # Refill fuel and recharge shield
-            self.engine.deactivate()
-            self.engine.refuel()
-            self.shield.recharge()
+            # Split this into two sections.  When you land, everything recharges as a one off.
+            # But I want the values below to be repeatedly set, else you can turn (and crash) the lander whilst it's
+            # landed, which feels odd.
             self.change_x = 0
             self.change_y = 0
             self.angle = 0
             self.bottom = self.scene['Landing Pad'].sprite_list[0].top
-            # Don't play recharged sound when the level is completed
-            if self.scene["Hostages"]:
-                self.recharged_player = arcade.play_sound(sound=self.recharged, volume=self.max_volume)
 
     def on_update(self, delta_time: float = 1 / 60):
         super().on_update(delta_time=delta_time)
