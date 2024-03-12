@@ -56,8 +56,10 @@ Not sure if this should be a problem, but on my current utterly ancient laptop, 
 When it occasionally stutters (frame rate drops), the ship can suddenly speed up.  It feels like it's more than gravity
 acting over the longer loop time - something else is happening, I think.
 But my laptop is 8 years old - I'll see if this still happens when I get my new one tomorrow.
+Basically, I think you need something with more than a tiny amount of video memory.
 
 Some pyglet media problem where sometimes it tries to delete a media player that's already been deleted.
+Not seen this for a good while - might not be an issue anymore.
 
 Think I've got a bug where if the sound I'm playing is very short, and I don't want it to loop, but it's accompanying
 a long thing (eg. long explosion), then I call it twice.  (Just one of the explosions is quite short and I see this.)

@@ -92,12 +92,12 @@ class Lander(GameObject):
         else:
             self._tractor_beam_timer = 0
             self.teleport_ongoing_player and self.teleport_ongoing.stop(self.teleport_ongoing_player)
+            self.teleport_ongoing_player = None
 
     def hostage_rescued(self, hostage):
         self._hostages_being_rescued.remove(hostage)
         self.teleport_ongoing_player and self.teleport_ongoing.stop(self.teleport_ongoing_player)
-        self.teleport_complete_player = sounds.play_or_update_sound(sound=self.teleport_complete,
-                                                                    player=self.teleport_complete_player, obj=self)
+        self.teleport_complete_player = arcade.play_sound(sound=self.teleport_complete, volume=self.max_volume)
 
     def determine_force_y(self, force_y):
         force_y = super().determine_force_y(force_y)

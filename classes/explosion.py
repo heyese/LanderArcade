@@ -86,7 +86,9 @@ class Explosion(GameObject):
         self.root_2 = math.sqrt(2)
 
         # Sound related
-        self.explosion_sound = random.choice(EXPLOSION_SOUNDS)
+        self.sound: arcade.Sound = random.choice(EXPLOSION_SOUNDS)
+        # Make the sound last as long as the explosion
+        self.sound_speed = self.lifetime / self.sound.get_length()
 
     @property
     def radius(self) -> float:
@@ -108,7 +110,7 @@ class Explosion(GameObject):
         self.sound_timer += delta_time
 
         self.media_player = sounds.play_or_update_sound(delta_time=delta_time,
-                                                        sound=self.explosion_sound,
+                                                        sound=self.sound,
                                                         player=self.media_player,
                                                         obj=self)
 

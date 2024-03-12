@@ -50,9 +50,13 @@ def get_volume_multiplier(position: tuple[float, float]) -> float:
     return 1 - distance / camera.viewport_width
 
 
-def get_speed(sound_position: tuple[float, float], sound_velocity: tuple[float, float]):
+def get_speed(sound_position: tuple[float, float], sound_velocity: tuple[float, float], speed: float | None = None) -> float:
     """Speed (or pitch) of sound.  1 is default, 2 is octave higher, 0.5 is octave lower, can't have 0.
       Idea here is to apply a doppler affect.  Need positions and velocities"""
+    # on looped sounds, I might want to vary the speed to apply a doppler effect.  But for one off sounds,
+    # the object itself sometimes knows the speed we want to play the sound at
+    if speed is not None:
+        return speed
     return 1
 
 
@@ -61,17 +65,19 @@ def play_or_update_sound(*, delta_time: None | float = None,
                          player: media.player,
                          loop: bool = False,
                          obj):
+    # This is for when I want to do funky things with sounds - eg. update their pitch / volume as they are playing
+    # (by stopping the sound, adjusting the attribute, and restarting at that point).
+    # If we just want to play a one of sound (eg. teleport complete), easier to use arcade.play_sound()
 
-    # We don't play a sound WHEN the engine in activated specifically, as it plays continuously,
-    # so it's triggered by on_update()
-    if (not player
-            or not sound.is_playing(player)
-            # Line below is so it repeats without a gap - messy, but seems necessary?  \@/
+    if (not player  # First time sound has played
+            # If I wait for a loop-able sound to finish before repeating, it sounds very bitty
+            # The line below is so it repeats without a gap - messy, but seems necessary?  \@/
             or loop and sound.get_stream_position(player) > sound.get_length() - 5 * delta_time):
         player = arcade.play_sound(sound,
                                    volume=obj.max_volume * get_volume_multiplier(obj.position),
                                    pan=get_pan(obj.position),
-                                   speed=get_speed(obj.position, (obj.velocity_x, obj.velocity_y)))
+                                   speed=get_speed(obj.position, (obj.velocity_x, obj.velocity_y),
+                                                   getattr(obj, "sound_speed", None)))
     # Testing the below out - the pan effect only works if we regularly update it.
     # So I'm testing out updating attributes every obj.sound_attributes_update_interval ...
     elif player and sound.is_playing(player) and obj.sound_timer > obj.sound_attributes_update_interval:
