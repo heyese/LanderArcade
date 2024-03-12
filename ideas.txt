@@ -17,13 +17,11 @@ an object, so it's not good enough
 Add an enemy aircraft
 Bomb thrower!  Parabolic curves, with bombs exploding on a timer.  Flashing rate can indicate how close it is to exploding
 Enemy weapons that temporarily disable the shield
-
+SmartMissileLauncher: missiles that solve equations rather than simply accelerate to the lander's position
 
 Think better to change to the shield continuous sound - might have changed my mind about this now!
 Maybe add a sound for switching shield off?
 Add doppler effect for missile engines - and possibly everything, actually
-Maybe stretch the explosion sounds to match the length of the explosion?  Would mean big long lasting explosions
-have satisfyingly deep sounds?
 
 
 Could have a doppler effect on missiles passing the lander: https://gamedev.stackexchange.com/questions/23583/how-do-i-simulate-the-doppler-effect-in-a-game
@@ -59,7 +57,7 @@ But my laptop is 8 years old - I'll see if this still happens when I get my new 
 Basically, I think you need something with more than a tiny amount of video memory.
 
 Some pyglet media problem where sometimes it tries to delete a media player that's already been deleted.
-Not seen this for a good while - might not be an issue anymore.
+Think this is when the player dies (lander crashes) and we just leave the game running.
 
 Think I've got a bug where if the sound I'm playing is very short, and I don't want it to loop, but it's accompanying
 a long thing (eg. long explosion), then I call it twice.  (Just one of the explosions is quite short and I see this.)
