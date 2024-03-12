@@ -8,13 +8,14 @@ from pathlib import Path
 from classes.game_object import GameObject
 from classes.engine import Engine
 from classes.shield import Shield, DisabledShield
+from classes.emp import EMP
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from classes.world import World
 
 
 class Lander(GameObject):
-    def __init__(self, scene: arcade.Scene, camera: arcade.Camera, world: World, fuel=100, shield_charge=100):
+    def __init__(self, scene: arcade.Scene, camera: arcade.Camera, world: World, fuel=100, shield_charge=100, EMP_count=3):
         super().__init__(scene=scene,
                          world=world,
                          filename="images/lander.png",
@@ -31,6 +32,9 @@ class Lander(GameObject):
         self.trying_to_activate_shield = False
         self._hostages_being_rescued = set()
         self._tractor_beam_timer: float = 0
+
+        # EMP weapon related
+        self.EMP_count = EMP_count
 
         # Sound related
         self.sound_enabled = True
@@ -132,3 +136,15 @@ class Lander(GameObject):
         for hostage in self._hostages_being_rescued:
             hostage.being_rescued = False
         self._hostages_being_rescued = set()
+
+    # noinspection PyPep8Naming
+    def activate_EMP(self):
+        """The electro-magnetic pulse disables any activated shields it touches - including your own!"""
+        if not self.EMP_count:
+            # TODO: play a "can't fire EMP" sound
+            return
+        self.EMP_count -= 1
+        EMP(scene=self.scene, owner=self)
+
+
+

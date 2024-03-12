@@ -21,13 +21,6 @@ if TYPE_CHECKING:
     from classes.world import World
 
 
-# SHIELD_BOUNCE = arcade.load_sound(Path('sounds/bounce_4.mp3'))
-# BOUNCE_1 = arcade.load_sound(Path('sounds/bounce_1.mp3'))
-# BOUNCE_2 = arcade.load_sound(Path('sounds/bounce_2.mp3'))
-# BOUNCE_3 = arcade.load_sound(Path('sounds/bounce_3.mp3'))
-# BOUNCE_4 = arcade.load_sound(Path('sounds/bounce_4.mp3'))
-# BOUNCES = [BOUNCE_1, BOUNCE_2, BOUNCE_3, BOUNCE_4]
-
 BOUNCE_SOUNDS = [arcade.load_sound(Path(bounce_sound)) for bounce_sound in Path('sounds').glob('bounce_*.mp3')]
 
 

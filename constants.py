@@ -33,6 +33,7 @@ GENERAL_OBJECT_SPRITELISTS = [
 
 ALLOWED_TERRAIN_SHIELD_COLLISIONS_SPRITELISTS = ['Landing Pad', 'Hostages', 'Ground Enemies']
 PLACE_ON_WORLD_SPRITELISTS = ["Landing Pad", "Ground Enemies", "Hostages"]
+EMP_COLLISION_SPRITELISTS = ["Lander", "Shields", "Air Enemies", "Missiles"]
 
 # Have to admit this feels wrong, but I often want to easily get a hold of the lander or the game camera
 # And it feels weird to have to pass them around absolutely everywhere ...

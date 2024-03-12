@@ -84,6 +84,7 @@ class GameView(arcade.View):
         self.scene.add_sprite_list("Hostages", use_spatial_hash=True)
         self.scene.add_sprite_list("Landing Pad", use_spatial_hash=True)
         self.scene.add_sprite_list("Shields")
+        self.scene.add_sprite_list("EMPs")
 
         self.level = level  # Ultimately want to use this to develop the game in later levels
         self.score = score
@@ -366,6 +367,8 @@ class GameView(arcade.View):
             self.lander.trying_to_activate_shield = True
         if button == arcade.MOUSE_BUTTON_LEFT:
             self.lander.engine.activate()
+        if button == arcade.MOUSE_BUTTON_MIDDLE:
+            self.lander.activate_EMP()
 
     def on_key_press(self, symbol, modifiers):
         if symbol == arcade.key.BACKSLASH:

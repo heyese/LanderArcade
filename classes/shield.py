@@ -150,3 +150,6 @@ class DisabledShield(arcade.SpriteCircle):
         self.center_y = self.owner.center_y
         # This "shield" only becomes visible when the main shield is disabled
         self.visible = True if self.owner.shield.disabled else False
+
+    def disable_for(self, seconds: float):
+        pass
