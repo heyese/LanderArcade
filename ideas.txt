@@ -35,7 +35,7 @@ Just need to test out whether that works seemlessly or ends up being a mess.
 Would be easy to test - just try stopping and starting the existing engine sounds on every update, say.
 
 https://learn.arcade.academy/en/latest/chapters/20_sounds/sounds.html
-
+https://api.arcade.academy/en/development/programming_guide/sound.html
 
 
 ## Known Bugs

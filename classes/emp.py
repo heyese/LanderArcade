@@ -34,7 +34,7 @@ class EMP(arcade.SpriteCircle):
         self.scene.add_sprite('EMPs', self)
         self.sound = arcade.load_sound(Path('sounds/emp.mp3'))
         sound_speed = self.sound.get_length() / self.lifetime
-        arcade.play_sound(sound=self.sound, speed=sound_speed, volume=1.5)
+        arcade.play_sound(sound=self.sound, speed=sound_speed, volume=1.8)
         self.root_2 = math.sqrt(2)
 
     def on_update(self, delta_time: float = 1 / 60):
