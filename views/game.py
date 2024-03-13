@@ -249,6 +249,11 @@ class GameView(arcade.View):
                                                             )], 6)
 
     def on_update(self, delta_time: float):
+        # On my crappy laptop, I see glitches.  Occasionally it takes a while to do a cycle, and then presumably the
+        # delta_time is huge which means gravity (or the engine, if it's on) has acted for a long time and suddenly
+        # you can go flying.  So I'm going to limit the delta time - if the game struggles on old hardware, it will just
+        # run slowly
+        delta_time = min(delta_time, 1/50)
         self.scene.on_update(delta_time=delta_time)
 
         # I want the lander to always face the mouse pointer, but we only get updates on events (eg. mouse movement)
