@@ -56,6 +56,9 @@ class GameView(arcade.View):
         self.gravity_text = None
         self.fps_text = None
         self.pos_text = None
+        self.EMP_text = None
+        self.left_hud_text = []
+        self.right_hud_text = []
         self.timer = 0
 
         # Sounds
@@ -149,20 +152,23 @@ class GameView(arcade.View):
         self.minimap_sprite_list = arcade.SpriteList()
         self.minimap_sprite_list.append(self.minimap_sprite)
 
-        self.fuel_text, self.shield_text, self.gravity_text, self.pos_text = self.scaled_and_centred_text(
-            texts=["Fuel: XXXX", 'Shield: XXXX', 'Gravity: XXXX', 'Pos: XXXX'],
+        # Basically, I'm just reserving spaces here for some text on the left and right hand side of the screen
+        # In the on_update(), I choose what to display here.  But it's not expecting the width to be larger than
+        # "XXXX: XXXX" (which is the string it's using to set the font size, basically)
+        self.left_hud_text = self.scaled_and_centred_text(
+            texts=["XXXXX: XXXX"] * 4,
+            width=(self.window.width - self.minimap_sprite.width) // 2,
+            height=int(self.minimap_sprite.height),
+            centre_x=(self.window.width - self.minimap_sprite.width) // 4,
+            centre_y=self.window.height - self.minimap_sprite.height // 2
+        )
+        self.right_hud_text = self.scaled_and_centred_text(
+            texts=["XXXXX: XXXX"] * 4,
             width=(self.window.width - self.minimap_sprite.width) // 2,
             height=int(self.minimap_sprite.height),
             centre_x=(3 * self.window.width + self.minimap_sprite.width) // 4,
             centre_y=self.window.height - self.minimap_sprite.height // 2
         )
-        self.level_text, self.score_text, self.hostages_text, self.fps_text = self.scaled_and_centred_text(
-            texts=["Level: XXXX", 'Score: XXXX', 'Hostages: X', 'FPS: XXXX'],
-            width=(self.window.width - self.minimap_sprite.width) // 2,
-            height=int(self.minimap_sprite.height),
-            centre_x=(self.window.width - self.minimap_sprite.width) // 4,
-            centre_y=self.window.height - self.minimap_sprite.height // 2
-            )
 
     @staticmethod
     def scaled_and_centred_text(texts: List[str], width: int, height: int, centre_x: int, centre_y: int) -> List[arcade.Text]:
@@ -323,14 +329,16 @@ class GameView(arcade.View):
         # Update the minimap
         self.update_minimap()
 
-        self.fuel_text.text = f"FUEL: {self.lander.engine.fuel:.0f}"
-        self.shield_text.text = f"SHIELD: {self.lander.shield.charge:.0f}"
-        self.level_text.text = f"LEVEL: {self.level:.0f}"
-        self.score_text.text = f"SCORE: {self.score:.0f}"
-        self.gravity_text.text = f"GRAVITY: {self.world.gravity:.0f}"
-        self.hostages_text.text = f"HOSTAGES: {len(self.scene['Hostages'])}"
-        self.fps_text.text = f"FPS: {arcade.get_fps():.0f}"
-        self.pos_text.text = f"Pos: {self.lander.center_x:.0f}, {self.lander.center_y:.0f}"
+        self.right_hud_text[0].text = f"FUEL: {self.lander.engine.fuel:.0f}"
+        self.right_hud_text[1].text = f"SHIELD: {self.lander.shield.charge:.0f}"
+        self.right_hud_text[2].text = f"EMPs: {self.lander.EMP_count}"
+        self.right_hud_text[3].text = f"HOSTAGES: {len(self.scene['Hostages'])}"
+        self.left_hud_text[0].text = f"LEVEL: {self.level:.0f}"
+        self.left_hud_text[1].text = f"SCORE: {self.score:.0f}"
+        self.left_hud_text[2].text = f"GRAVITY: {self.world.gravity:.0f}"
+        self.left_hud_text[3].text = f"FPS: {arcade.get_fps():.0f}"
+        # Might want to reactivate these at some point:
+        #self.pos_text.text = f"Pos: {self.lander.center_x:.0f}, {self.lander.center_y:.0f}"
 
         # Check for collisions
         collisions.check_for_collisions(self.scene, self.game_camera, self.world)
@@ -378,6 +386,8 @@ class GameView(arcade.View):
     def on_key_press(self, symbol, modifiers):
         if symbol == arcade.key.BACKSLASH:
             self.lander.engine.activate()
+        if symbol == arcade.key.X:
+            self.lander.activate_EMP()
         if symbol == arcade.key.Z:
             self.lander.shield.activate()
             self.lander.trying_to_activate_shield = True
@@ -465,8 +475,5 @@ class GameView(arcade.View):
         # Draw the overlay - minimap, fuel, shield, etc.
         self.overlay_camera.use()
         self.minimap_sprite_list.draw()
-        for text in [self.level_text, self.score_text,
-                     self.gravity_text, self.fuel_text,
-                     self.shield_text, self.hostages_text,
-                     self.fps_text, self.pos_text]:
+        for text in [*self.left_hud_text, *self.right_hud_text]:
             text.draw()

@@ -22,6 +22,7 @@ SmartMissileLauncher: missiles that solve equations rather than simply accelerat
 Think better to change to the shield continuous sound - might have changed my mind about this now!
 Maybe add a sound for switching shield off?
 Add doppler effect for missile engines - and possibly everything, actually
+Work on the scores!  Need points for various things
 
 
 Could have a doppler effect on missiles passing the lander: https://gamedev.stackexchange.com/questions/23583/how-do-i-simulate-the-doppler-effect-in-a-game
