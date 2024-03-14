@@ -44,8 +44,10 @@ I suspect this is unavoidable - I've not found a completely clear way of thinkin
 at which it wraps seamlessly, and I've chosen that so you don't see a glitch in the main camera_view.  To have it also
 wrap seamlessly in the minimap (ie. at "WORLD_WDITH - camera_width" and "camera_width") - this is a different point.
 (ie. when the lander flips from one side to the other) - this feels right to me.
+---> Not really a problem, so not intending to "fix"
 
 Explosions go through the terrain - I'm not bothered about this.  Let's call it a feature.
+---> Not really a problem, so not intending to "fix"
 
 Still have a bug where sometimes collisions go crazy and the lander disappears somewhere - easy thing to do is not let
 y <= 0, but more careful thinking about this will obviously help.  Basically (and roughly), unless there is a terrain
@@ -57,15 +59,16 @@ stutters away - I'm not sure I've got the patience to look into it at this point
 GTX 1070, it runs really nicely ...
 
 Some pyglet media problem where sometimes it tries to delete a media player that's already been deleted.
+Seem to hit this reliably if you start a new level, activate the engine and immediately fire an EMP - if you
+stop the EMP impacting the engines, issue goes away.
+Think it's probably related to the way we play the engine noise repeatedly and, to avoid gaps, we overlap it with itself.
 Quite frustrating
+I think I should probably throw away the sound stuff I have - it's still easy to update volume mid-sound, so I'm only
+currently losing the pan effect - and if I want to put more effort into sound, I should look at how to actually use
+the Pyglet media player.  I can do spatial sound - just need to learn how.
   File "C:\Users\e_hey\PycharmProjects\LanderArcade\venv\Lib\site-packages\arcade\sound.py", line 87, in _on_player_eos
     media.Source._players.remove(player)
 ValueError: list.remove(x): x not in list
 
 A few times my main machine has had a flicker of interruption (malware detection running in the background?  Noticed
 network traffic really spiked) and that caused my shield to switch off.  Pretty frustrating.
-
-If you're teleporting two people up at the same time, the noise currently stops when the first person is teleported.
-Think I've fixed this.
-
-Lander's disabled shield sound not firing?

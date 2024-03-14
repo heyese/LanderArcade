@@ -46,8 +46,9 @@ class Engine(arcade.Sprite):
         # Engine sounds
         self.sound_enabled = sound_enabled
         self.engine_sound = engine_activated_sound
+        self.engine_sound_player = None
         self.engine_disabled_sound = engine_disabled_sound
-        self.media_player = None
+        self.engine_disabled_sound_player = None
         self.max_volume = max_volume
         # I have a timer so I can control how long sounds play for before I adjust their attributes
         self.sound_timer = 0
@@ -79,7 +80,7 @@ class Engine(arcade.Sprite):
 
     def activate(self):
         if self.disabled and self.owner.__class__.__name__ == ('Lander'):
-            self.sound_enabled and arcade.play_sound(self.engine_disabled_sound, volume=1)
+            self.engine_disabled_sound_player = self.sound_enabled and arcade.play_sound(self.engine_disabled_sound, volume=1)
         elif self.fuel and not self.disabled:
             self.visible = True
             self.activated = True
@@ -108,9 +109,9 @@ class Engine(arcade.Sprite):
                 self.boosted = False
                 self.max_volume /= 2
         # Volume of the engine changes when we engage / disengage the boost
-        if self.media_player and self.engine_sound.is_playing(self.media_player):
+        if self.engine_sound_player and self.engine_sound.is_playing(self.engine_sound_player):
             self.engine_sound.set_volume(self.max_volume * sounds.get_volume_multiplier(self.position),
-                                         self.media_player)
+                                         self.engine_sound_player)
 
     def on_update(self, delta_time: float = 1 / 60):
         self.sound_timer += delta_time
@@ -127,15 +128,15 @@ class Engine(arcade.Sprite):
         # If activated, use up some fuel
         if self.activated:
             self.fuel = max(self.fuel - self.burn_rate * delta_time, 0)
-            self.media_player = sounds.play_or_update_sound(delta_time=delta_time,
-                                                            sound=self.engine_sound,
-                                                            player=self.media_player,
-                                                            loop=True, obj=self)
+            self.engine_sound_player = sounds.play_or_update_sound(delta_time=delta_time,
+                                                                   sound=self.engine_sound,
+                                                                   player=self.engine_sound_player,
+                                                                   loop=True, obj=self)
             if self.fuel == 0:
                 self.deactivate()
-        elif self.media_player and self.engine_sound.is_playing(self.media_player):
-            self.engine_sound.stop(self.media_player)
-            self.media_player = None
+        elif self.engine_sound_player and self.engine_sound.is_playing(self.engine_sound_player):
+            self.engine_sound.stop(self.engine_sound_player)
+            self.engine_sound_player = None
 
         # If disabled (via EMP), count down to being un-disabled
         if self.disabled:
@@ -149,6 +150,6 @@ class Engine(arcade.Sprite):
 
     def disable_for(self, seconds: float):
         if self.activated:
-            self.sound_enabled and arcade.play_sound(self.engine_disabled_sound, volume=self.max_volume)
+            self.engine_disabled_sound_player = self.sound_enabled and arcade.play_sound(self.engine_disabled_sound, volume=self.max_volume)
         self.disabled_timer = seconds
         self.deactivate()

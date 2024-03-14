@@ -72,6 +72,9 @@ def play_or_update_sound(*, delta_time: None | float = None,
     if (not player  # First time sound has played
             # If I wait for a loop-able sound to finish before repeating, it sounds very bitty
             # The line below is so it repeats without a gap - messy, but seems necessary?  \@/
+
+            # The line below is what's causing the "media.Source._players.remove(player) ValueError: list.remove(x): x not in list" bug
+            # I play a new sound whilst the old one is still going, but we've lost the reference to the old one, I think.
             or loop and sound.get_stream_position(player) > sound.get_length() - 5 * delta_time):
         player = arcade.play_sound(sound,
                                    volume=obj.max_volume * get_volume_multiplier(obj.position),
