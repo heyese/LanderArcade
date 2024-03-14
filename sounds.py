@@ -7,6 +7,65 @@ if TYPE_CHECKING:
     from classes.lander import Lander
     import pyglet.media as media
 
+import math
+import pyglet.media as media
+
+
+def play(
+        self,
+        volume: float = 1.0,
+        pan: float = 0.0,
+        loop: bool = False,
+        speed: float = 1.0,
+) -> media.Player:
+    """
+    Play the sound.
+
+    :param float volume: Volume, from 0=quiet to 1=loud
+    :param float pan: Pan, from -1=left to 0=centered to 1=right
+    :param bool loop: Loop, false to play once, true to loop continuously
+    :param float speed: Change the speed of the sound which also changes pitch, default 1.0
+    """
+    if (
+            isinstance(self.source, media.StreamingSource)
+            and self.source.is_player_source
+    ):
+        raise RuntimeError(
+            "Tried to play a streaming source more than once."
+            " Streaming sources should only be played in one instance."
+            " If you need more use a Static source."
+        )
+
+    player: media.Player = media.Player()
+    player.volume = volume
+    player.position = (
+        pan,
+        0.0,
+        math.sqrt(1 - math.pow(pan, 2)),
+    )  # used to mimic panning with 3D audio
+
+    # Note that the underlying attribute is pitch but "speed" is used
+    # because it describes the behavior better (see #1198)
+    player.pitch = speed
+
+    player.loop = loop
+    player.queue(self.source)
+    player.play()
+    media.Source._players.append(player)
+
+    def _on_player_eos():
+        if player in media.Source._players:
+            media.Source._players.remove(player)
+        # There is a closure on player. To get the refcount to 0,
+        # we need to delete this function.
+        player.on_player_eos = None
+
+    player.on_player_eos = _on_player_eos
+    return player
+
+
+arcade.Sound.play = play
+
 # Generally speaking, the functions here will depend on the lander - it's velocity and position.
 # I don't want to have to keep on passing it in to all the functions, so I set it in game.py as soon
 # as its created.  Doesn't feel quite right, though ...
