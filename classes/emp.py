@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import arcade
 import math
-from pathlib import Path
 import constants
 from classes.engine import Engine
 from classes.shield import Shield
@@ -35,7 +34,7 @@ class EMP(arcade.SpriteCircle):
         self.scene.add_sprite('EMPs', self)
         self.sound = constants.SOUNDS['sounds/emp.mp3']
         sound_speed = self.sound.get_length() / self.lifetime
-        arcade.play_sound(sound=self.sound, speed=sound_speed, volume=2)
+        self.media_player = arcade.play_sound(sound=self.sound, speed=sound_speed, volume=2)
         self.root_2 = math.sqrt(2)
 
         # Another sprite, which shows the inner part of the EMP, within which it is safe to use engines / shields again

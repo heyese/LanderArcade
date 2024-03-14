@@ -51,11 +51,21 @@ Still have a bug where sometimes collisions go crazy and the lander disappears s
 y <= 0, but more careful thinking about this will obviously help.  Basically (and roughly), unless there is a terrain
 rect underneath the lander, the answer will never be to go further down!
 
-Not sure if this should be a problem, but on my current utterly ancient laptop, it can slightly struggle.
-When it occasionally stutters (frame rate drops), the ship can suddenly speed up.  It feels like it's more than gravity
-acting over the longer loop time - something else is happening, I think.
-But my laptop is 8 years old - I'll see if this still happens when I get my new one tomorrow.
-Basically, I think you need something with more than a tiny amount of video memory.
+The game really, really struggles on my new laptop - such that I don't want to play it.  Initially, I could see
+it was running on the integrated graphics chip, but I've fixed that and forced it to run on the GPU.  It still
+stutters away - I'm not sure I've got the patience to look into it at this point.  On my years old desktop with a
+GTX 1070, it runs really nicely ...
 
 Some pyglet media problem where sometimes it tries to delete a media player that's already been deleted.
-Think this is when the player dies (lander crashes) and we just leave the game running.
+Quite frustrating
+  File "C:\Users\e_hey\PycharmProjects\LanderArcade\venv\Lib\site-packages\arcade\sound.py", line 87, in _on_player_eos
+    media.Source._players.remove(player)
+ValueError: list.remove(x): x not in list
+
+A few times my main machine has had a flicker of interruption (malware detection running in the background?  Noticed
+network traffic really spiked) and that caused my shield to switch off.  Pretty frustrating.
+
+If you're teleporting two people up at the same time, the noise currently stops when the first person is teleported.
+Think I've fixed this.
+
+Lander's disabled shield sound not firing?
