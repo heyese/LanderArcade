@@ -64,7 +64,7 @@ class GameView(arcade.View):
         # Sounds
         self.level_complete = arcade.load_sound(Path('sounds/level_complete.mp3'))
 
-    def setup(self, level: int = 6, score: int = 0):
+    def setup(self, level: int = 1, score: int = 0):
         """Get the game ready to play"""
 
         # Set the background color
@@ -74,6 +74,7 @@ class GameView(arcade.View):
 
         # Adding spritelists now to get the ordering I want, and so that it's easy to see all of them in one go!
         # If we draw the engines before their owners, the angles aren't quite right
+        self.scene.add_sprite_list("EMPs")
         self.scene.add_sprite_list("Explosions")
         self.scene.add_sprite_list("Lander")
         self.scene.add_sprite_list("Missiles")
@@ -87,7 +88,7 @@ class GameView(arcade.View):
         self.scene.add_sprite_list("Hostages", use_spatial_hash=True)
         self.scene.add_sprite_list("Landing Pad", use_spatial_hash=True)
         self.scene.add_sprite_list("Shields")
-        self.scene.add_sprite_list("EMPs")
+
 
         self.level = level  # Ultimately want to use this to develop the game in later levels
         self.score = score
@@ -380,12 +381,14 @@ class GameView(arcade.View):
             self.lander.trying_to_activate_shield = True
         if button == arcade.MOUSE_BUTTON_LEFT:
             self.lander.engine.activate()
+            self.lander.trying_to_activate_engine = True
         if button == arcade.MOUSE_BUTTON_MIDDLE:
             self.lander.activate_EMP()
 
     def on_key_press(self, symbol, modifiers):
         if symbol == arcade.key.BACKSLASH:
             self.lander.engine.activate()
+            self.lander.trying_to_activate_engine = True
         if symbol == arcade.key.X:
             self.lander.activate_EMP()
         if symbol == arcade.key.Z:
@@ -406,6 +409,7 @@ class GameView(arcade.View):
     def on_key_release(self, symbol, modifiers):
         if symbol == arcade.key.BACKSLASH:
             self.lander.engine.deactivate()
+            self.lander.trying_to_activate_engine = False
         if symbol == arcade.key.Z:
             self.lander.shield.deactivate()
             self.lander.trying_to_activate_shield = False
@@ -419,6 +423,7 @@ class GameView(arcade.View):
             self.lander.trying_to_activate_shield = False
         if button == arcade.MOUSE_BUTTON_LEFT:
             self.lander.engine.deactivate()
+            self.lander.trying_to_activate_engine = False
 
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int) -> None:
         self.lander.mouse_location = Vec2(x, y)

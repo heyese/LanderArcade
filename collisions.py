@@ -276,9 +276,9 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
                     change_pos_of_sprite_and_shield_by_vector(obj=obj_1, x=-obj_1.change_x, y=-obj_1.change_y)
                     break
                 if i == 10:
-                    raise ValueError("Collision trap.  Rebound vector for obj_1: (x: {obj_1.change_x}, "
-                                     "y: {obj_1.change_y}). obj_1 centre: ({obj_1.center_x}, {obj_1.center_y}). "
-                                     "obj_2 centre: ({obj_2.center_x}, {obj_2.center_y}).")
+                    raise ValueError(f"Collision trap.  Rebound vector for obj_1: (x: {obj_1.change_x}, "
+                                     f"y: {obj_1.change_y}). obj_1 centre: ({obj_1.center_x}, {obj_1.center_y}). "
+                                     f"obj_2 centre: ({obj_2.center_x}, {obj_2.center_y}).")
 
             # Two shields have bounced
             arcade.play_sound(random.choice(BOUNCE_SOUNDS))

@@ -1,7 +1,7 @@
 from __future__ import annotations
 import arcade
 import math
-from constants import SCALING
+import constants
 from pathlib import Path
 import sounds
 from typing import TYPE_CHECKING
@@ -18,7 +18,8 @@ class Engine(arcade.Sprite):
                  scale: float = 0.3,
                  engine_owner_offset: int = None,
                  sound_enabled: bool = False,
-                 engine_activated_sound: arcade.Sound = arcade.load_sound(Path('sounds/engine.mp3')),
+                 engine_activated_sound: arcade.Sound = constants.SOUNDS['sounds/engine.mp3'],
+                 engine_disabled_sound: arcade.Sound = constants.SOUNDS['sounds/engine_disabled.mp3'],
                  max_volume: float = 0.5):
         super().__init__()
         self.scene = scene
@@ -32,11 +33,12 @@ class Engine(arcade.Sprite):
         self.force = force
         self.fuel = fuel
         self.initial_fuel = fuel
-        self.scale = scale * SCALING
+        self.scale = scale * constants.SCALING
         self.burn_rate = 1
         self._boosted = False
         self.engine_owner_offset = engine_owner_offset if engine_owner_offset is not None else self.owner.height
         self.scene.add_sprite('Engines', self)
+        self.disabled_timer = 0
 
         self.velocity_x = self.owner.velocity_x
         self.velocity_y = self.owner.velocity_y
@@ -44,8 +46,9 @@ class Engine(arcade.Sprite):
         # Engine sounds
         self.sound_enabled = sound_enabled
         self.engine_sound = engine_activated_sound
-        self.max_volume = max_volume
+        self.engine_disabled_sound = engine_disabled_sound
         self.media_player = None
+        self.max_volume = max_volume
         # I have a timer so I can control how long sounds play for before I adjust their attributes
         self.sound_timer = 0
         # Num seconds after which sound attributes are updated.  If I do this every frame, sound is crackly and it doesn't work well.
@@ -53,6 +56,10 @@ class Engine(arcade.Sprite):
 
     def refuel(self):
         self.fuel = self.initial_fuel
+
+    @property
+    def disabled(self):
+        return self.disabled_timer > 0
 
     @property
     def boosted(self):
@@ -71,7 +78,9 @@ class Engine(arcade.Sprite):
             self.force /= 2
 
     def activate(self):
-        if self.fuel:
+        if self.disabled and self.owner.__class__.__name__ == ('Lander'):
+            self.sound_enabled and arcade.play_sound(self.engine_disabled_sound, volume=1)
+        elif self.fuel and not self.disabled:
             self.visible = True
             self.activated = True
             # Are we trying to take off after having landed?
@@ -128,4 +137,18 @@ class Engine(arcade.Sprite):
             self.engine_sound.stop(self.media_player)
             self.media_player = None
 
+        # If disabled (via EMP), count down to being un-disabled
+        if self.disabled:
+            self.disabled_timer -= delta_time
+            if self.disabled_timer <= 0:
+                self.disabled_timer = 0
+                # If the engine owner happens to be the Lander itself, and the user is still trying to activate
+                # the engine (ie. mouse button / key still pressed), we auto try to re-enable it here
+                if self.owner in self.scene["Lander"].sprite_list and self.owner.trying_to_activate_engine:
+                    self.activate()
 
+    def disable_for(self, seconds: float):
+        if self.activated:
+            self.sound_enabled and arcade.play_sound(self.engine_disabled_sound, volume=self.max_volume)
+        self.disabled_timer = seconds
+        self.deactivate()

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import arcade
-from typing import NamedTuple
+from pathlib import Path
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ GENERAL_OBJECT_SPRITELISTS = [
 
 ALLOWED_TERRAIN_SHIELD_COLLISIONS_SPRITELISTS = ['Landing Pad', 'Hostages', 'Ground Enemies']
 PLACE_ON_WORLD_SPRITELISTS = ["Landing Pad", "Ground Enemies", "Hostages"]
-EMP_COLLISION_SPRITELISTS = ["Lander", "Shields", "Air Enemies", "Missiles"]
+EMP_COLLISION_SPRITELISTS = ["Lander", "Shields", "Engines", "Air Enemies", "Missiles"]
 
 # Have to admit this feels wrong, but I often want to easily get a hold of the lander or the game camera
 # And it feels weird to have to pass them around absolutely everywhere ...
@@ -82,3 +82,6 @@ def get_level_config(level: int) -> Levels:
         return LEVELS[level]
     # otherwise, return max(i) such that i in LEVELS
     return Levels()
+
+# Maybe pre-load all the sounds?
+SOUNDS = {path.as_posix(): arcade.load_sound(path) for path in Path('sounds/').glob('*.mp3')}

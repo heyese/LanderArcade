@@ -2,7 +2,7 @@ from __future__ import annotations
 import arcade
 import math
 import sounds
-from constants import SCALING, SPACE_END
+import constants
 import collisions
 from pathlib import Path
 from classes.game_object import GameObject
@@ -15,12 +15,12 @@ if TYPE_CHECKING:
 
 
 class Lander(GameObject):
-    def __init__(self, scene: arcade.Scene, camera: arcade.Camera, world: World, fuel=100, shield_charge=100, EMP_count=3):
+    def __init__(self, scene: arcade.Scene, camera: arcade.Camera, world: World, fuel=100, shield_charge=100, EMP_count=1):
         super().__init__(scene=scene,
                          world=world,
                          filename="images/lander.png",
                          mass=20,
-                         scale=0.2 * SCALING,
+                         scale=0.2 * constants.SCALING,
                          camera=camera
                          )
         self.scene.add_sprite("Lander", self)
@@ -30,19 +30,21 @@ class Lander(GameObject):
         self.mouse_location = None  # Set by Game view.  Want Lander to face mouse on every update
         self._landed: bool = False
         self.trying_to_activate_shield = False
+        self.trying_to_activate_engine = False
         self._hostages_being_rescued = set()
         self._tractor_beam_timer: float = 0
 
         # EMP weapon related
+        self.initial_EMP_count = EMP_count
         self.EMP_count = EMP_count
 
         # Sound related
         self.sound_enabled = True
-        self.teleport_complete = arcade.load_sound(Path('sounds/teleport_complete.mp3'))
+        self.teleport_complete = constants.SOUNDS['sounds/teleport_complete.mp3']
         self.teleport_complete_player = None
-        self.teleport_ongoing = arcade.load_sound(Path('sounds/teleport_ongoing.mp3'))
+        self.teleport_ongoing = constants.SOUNDS['sounds/teleport_ongoing.mp3']
         self.teleport_ongoing_player = None
-        self.recharged = arcade.load_sound(Path('sounds/recharged.mp3'))
+        self.recharged = constants.SOUNDS['sounds/recharged.mp3']
         self.recharged_player = None
         self.max_volume = 0.4
         # I have a timer so I can control how long sounds play for before I adjust their attributes
@@ -66,6 +68,7 @@ class Lander(GameObject):
                 self.engine.deactivate()
                 self.engine.refuel()
                 self.shield.recharge()
+                self.EMP_count = self.initial_EMP_count
         if value:
             # Split this into two sections.  When you land, everything recharges as a one off.
             # But I want the values below to be repeatedly set, else you can turn (and crash) the lander whilst it's
@@ -111,7 +114,7 @@ class Lander(GameObject):
         if self.above_space and self.change_y > 0:
             # We want to stop people flying off into deep space, but I don't want to fling them wildly
             # back at the ground.  So we only apply the force while we're gaining altitude
-            force_y -= self.mass * 5 * (self.center_y - SPACE_END)
+            force_y -= self.mass * 5 * (self.center_y - constants.SPACE_END)
         return force_y
 
     def draw_landing_angle_guide(self):

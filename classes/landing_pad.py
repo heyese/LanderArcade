@@ -1,9 +1,5 @@
 from __future__ import annotations
-
-import itertools
-
 import arcade
-import random
 import collisions
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

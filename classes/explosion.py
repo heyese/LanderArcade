@@ -4,7 +4,7 @@ import math
 import arcade
 import random
 from classes.game_object import GameObject
-from constants import SCALING
+import constants
 import sounds
 from typing import TYPE_CHECKING
 from pathlib import Path
@@ -59,7 +59,7 @@ class Explosion(GameObject):
         ]
         file = random.choice(files)
         super().__init__(filename=file,
-                         scale=scale * SCALING,
+                         scale=scale * constants.SCALING,
                          camera=camera,
                          world=world,
                          explodes=False,

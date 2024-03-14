@@ -27,20 +27,22 @@ class HowToPlayView(arcade.View):
         Thank goodness you're here, pilot!
         
         There are a number of hostages, scattered across various different hostile worlds. 
-        Each hostage has a special device which provides them with a shield and a breathable atmosphere, but they 
-        cannot move it and so are stuck where they are on the surface!
+        Each hostage has a special device which provides them with an (EMP-proof) shield and a breathable atmosphere, 
+        but they cannot move it and so are stuck where they are on the surface!
         
         We need you to get close enough to each of them so that your transporter can beam them aboard your ship.
         Each world has a secure underground base, accessed via a landing pad - land on the landing pad and any hostages
         on board will be taken to safety.  Once all hostages have been rescued, you can move on to the next world.
         
         Some of these worlds not only have a hostile atmosphere, but also enemies that will fire upon your ship!
-        You have no weapons, but can attack as well as defend yourself by using your trusty shield.
+        Thankfully, you can attack as well as defend yourself by using your trusty shield!  
+        You can also carry a single EMP (electro-magnetic pulse) charge which will disable any active shields and 
+        engines it touches for a while - but ensure that when fired your own shield and engine aren't activated!
         
         You can land on the landing pad before you have rescued all the hostages - the base will immediately refill
-        your fuel and recharge your shield.  Keep an eye on your fuel and shield levels - on different missions, your
-        ship may have different capacities for these vital resources.  Also, some worlds have a stronger gravitational
-        pull than others, so you may find you burn through your fuel quickly.
+        your fuel, recharge your shield and reload the EMP charge.  Keep an eye on your fuel and shield levels - 
+        on different missions, your ship may have different capacities for these vital resources.  Also, some worlds 
+        have a stronger gravitational pull than others, so you may find you burn through your fuel quickly.
         
         LANDING
         The landing pads have a status light that activates when you get close, indicating whether or not it is safe 
@@ -55,6 +57,7 @@ class HowToPlayView(arcade.View):
         CONTROLS
         Left mouse button / backslash key: Thrust
         Right mouse button / Z: Shield
+        Middle mouse button / X: Fire the EMP
         Shift: Boost the engine (uses fuel at higher rate)
         Escape button: Pause
         R: Reset level

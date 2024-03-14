@@ -1,6 +1,6 @@
 from __future__ import annotations
 import arcade
-from constants import SCALING, WORLD_WIDTH
+import constants
 import random
 import itertools
 from classes.game_object import GameObject
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 class MissileLauncher(GameObject):
     def __init__(self, scene: arcade.Scene, camera: arcade.Camera, world: World, missile_interval: int = 15,
-                 scale: float = 0.3 * SCALING, mass: int = 300, shield: bool = False):
+                 scale: float = 0.3 * constants.SCALING, mass: int = 300, shield: bool = False):
         super().__init__(scene=scene,
                          camera=camera,
                          world=world,
@@ -51,6 +51,7 @@ class MissileLauncher(GameObject):
             self.fire_missile()
             self.current_interval = self.missile_interval
         if (self.shield is not None
+                and not self.shield.disabled
                 and self.shield_disabled_for_missile_fire_interval / 2 < self.current_interval <= self.missile_interval - (self.shield_disabled_for_missile_fire_interval / 2)
                 and not self.shield.activated):
             self.shield.activate()
@@ -68,7 +69,7 @@ class SuperMissileLauncher(MissileLauncher):
     # I'd quite like it to activate shields in between firing missiles ...
 
     def __init__(self, scene: arcade.Scene, camera: arcade.Camera, world: World, missile_interval: int = 15,
-                 scale: float = 0.5 * SCALING, mass: int = 600):
+                 scale: float = 0.5 * constants.SCALING, mass: int = 600):
         super().__init__(scene=scene,
                          camera=camera,
                          world=world,
@@ -81,11 +82,11 @@ class SuperMissileLauncher(MissileLauncher):
     def fire_missile(self):
         missile = Missile(scene=self.scene, world=self.world, camera=self.camera,
                           mass=100,
-                          scale=0.4 * SCALING,
+                          scale=0.4 * constants.SCALING,
                           # Engine related
                           engine_fuel=60,
                           engine_force=12000,
-                          engine_scale=0.5 * SCALING,
+                          engine_scale=0.5 * constants.SCALING,
                           engine_max_volume=0.4,
                           filename="images/super_missile.png",
                           # Explosion related

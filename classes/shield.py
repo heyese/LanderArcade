@@ -2,7 +2,7 @@ from __future__ import annotations
 import arcade
 from classes.game_object import GameObject
 from pathlib import Path
-import sounds
+import constants
 
 
 shield_disabled_when_collisions_exist_with = [
@@ -39,8 +39,7 @@ class Shield(arcade.SpriteCircle):
         self.activated = False
         self.scene = scene
         self.scene.add_sprite('Shields', self)
-        self.disabled = False
-        self.disabled_timer = None
+        self.disabled_timer = 0
         self.disabled_shield = DisabledShield(scene=scene, owner=self.owner)
 
         self.center_x = self.owner.center_x
@@ -50,9 +49,9 @@ class Shield(arcade.SpriteCircle):
 
         # Shield sounds
         self.sound_enabled = sound_enabled
-        self.shield_activate = arcade.load_sound(Path('sounds/shield_activated.mp3'))
-        self.shield_disabled = arcade.load_sound(Path('sounds/shield_disabled.mp3'))
-        self.shield_continuous = arcade.load_sound(Path('sounds/shield_continuous.mp3'))
+        self.shield_activate = constants.SOUNDS['sounds/shield_activated.mp3']
+        self.shield_disabled = constants.SOUNDS['sounds/shield_disabled.mp3']
+        self.shield_continuous = constants.SOUNDS['sounds/shield_continuous.mp3']
         self.max_volume = max_volume
         # This keeps track of the "media player" that is playing the current sound
         # Each time I play a sound, I think it returns a different player!
@@ -60,6 +59,10 @@ class Shield(arcade.SpriteCircle):
 
     def recharge(self):
         self.charge = self.initial_charge
+
+    @property
+    def disabled(self):
+        return self.disabled_timer > 0
 
     def on_update(self, delta_time: float = 1 / 60):
         # These don't actually make a difference - just so we can reference them in functions
@@ -82,54 +85,59 @@ class Shield(arcade.SpriteCircle):
         # If disabled (ie. someone tried to activate it whilst an object was within its perimeter),
         # count down to being un-disabled
         if self.disabled:
-            if self.disabled_timer is None:
-                self.disabled_timer = 0.5  # seconds
-            else:
-                self.disabled_timer -= delta_time
-                if self.disabled_timer <= 0:
-                    self.disabled_timer = None
-                    self.disabled = False
-                    # If the shield owner happens to be the Lander itself, and the user is still trying to operate
-                    # the shield (ie. mouse button / key still pressed), we auto try to re-enable it here
-                    if self.owner in self.scene["Lander"].sprite_list and self.owner.trying_to_activate_shield:
-                        self.activate()
+            self.disabled_timer -= delta_time
+            if self.disabled_timer <= 0:
+                self.disabled_timer = 0
+                # If the shield owner happens to be the Lander itself, and the user is still trying to operate
+                # the shield (ie. mouse button / key still pressed), we auto try to re-enable it here
+                if self.owner in self.scene["Lander"].sprite_list and self.owner.trying_to_activate_shield:
+                    self.activate()
 
     def activate(self):
-        if self.disabled:
+        if self.disabled or not self.charge:
+            self.media_player = self.sound_enabled and arcade.play_sound(self.shield_disabled, volume=self.max_volume)
             return
-        if self.disabled is False:
-            if not self.charge:
-                self.disabled = True
-                return
-            # Cannot enable shield when an object is already within the perimeter
-            # If you try to, it is disabled for a small period.
-            # Except that ground objects are allowed to have their shields collide with the terrain.
-            # And except for Hostages who always have an activated shield, regardless.
-            if self.owner not in self.scene["Hostages"]:
-                collisions = arcade.check_for_collision_with_lists(self, [self.scene[i] for i in shield_disabled_when_collisions_exist_with])
-                if self.owner not in self.scene["Ground Enemies"]:
-                    terrain_collisions = arcade.check_for_collision_with_lists(self, [self.scene[i] for i in terrain])
-                    collisions += terrain_collisions
-                for obj in collisions:
-                    if obj in self.scene["Shields"] and not obj.activated:
-                        # Collisions with de-activated shields don't count
-                        continue
-                    if self.owner == obj or self is obj:
-                        # collisions with your own shield are obviously allowed
-                        continue
-                    self.disabled = True
-                    self.media_player = self.sound_enabled and arcade.play_sound(self.shield_disabled,
-                                                                                 volume=self.max_volume)
-                    return
-            # Shield is being activated
-            self.visible = True
-            self.activated = True
-            self.media_player = self.sound_enabled and arcade.play_sound(self.shield_activate,
-                                                                         volume=self.max_volume)
+
+        if self.attempted_to_activate_shield_with_collision():
+            self.disable_for(0.5)
+            return
+
+        # Shield is being activated
+        self.visible = True
+        self.activated = True
+        self.media_player = self.sound_enabled and arcade.play_sound(self.shield_activate, volume=self.max_volume)
 
     def deactivate(self):
         self.visible = False
         self.activated = False
+
+    def disable_for(self, seconds: float):
+        self.disabled_timer = seconds
+        if self.activated:
+            if self.activated:
+                self.media_player = self.sound_enabled and arcade.play_sound(self.shield_disabled,
+                                                                             volume=self.max_volume)
+        self.deactivate()
+
+    def attempted_to_activate_shield_with_collision(self):
+        # Cannot enable shield when an object is already within the shield perimeter
+        # If you try to, it is disabled for a small period.
+        # Except that ground objects are allowed to have their shields collide with the terrain.
+        # And except for Hostages who always have an activated shield, regardless.
+        if self.owner not in self.scene["Hostages"]:
+            collisions = arcade.check_for_collision_with_lists(self, [self.scene[i] for i in shield_disabled_when_collisions_exist_with])
+            if self.owner not in self.scene["Ground Enemies"]:
+                terrain_collisions = arcade.check_for_collision_with_lists(self, [self.scene[i] for i in terrain])
+                collisions += terrain_collisions
+            for obj in collisions:
+                if obj in self.scene["Shields"] and not obj.activated:
+                    # Collisions with de-activated shields don't count
+                    continue
+                if self.owner == obj or self is obj:
+                    # collisions with your own shield are obviously allowed
+                    continue
+                return True
+            return False
 
 
 class DisabledShield(arcade.SpriteCircle):
@@ -151,5 +159,3 @@ class DisabledShield(arcade.SpriteCircle):
         # This "shield" only becomes visible when the main shield is disabled
         self.visible = True if self.owner.shield.disabled else False
 
-    def disable_for(self, seconds: float):
-        pass
