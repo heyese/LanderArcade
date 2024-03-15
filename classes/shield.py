@@ -49,10 +49,10 @@ class Shield(arcade.SpriteCircle):
 
         # Shield sounds
         self.sound_enabled = sound_enabled
-        self.shield_activate = constants.SOUNDS['sounds/shield_activated.mp3']
-        self.shield_disabled = constants.SOUNDS['sounds/shield_disabled.mp3']
+        self.shield_activate_sound = constants.SOUNDS['sounds/shield_activated.mp3']
+        self.shield_disabled_sound = constants.SOUNDS['sounds/shield_disabled.mp3']
         # Don't currently use the continuous sound
-        #self.shield_continuous = constants.SOUNDS['sounds/shield_continuous.mp3']
+        #self.shield_continuous = constants.SOUNDS['sounds/shield_continuous.wav']
         self.max_volume = max_volume
         # This keeps track of the "media player" that is playing the current sound
         # Each time I play a sound, I think it returns a different player!
@@ -74,20 +74,21 @@ class Shield(arcade.SpriteCircle):
         self.center_x = self.owner.center_x
         self.center_y = self.owner.center_y
         # If activated, use up some power
-        if self.activated:
-            self.charge = max(self.charge - delta_time, 0)
-            if self.charge == 0:
-                self.deactivate()
-        # If disabled (ie. someone tried to activate it whilst an object was within its perimeter),
-        # count down to being un-disabled
-        if self.disabled:
-            self._disabled_timer -= delta_time
-            if self._disabled_timer <= 0:
-                self._disabled_timer = 0
-                # If the shield owner happens to be the Lander itself, and the user is still trying to operate
-                # the shield (ie. mouse button / key still pressed), we auto try to re-enable it here
-                if self.owner in self.scene["Lander"].sprite_list and self.owner.trying_to_activate_shield:
-                    self.activate()
+        if not self.owner.dead:
+            if self.activated:
+                self.charge = max(self.charge - delta_time, 0)
+                if self.charge == 0:
+                    self.deactivate()
+            # If disabled (ie. someone tried to activate it whilst an object was within its perimeter),
+            # count down to being un-disabled
+            if self.disabled:
+                self._disabled_timer -= delta_time
+                if self._disabled_timer <= 0:
+                    self._disabled_timer = 0
+                    # If the shield owner happens to be the Lander itself, and the user is still trying to operate
+                    # the shield (ie. mouse button / key still pressed), we auto try to re-enable it here
+                    if self.owner in self.scene["Lander"].sprite_list and self.owner.trying_to_activate_shield:
+                        self.activate()
 
     def activate(self):
         if self.disabled:
@@ -97,7 +98,7 @@ class Shield(arcade.SpriteCircle):
         if not self.charge and self.owner in self.scene["Lander"].sprite_list:
             # If the user is trying to activate their shield but has no charge, we play the sound every time
             # to help them understand
-            self.media_player = self.sound_enabled and arcade.play_sound(self.shield_disabled, volume=self.max_volume)
+            self.media_player = self.sound_enabled and arcade.play_sound(self.shield_disabled_sound, volume=self.max_volume)
             return
 
         if self.attempted_to_activate_shield_with_collision():
@@ -107,7 +108,7 @@ class Shield(arcade.SpriteCircle):
         # Shield is being activated
         self.visible = True
         self.activated = True
-        self.media_player = self.sound_enabled and arcade.play_sound(self.shield_activate, volume=self.max_volume)
+        self.media_player = self.sound_enabled and arcade.play_sound(self.shield_activate_sound, volume=self.max_volume)
 
     def deactivate(self):
         self.visible = False
@@ -115,7 +116,7 @@ class Shield(arcade.SpriteCircle):
 
     def disable_for(self, seconds: float):
         self._disabled_timer = seconds
-        self.media_player = self.sound_enabled and arcade.play_sound(self.shield_disabled,
+        self.media_player = self.sound_enabled and arcade.play_sound(self.shield_disabled_sound,
                                                                      volume=self.max_volume)
         self.deactivate()
 

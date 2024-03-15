@@ -40,11 +40,6 @@ class LandingPad(arcade.SpriteSolidColor):
             # we try to place it before any other ground objects
             raise ValueError("No space on world terrain to place Landing Pad")
 
-        # LandingPad has effectively infinite shield
-        # but disabling shield for now - bit complicated to implement, and want the game to evolve a bit first
-        #self.shield = Shield(scene=self.scene, owner=self, radius=int(1.5*self.width), power=999)
-        #self.shield_sensor = arcade.SpriteCircle(radius=int(4*self.width), color=(0, 0, 0, 200))
-        #self.shield_sensor.center_x, self.shield_sensor.center_y = self.center_x, self.center_y
         self.velocity_x, self.velocity_y = 0, 0
         self.on_ground = True
 

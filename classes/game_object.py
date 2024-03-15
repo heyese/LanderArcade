@@ -167,9 +167,15 @@ class GameObject(arcade.Sprite):
 
     def die(self):
         self.dead = True
-        self.remove_from_sprite_lists()
-        self.shield and self.shield.disabled_shield.remove_from_sprite_lists() and self.shield.remove_from_sprite_lists()
-        self.engine and self.engine.remove_from_sprite_lists()
-        self.max_volume = 0  # should kill off any sounds!
+        if self.shield:
+            self.shield.deactivate()
+            self.shield.disabled_shield.remove_from_sprite_lists()
+            self.shield.remove_from_sprite_lists()
+        if self.engine:
+            self.engine.deactivate()
+            self.engine.remove_from_sprite_lists()
+        # Once we're off the sprite lists, we no longer run any updates, so I want to stop any playing sounds
+
         if self.explodes:
             self.explode()
+        self.remove_from_sprite_lists()

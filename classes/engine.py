@@ -18,7 +18,7 @@ class Engine(arcade.Sprite):
                  scale: float = 0.3,
                  engine_owner_offset: int = None,
                  sound_enabled: bool = False,
-                 engine_activated_sound: arcade.Sound = constants.SOUNDS['sounds/engine.mp3'],
+                 engine_activated_sound: arcade.Sound = constants.SOUNDS['sounds/engine.wav'],
                  engine_disabled_sound: arcade.Sound = constants.SOUNDS['sounds/engine_disabled.mp3'],
                  max_volume: float = 0.5):
         super().__init__()
@@ -98,6 +98,9 @@ class Engine(arcade.Sprite):
     def deactivate(self):
         self.visible = False
         self.activated = False
+        if self.engine_sound_player and self.engine_sound.is_playing(self.engine_sound_player):
+            self.engine_sound.stop(self.engine_sound_player)
+            self.engine_sound_player = None
 
     def boost(self, on: bool):
         if on is True:
@@ -128,15 +131,14 @@ class Engine(arcade.Sprite):
         # If activated, use up some fuel
         if self.activated:
             self.fuel = max(self.fuel - self.burn_rate * delta_time, 0)
-            self.engine_sound_player = sounds.play_or_update_sound(delta_time=delta_time,
-                                                                   sound=self.engine_sound,
-                                                                   player=self.engine_sound_player,
-                                                                   loop=True, obj=self)
+            volume = sounds.get_volume_multiplier((self.center_x, self.center_y)) * self.max_volume
+            if not (self.engine_sound_player
+                    or self.engine_sound_player and not self.engine_sound.is_playing(self.engine_sound_player)):
+                self.engine_sound_player = arcade.play_sound(sound=self.engine_sound, looping=True, volume=volume)
+            else:
+                self.engine_sound.set_volume(volume, player=self.engine_sound_player)
             if self.fuel == 0:
                 self.deactivate()
-        elif self.engine_sound_player and self.engine_sound.is_playing(self.engine_sound_player):
-            self.engine_sound.stop(self.engine_sound_player)
-            self.engine_sound_player = None
 
         # If disabled (via EMP), count down to being un-disabled
         if self.disabled:

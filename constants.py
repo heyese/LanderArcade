@@ -2,6 +2,7 @@ from __future__ import annotations
 import arcade
 from pathlib import Path
 from dataclasses import dataclass
+import itertools
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from classes.lander import Lander
@@ -84,4 +85,4 @@ def get_level_config(level: int) -> Levels:
     return Levels()
 
 # Maybe pre-load all the sounds?
-SOUNDS = {path.as_posix(): arcade.load_sound(path) for path in Path('sounds/').glob('*.mp3')}
+SOUNDS = {path.as_posix(): arcade.load_sound(path) for path in itertools.chain(Path('sounds/').glob('*.mp3'), Path('sounds/').glob('*.wav'))}

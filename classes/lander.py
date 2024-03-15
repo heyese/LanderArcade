@@ -40,12 +40,12 @@ class Lander(GameObject):
 
         # Sound related
         self.sound_enabled = True
-        self.teleport_complete = constants.SOUNDS['sounds/teleport_complete.mp3']
-        self.teleport_complete_player = None
-        self.teleport_ongoing = constants.SOUNDS['sounds/teleport_ongoing.mp3']
-        self.teleport_ongoing_player = None
-        self.recharged = constants.SOUNDS['sounds/recharged.mp3']
-        self.recharged_player = None
+        self.teleport_complete_sound = constants.SOUNDS['sounds/teleport_complete.mp3']
+        self.teleport_complete_sound_player = None
+        self.teleport_ongoing_sound = constants.SOUNDS['sounds/teleport_ongoing.wav']
+        self.teleport_ongoing_sound_player = None
+        self.recharged_sound = constants.SOUNDS['sounds/recharged.mp3']
+        self.recharged_sound_player = None
         self.max_volume = 0.4
         # I have a timer so I can control how long sounds play for before I adjust their attributes
         self.sound_timer = 0
@@ -63,7 +63,7 @@ class Lander(GameObject):
             if value:
                 # Don't play recharged sound when the level is completed
                 if self.scene["Hostages"]:
-                    self.recharged_player = arcade.play_sound(sound=self.recharged, volume=self.max_volume)
+                    self.recharged_sound_player = arcade.play_sound(sound=self.recharged_sound, volume=self.max_volume)
                 # Refill fuel and recharge shield
                 self.engine.deactivate()
                 self.engine.refuel()
@@ -94,21 +94,20 @@ class Lander(GameObject):
         # If we're still rescuing anyone - animate the tractor beam!
         if self._hostages_being_rescued:
             self._tractor_beam_timer += delta_time
-            self.teleport_ongoing_player = sounds.play_or_update_sound(sound=self.teleport_ongoing,
-                                                                       player=self.teleport_ongoing_player,
-                                                                       delta_time=delta_time,
-                                                                       loop=True,
-                                                                       obj=self)
+            if not (self.teleport_ongoing_sound_player
+                    or self.teleport_ongoing_sound_player and not self.teleport_ongoing_sound.is_playing(self.teleport_ongoing_sound_player)):
+                self.teleport_ongoing_sound_player = arcade.play_sound(sound=self.teleport_ongoing_sound, looping=True, volume=self.max_volume)
+
         else:
             self._tractor_beam_timer = 0
-            self.teleport_ongoing_player and self.teleport_ongoing.stop(self.teleport_ongoing_player)
-            self.teleport_ongoing_player = None
+            self.teleport_ongoing_sound_player and self.teleport_ongoing_sound.stop(self.teleport_ongoing_sound_player)
+            self.teleport_ongoing_sound_player = None
 
     def hostage_rescued(self, hostage):
         self._hostages_being_rescued.remove(hostage)
-        if self.teleport_ongoing_player and not self._hostages_being_rescued:
-            self.teleport_ongoing.stop(self.teleport_ongoing_player)
-        self.teleport_complete_player = arcade.play_sound(sound=self.teleport_complete, volume=self.max_volume)
+        if self.teleport_ongoing_sound_player and not self._hostages_being_rescued:
+            self.teleport_ongoing_sound.stop(self.teleport_ongoing_sound_player)
+        self.teleport_complete_sound_player = arcade.play_sound(sound=self.teleport_complete_sound, volume=self.max_volume)
 
     def determine_force_y(self, force_y):
         force_y = super().determine_force_y(force_y)

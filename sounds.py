@@ -7,64 +7,6 @@ if TYPE_CHECKING:
     from classes.lander import Lander
     import pyglet.media as media
 
-import math
-import pyglet.media as media
-
-
-def play(
-        self,
-        volume: float = 1.0,
-        pan: float = 0.0,
-        loop: bool = False,
-        speed: float = 1.0,
-) -> media.Player:
-    """
-    Play the sound.
-
-    :param float volume: Volume, from 0=quiet to 1=loud
-    :param float pan: Pan, from -1=left to 0=centered to 1=right
-    :param bool loop: Loop, false to play once, true to loop continuously
-    :param float speed: Change the speed of the sound which also changes pitch, default 1.0
-    """
-    if (
-            isinstance(self.source, media.StreamingSource)
-            and self.source.is_player_source
-    ):
-        raise RuntimeError(
-            "Tried to play a streaming source more than once."
-            " Streaming sources should only be played in one instance."
-            " If you need more use a Static source."
-        )
-
-    player: media.Player = media.Player()
-    player.volume = volume
-    player.position = (
-        pan,
-        0.0,
-        math.sqrt(1 - math.pow(pan, 2)),
-    )  # used to mimic panning with 3D audio
-
-    # Note that the underlying attribute is pitch but "speed" is used
-    # because it describes the behavior better (see #1198)
-    player.pitch = speed
-
-    player.loop = loop
-    player.queue(self.source)
-    player.play()
-    media.Source._players.append(player)
-
-    def _on_player_eos():
-        if player in media.Source._players:
-            media.Source._players.remove(player)
-        # There is a closure on player. To get the refcount to 0,
-        # we need to delete this function.
-        player.on_player_eos = None
-
-    player.on_player_eos = _on_player_eos
-    return player
-
-
-arcade.Sound.play = play
 
 # Generally speaking, the functions here will depend on the lander - it's velocity and position.
 # I don't want to have to keep on passing it in to all the functions, so I set it in game.py as soon
@@ -134,7 +76,7 @@ def play_or_update_sound(*, delta_time: None | float = None,
 
             # The line below is what's causing the "media.Source._players.remove(player) ValueError: list.remove(x): x not in list" bug
             # I play a new sound whilst the old one is still going, but we've lost the reference to the old one, I think.
-            or loop and sound.get_stream_position(player) > sound.get_length() - 5 * delta_time):
+            or loop and not sound.is_playing(player)):  #sound.get_stream_position(player) > sound.get_length() - 5 * delta_time):
         player = arcade.play_sound(sound,
                                    volume=obj.max_volume * get_volume_multiplier(obj.position),
                                    pan=get_pan(obj.position),

@@ -87,6 +87,7 @@ class Explosion(GameObject):
 
         # Sound related
         self.sound: arcade.Sound = random.choice(EXPLOSION_SOUNDS)
+        self.sound_player = None
         # Make the sound last as long as the explosion
         self.sound_speed = self.sound.get_length() / self.lifetime
 
@@ -108,11 +109,12 @@ class Explosion(GameObject):
         super().on_update(delta_time=delta_time)
         self.timer += delta_time
         self.sound_timer += delta_time
-
-        self.media_player = sounds.play_or_update_sound(delta_time=delta_time,
-                                                        sound=self.sound,
-                                                        player=self.media_player,
-                                                        obj=self)
+        volume = sounds.get_volume_multiplier((self.center_x, self.center_y)) * self.max_volume
+        if not (self.sound_player
+                or self.sound_player and not self.sound.is_playing(self.sound_player)):
+            self.sound_player = arcade.play_sound(sound=self.sound, volume=volume)
+        else:
+            self.sound.set_volume(volume, player=self.sound_player)
 
         # We start off spinning but, as friction reduces the horizontal speed of the explosion to zero, we stop rotating
         self.angle += 0 if not self.velocity_x_initial else delta_time * self.rotation_rate * abs(self.velocity_x/self.velocity_x_initial)
