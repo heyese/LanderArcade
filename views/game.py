@@ -281,16 +281,8 @@ class GameView(arcade.View):
 
         # First, just deal with sprite positions.  Then consider the camera.
         # Landing pad is effectively terrain.  Shields and Engines move themselves, as centred on owner
-        non_terrain_spritelist_names = [
-                                        "Lander",  # Important lander is first in the list
-                                        "Missiles",
-                                        "Air Enemies",
-                                        "Ground Enemies",
-                                        "Explosions",
-                                        "Hostages",
-                                        "Landing Pad"]
 
-        non_terrain_spritelists = [self.scene[i] for i in non_terrain_spritelist_names]
+        non_terrain_spritelists = [self.scene[i] for i in constants.NON_TERRAIN_SPRITELISTS]
         non_terrain_sprites = [s for i in non_terrain_spritelists for s in i]
         # Flip all sprites from one side to the other
         screen_width = self.game_camera.viewport_width

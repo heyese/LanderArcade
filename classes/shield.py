@@ -57,6 +57,10 @@ class Shield(arcade.SpriteCircle):
         # This keeps track of the "media player" that is playing the current sound
         # Each time I play a sound, I think it returns a different player!
         self.media_player = None
+        self.media_player_references = [
+            'media_player',
+        ]
+
 
     def recharge(self):
         self.charge = self.initial_charge

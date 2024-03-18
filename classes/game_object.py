@@ -8,6 +8,7 @@ import collisions
 if TYPE_CHECKING:
     from classes.world import World
     from classes.explosion import Explosion
+    import pyglet.media as media
 
 
 class GameObject(arcade.Sprite):
@@ -64,10 +65,12 @@ class GameObject(arcade.Sprite):
         self.owner = owner
 
         # Sound related
-        self.media_player = None
         self.sound_timer = 0
         self.max_volume = max_volume
         self.sound_attributes_update_interval = 0.2
+        # Keep a list of references to the media players so I can ensure that when an object "dies"
+        # I stop all of its sounds
+        self.media_player_references = []
 
         # Explosion related
         self.explosion_radius_initial = int(self.height * explosion_initial_radius_multiplier)
@@ -175,7 +178,10 @@ class GameObject(arcade.Sprite):
             self.engine.deactivate()
             self.engine.remove_from_sprite_lists()
         # Once we're off the sprite lists, we no longer run any updates, so I want to stop any playing sounds
-
+        for ref in self.media_player_references:
+            player:  media.Player | None = getattr(self, ref, None)
+            if player:
+                arcade.stop_sound(player)
         if self.explodes:
             self.explode()
         self.remove_from_sprite_lists()

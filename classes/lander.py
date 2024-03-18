@@ -46,6 +46,12 @@ class Lander(GameObject):
         self.teleport_ongoing_sound_player = None
         self.recharged_sound = constants.SOUNDS['sounds/recharged.mp3']
         self.recharged_sound_player = None
+        self.media_player_references = [
+            'teleport_complete_sound_player',
+            'teleport_ongoing_sound_player',
+            'recharged_sound_player',
+        ]
+
         self.max_volume = 0.4
         # I have a timer so I can control how long sounds play for before I adjust their attributes
         self.sound_timer = 0

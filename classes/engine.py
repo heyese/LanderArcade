@@ -49,6 +49,11 @@ class Engine(arcade.Sprite):
         self.engine_sound_player = None
         self.engine_disabled_sound = engine_disabled_sound
         self.engine_disabled_sound_player = None
+        self.media_player_references = [
+            'engine_sound_player',
+            'engine_disabled_sound_player',
+        ]
+
         self.max_volume = max_volume
         # I have a timer so I can control how long sounds play for before I adjust their attributes
         self.sound_timer = 0

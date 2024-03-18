@@ -67,7 +67,3 @@ for that, rather than trying to do it my own way.
 
 A few times my main machine has had a flicker of interruption (malware detection running in the background?  Noticed
 network traffic really spiked) and that caused my shield to switch off.  Pretty frustrating.
-
-Need to ensure that all sounds relating to an object stop playing when that object dies.
-(eg. the teleporting sound when the lander is destroyed.)
-This is because objects are removed from spritelists on death and their updates are no longer called.

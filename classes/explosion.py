@@ -88,6 +88,7 @@ class Explosion(GameObject):
         # Sound related
         self.sound: arcade.Sound = random.choice(EXPLOSION_SOUNDS)
         self.sound_player = None
+        self.media_player_references = ['sound_player']
         # Make the sound last as long as the explosion
         self.sound_speed = self.sound.get_length() / self.lifetime
 

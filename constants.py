@@ -32,6 +32,15 @@ GENERAL_OBJECT_SPRITELISTS = [
     'Ground Enemies',
 ]
 
+NON_TERRAIN_SPRITELISTS = [
+    "Lander",  # Important lander is first in the list
+    "Missiles",
+    "Air Enemies",
+    "Ground Enemies",
+    "Explosions",
+    "Hostages",
+    "Landing Pad"]
+
 ALLOWED_TERRAIN_SHIELD_COLLISIONS_SPRITELISTS = ['Landing Pad', 'Hostages', 'Ground Enemies']
 PLACE_ON_WORLD_SPRITELISTS = ["Landing Pad", "Ground Enemies", "Hostages"]
 EMP_COLLISION_SPRITELISTS = ["Lander", "Shields", "Engines", "Air Enemies", "Missiles"]

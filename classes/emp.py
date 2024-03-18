@@ -35,6 +35,7 @@ class EMP(arcade.SpriteCircle):
         self.sound = constants.SOUNDS['sounds/emp.mp3']
         sound_speed = self.sound.get_length() / self.lifetime
         self.sound_player = arcade.play_sound(sound=self.sound, speed=sound_speed, volume=2)
+        self.media_player_references = ['sound_player']
         self.root_2 = math.sqrt(2)
 
         # Another sprite, which shows the inner part of the EMP, within which it is safe to use engines / shields again

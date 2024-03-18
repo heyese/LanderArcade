@@ -1,0 +1,5 @@
+__pycache__/
+classes/__pycache__/
+main.dist/
+main.exe
+views/__pycache__/
