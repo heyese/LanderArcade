@@ -52,6 +52,8 @@ Explosions go through the terrain - I'm not bothered about this.  Let's call it 
 Still have a bug where sometimes collisions go crazy and the lander disappears somewhere - easy thing to do is not let
 y <= 0, but more careful thinking about this will obviously help.  Basically (and roughly), unless there is a terrain
 rect underneath the lander, the answer will never be to go further down!
+Put in a fix for this, whereby if an object finds itself below y=0, the collision vector being applied is just reversed.
+Will see how that behaves ...
 
 The game really, really struggles on my new laptop - such that I don't want to play it.  Initially, I could see
 it was running on the integrated graphics chip, but I've fixed that and forced it to run on the GPU.  It still

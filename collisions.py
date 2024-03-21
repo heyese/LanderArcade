@@ -263,19 +263,26 @@ def check_for_collisions_general(sprite: Sprite, general_object_spritelists: Lis
                 obj_1, obj_2 = sprite.owner, collision.owner
             collision_with_fixed_point(point_x=point[0], point_y=point[1], obj=obj_1)
 
-            # Now - have a bug-type scenario sometimes where a shields can get "stuck" together.
+            # Now - have a bug-type scenario sometimes where shields can get "stuck" together.
             # ie. We compute the bounce back vector, but it's not enough for the two objects to stop colliding,
             # so then we immediately detect another collision but then bounce the two objects back a bit closer again!
-            # So at this point, I check to see if the change we've applied is enough, and if not, apply it again.
+            # So I check to see if the initial change we've applied is enough, and if not, apply it again.
             i = 0
             while True:
                 i += 1
                 change_pos_of_sprite_and_shield_by_vector(obj=obj_1, x=obj_1.change_x, y=obj_1.change_y)
-                if not arcade.check_for_collision(obj_1.shield, obj_2.shield):
+                if not arcade.check_for_collision(obj_1.shield, obj_2.shield) or obj_1.center_y < 0:
                     # If we're no longer colliding, then we can undo the last pos change, as it will get applied later.
                     change_pos_of_sprite_and_shield_by_vector(obj=obj_1, x=-obj_1.change_x, y=-obj_1.change_y)
                     break
-                if i == 10:
+                if obj_1.center_y < 0:
+                    # Ok - something has definitely gone wrong.  We've been stuck in this while loop, applied a bunch
+                    # of little nudges to our object and it's now below ground.  We obviously somehow got the wrong
+                    # direction initially - I'm simply going to bump the object back in the other direction
+                    print("Switched the direction of the bounce so as to stay above ground!")
+                    obj_1.change_x = -obj_1.change_x
+                    obj_1.change_y = -obj_1.change_y
+                if i == 30:
                     raise ValueError(f"Collision trap.  Rebound vector for obj_1: (x: {obj_1.change_x}, "
                                      f"y: {obj_1.change_y}). obj_1 centre: ({obj_1.center_x}, {obj_1.center_y}). "
                                      f"obj_2 centre: ({obj_2.center_x}, {obj_2.center_y}).")
