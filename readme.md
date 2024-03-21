@@ -1,6 +1,6 @@
 # Lander Arcade
 
-[![](C:\Users\e_hey\PycharmProjects\LanderArcade\images\title_screen.png)](https://training.talkpython.fm/courses/explore_pycharm/mastering-pycharm-ide)
+[![](.\images\title_screen.png)](https://training.talkpython.fm/courses/explore_pycharm/mastering-pycharm-ide)
 
 
     Thank goodness you're here, pilot!
