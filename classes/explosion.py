@@ -50,7 +50,7 @@ class Explosion(GameObject):
                  velocity_y: float,
                  center_x: int,
                  center_y: int,
-                 owner: GameObject):
+                 owner: GameObject | None):
         files = [
             "images/explosion_1.png",
             "images/explosion_2.png",

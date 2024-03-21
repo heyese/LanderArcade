@@ -41,6 +41,15 @@ NON_TERRAIN_SPRITELISTS = [
     "Hostages",
     "Landing Pad"]
 
+RESCALED_MINIMAP_SPRITES = [
+    "Lander",
+    "Landing Pad",
+    "Air Enemies",
+    "Missiles",
+    "Ground Enemies",
+    "Hostages",
+]
+
 ALLOWED_TERRAIN_SHIELD_COLLISIONS_SPRITELISTS = ['Landing Pad', 'Hostages', 'Ground Enemies']
 PLACE_ON_WORLD_SPRITELISTS = ["Landing Pad", "Ground Enemies", "Hostages"]
 EMP_COLLISION_SPRITELISTS = ["Lander", "Shields", "Engines", "Air Enemies", "Missiles"]
@@ -51,7 +60,8 @@ EMP_COLLISION_SPRITELISTS = ["Lander", "Shields", "Engines", "Air Enemies", "Mis
 # module namespace as soon as they're defined (they get defined for each level in game.py).
 GAME_OBJECTS = {
     "lander": None,
-    "camera": None
+    "camera": None,
+    "score": None
 }
 
 

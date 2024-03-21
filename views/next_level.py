@@ -4,11 +4,10 @@ from constants import SCALING
 
 
 class NextLevelView(arcade.View):
-    def __init__(self, level: int, score: int):
+    def __init__(self, level: int):
         super().__init__()
         self.manager = arcade.gui.UIManager()
         self.level = level + 1
-        self.score = score + 100
 
         # Create a vertical BoxGroup to align buttons
         self.v_box = arcade.gui.UIBoxLayout()
@@ -19,7 +18,7 @@ class NextLevelView(arcade.View):
         # I'm not sure how to move this import to the top level without getting a circular import ...
         from views.game import GameView
         self.game_view = GameView()
-        self.game_view.setup(level=self.level, score=self.score)
+        self.game_view.setup(level=self.level)
 
         @start_button.event("on_click")
         def start(event):

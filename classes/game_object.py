@@ -1,10 +1,11 @@
 from __future__ import annotations
 import arcade
 import math
-import sounds
+
+import constants
 from constants import SCALING, SPACE_START, SPACE_END
-from typing import TYPE_CHECKING
 import collisions
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from classes.world import World
     from classes.explosion import Explosion
@@ -29,6 +30,7 @@ class GameObject(arcade.Sprite):
                  above_space: bool = False,
                  explodes: bool = True,
                  owner=None,
+                 score_points: int = 0,
                  sound_enabled: bool = False,
                  max_volume: float = 1,
 
@@ -185,3 +187,9 @@ class GameObject(arcade.Sprite):
         if self.explodes:
             self.explode()
         self.remove_from_sprite_lists()
+        if getattr(self, "score_points", None):
+            constants.GAME_OBJECTS["score"] += self.score_points
+
+
+
+

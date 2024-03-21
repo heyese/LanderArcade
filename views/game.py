@@ -37,7 +37,6 @@ class GameView(arcade.View):
         self.landing_pad = None
         self.level = None
         self.level_config = None
-        self.score = None
 
         # Mini-map related
         # Background color must include an alpha component
@@ -64,35 +63,20 @@ class GameView(arcade.View):
         # Sounds
         self.level_complete = arcade.load_sound(Path('sounds/level_complete.mp3'))
 
-    def setup(self, level: int = 1, score: int = 0):
+    def setup(self, level: int = 1):
         """Get the game ready to play"""
 
         # Set the background color
         arcade.set_background_color(BACKGROUND_COLOR)
 
         self.scene = arcade.Scene()
-
-        # Adding spritelists now to get the ordering I want, and so that it's easy to see all of them in one go!
-        # If we draw the engines before their owners, the angles aren't quite right
-        self.scene.add_sprite_list("EMPs")
-        self.scene.add_sprite_list("Explosions")
-        self.scene.add_sprite_list("Lander")
-        self.scene.add_sprite_list("Missiles")
-        self.scene.add_sprite_list("Air Enemies")
-        self.scene.add_sprite_list("Disabled Shields")
-        self.scene.add_sprite_list('Engines')
-        self.scene.add_sprite_list("Terrain Left Edge", use_spatial_hash=True)
-        self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True)
-        self.scene.add_sprite_list("Terrain Right Edge", use_spatial_hash=True)
-        self.scene.add_sprite_list("Ground Enemies", use_spatial_hash=True)
-        self.scene.add_sprite_list("Hostages", use_spatial_hash=True)
-        self.scene.add_sprite_list("Landing Pad", use_spatial_hash=True)
-        self.scene.add_sprite_list("Shields")
-
+        self.add_spritelists_to_scene()
 
         self.level = level  # Ultimately want to use this to develop the game in later levels
-        self.score = score
+        if not constants.GAME_OBJECTS["score"]:
+            constants.GAME_OBJECTS["score"] = 0
         self.level_config = constants.get_level_config(level)
+
         # Tied myself up in knots here.  I want to ensure there is a hill wide enough in the world for the
         # landing pad.  But the landing pad width depends on the lander width, and I pass the world in when
         # creating the lander ... Rather than sort that out, for now I'm just hard coding a number that's large
@@ -103,55 +87,17 @@ class GameView(arcade.View):
                            landing_pad_width_limit=landing_pad_width_limit,
                            max_gravity=self.level_config.max_gravity)
 
-        self.lander = Lander(scene=self.scene,
-                             world=self.world,
-                             fuel=self.level_config.fuel,
-                             shield_charge=self.level_config.shield,
-                             camera=self.game_camera)
+        self.create_and_place_lander_in_world()
+        self.pan_camera_to_lander(1)
+
         # Not sure of the best pattern to do this, but most of the sound functions depend on the lander.  I don't
         # want to always be having to pass it in - I want the object accessible in general in the module
         # So I set it here, just after having created it!
         constants.GAME_OBJECTS["lander"] = self.lander
 
-        landing_pad_width = int(2 * self.lander.width)
-        if landing_pad_width > landing_pad_width_limit:
-            print("Your hardcoded value for the landing pad width limit isn't large enough!")
-            return
-        landing_pad_height = int(0.3 * landing_pad_width)
-        self.landing_pad = LandingPad(scene=self.scene, lander=self.lander, world=self.world,
-                                      width=landing_pad_width,
-                                      height=landing_pad_height)
+        self.create_and_place_objects_in_world(landing_pad_width_limit=landing_pad_width_limit)
 
-        # Starting location of the Lander
-        self.lander.center_y = int((1/2) * (SPACE_END - SPACE_START)) + SPACE_START
-        self.lander.center_x = WORLD_WIDTH / 2
-        self.pan_camera_to_lander(1)
-        self.lander.change_x = random.randint(-30, 30) / 60
-        self.lander.change_y = -random.randint(10, 30) / 60
-
-        # Add the missile launchers
-        for i in range(self.level_config.missile_launchers):
-            MissileLauncher(scene=self.scene, world=self.world, camera=self.game_camera)
-
-        for i in range(self.level_config.shielded_missile_launchers):
-            MissileLauncher(scene=self.scene, world=self.world, camera=self.game_camera, shield=True)
-
-        for i in range(self.level_config.super_missile_launchers):
-            SuperMissileLauncher(scene=self.scene, world=self.world, camera=self.game_camera)
-
-        # Add the hostages
-        for i in range(self.level_config.hostages):
-            Hostage(scene=self.scene, world=self.world, lander=self.lander, camera=self.game_camera)
-
-        # Construct the minimap
-        minimap_width = int(0.75 * self.game_camera.viewport_width)
-        minimap_height = self.window.height - self.game_camera.viewport_height
-        self.minimap_texture = arcade.Texture.create_empty(str(uuid4()), (minimap_width, minimap_height))
-        self.minimap_sprite = arcade.Sprite(center_x=self.game_camera.viewport_width / 2,
-                                            center_y=(minimap_height / 2) + self.game_camera.viewport_height,
-                                            texture=self.minimap_texture)
-        self.minimap_sprite_list = arcade.SpriteList()
-        self.minimap_sprite_list.append(self.minimap_sprite)
+        self.construct_minimap()
 
         # Basically, I'm just reserving spaces here for some text on the left and right hand side of the screen
         # In the on_update(), I choose what to display here.  But it's not expecting the width to be larger than
@@ -170,6 +116,67 @@ class GameView(arcade.View):
             centre_x=(3 * self.window.width + self.minimap_sprite.width) // 4,
             centre_y=self.window.height - self.minimap_sprite.height // 2
         )
+
+    def construct_minimap(self):
+        # Construct the minimap
+        minimap_width = int(0.75 * self.game_camera.viewport_width)
+        minimap_height = self.window.height - self.game_camera.viewport_height
+        self.minimap_texture = arcade.Texture.create_empty(str(uuid4()), (minimap_width, minimap_height))
+        self.minimap_sprite = arcade.Sprite(center_x=self.game_camera.viewport_width / 2,
+                                            center_y=(minimap_height / 2) + self.game_camera.viewport_height,
+                                            texture=self.minimap_texture)
+        self.minimap_sprite_list = arcade.SpriteList()
+        self.minimap_sprite_list.append(self.minimap_sprite)
+
+    def create_and_place_lander_in_world(self):
+        self.lander = Lander(scene=self.scene,
+                             world=self.world,
+                             fuel=self.level_config.fuel,
+                             shield_charge=self.level_config.shield,
+                             camera=self.game_camera)
+        # Starting location of the Lander
+        self.lander.center_y = int((1 / 2) * (SPACE_END - SPACE_START)) + SPACE_START
+        self.lander.center_x = WORLD_WIDTH / 2
+        self.lander.change_x = random.randint(-30, 30) / 60
+        self.lander.change_y = -random.randint(10, 30) / 60
+
+    def create_and_place_objects_in_world(self, landing_pad_width_limit: int):
+        landing_pad_width = int(2 * self.lander.width)
+        if landing_pad_width > landing_pad_width_limit:
+            print("Your hardcoded value for the landing pad width limit isn't large enough!")
+            return
+        self.landing_pad = LandingPad(scene=self.scene, lander=self.lander, world=self.world,
+                                      width=landing_pad_width,
+                                      height=int(0.3 * landing_pad_width))
+
+        # Add the missile launchers
+        for i in range(self.level_config.missile_launchers):
+            MissileLauncher(scene=self.scene, world=self.world, camera=self.game_camera)
+        for i in range(self.level_config.shielded_missile_launchers):
+            MissileLauncher(scene=self.scene, world=self.world, camera=self.game_camera, shield=True)
+        for i in range(self.level_config.super_missile_launchers):
+            SuperMissileLauncher(scene=self.scene, world=self.world, camera=self.game_camera)
+        # Add the hostages
+        for i in range(self.level_config.hostages):
+            Hostage(scene=self.scene, world=self.world, lander=self.lander, camera=self.game_camera)
+
+    def add_spritelists_to_scene(self):
+        # Adding spritelists now to get the ordering I want, and so that it's easy to see all of them in one go!
+        # If we draw the engines before their owners, the angles aren't quite right
+        self.scene.add_sprite_list("EMPs")
+        self.scene.add_sprite_list("Explosions")
+        self.scene.add_sprite_list("Lander")
+        self.scene.add_sprite_list("Missiles")
+        self.scene.add_sprite_list("Air Enemies")
+        self.scene.add_sprite_list("Disabled Shields")
+        self.scene.add_sprite_list('Engines')
+        self.scene.add_sprite_list("Terrain Left Edge", use_spatial_hash=True)
+        self.scene.add_sprite_list("Terrain Centre", use_spatial_hash=True)
+        self.scene.add_sprite_list("Terrain Right Edge", use_spatial_hash=True)
+        self.scene.add_sprite_list("Ground Enemies", use_spatial_hash=True)
+        self.scene.add_sprite_list("Hostages", use_spatial_hash=True)
+        self.scene.add_sprite_list("Landing Pad", use_spatial_hash=True)
+        self.scene.add_sprite_list("Shields")
 
     @staticmethod
     def scaled_and_centred_text(texts: List[str], width: int, height: int, centre_x: int, centre_y: int) -> List[arcade.Text]:
@@ -238,22 +245,16 @@ class GameView(arcade.View):
                     sprite.center_x = old_center_x
                     sprite.scale /= scale_multiplier
 
-        # I show the repeated terrain in the minimap - I think this makes the most sense
         proj = self.game_camera.viewport_width, WORLD_WIDTH - self.game_camera.viewport_width, 0, WORLD_HEIGHT
         with self.minimap_sprite_list.atlas.render_into(self.minimap_texture, projection=proj) as fbo:
             fbo.clear(self.minimap_background_colour)
+            # Draw parallax backgrounds, from furthest away to closest
             for parallax_factor in sorted(self.world.background_layers.keys(), reverse=True):
                 self.world.background_layers[parallax_factor].draw()
             for name in ('Terrain Left Edge', 'Terrain Centre', 'Terrain Right Edge'):
                 self.scene.get_sprite_list(name).draw()
-            # Want the lander and the landing pad to stand out, rather than being tiny
-            rescale_and_draw([self.scene[name] for name in ("Lander",
-                                                            "Landing Pad",
-                                                            "Air Enemies",
-                                                            "Missiles",
-                                                            "Ground Enemies",
-                                                            "Hostages",
-                                                            )], 6)
+            # Don't show all details on minimap (eg. no shields or engines), and rescale those I do draw to be larger
+            rescale_and_draw([self.scene[name] for name in constants.RESCALED_MINIMAP_SPRITES], 6)
 
     def on_update(self, delta_time: float):
         # On my crappy laptop, I see glitches.  Occasionally it takes a while to do a cycle, and then presumably the
@@ -261,6 +262,8 @@ class GameView(arcade.View):
         # you can go flying.  So I'm going to limit the delta time - if the game struggles on old hardware, it will just
         # run slowly
         delta_time = min(delta_time, 1/50)
+
+        # Run the "on_update" function on every sprite in every sprite list ...
         self.scene.on_update(delta_time=delta_time)
 
         # I want the lander to always face the mouse pointer, but we only get updates on events (eg. mouse movement)
@@ -271,6 +274,67 @@ class GameView(arcade.View):
         if self.lander.mouse_location is not None:
             self.lander.face_point((self.lander.mouse_location + self.game_camera.position))
 
+        self.apply_world_wrap_to_sprites(screen_width=self.game_camera.viewport_width)
+
+        # Check to see if the level's been completed!
+        if self.lander.landed and len(self.scene['Hostages']) == 0:
+            arcade.play_sound(self.level_complete)
+            constants.GAME_OBJECTS["score"] += 150
+            self.window.show_view(NextLevelView(level=self.level))
+
+
+        self.update_minimap()
+        self.update_hud_text()
+
+        # Check for collisions
+        collisions.check_for_collisions(self.scene, self.game_camera, self.world)
+
+        # Parallax scrolling of the backgrounds
+        # I find updating the positions of the backgrounds in this on_update() function causes a slight flicker as you
+        # cross the camera_width boundary - but that goes away if I move the update to the on_draw() function!
+        # I don't know why, but there you go. Parallax background position updates are done alongside the draw().
+
+        # For testing purposes - occasionally useful to have a regular explosion appear!
+        #self.add_test_explosion(delta_time)
+
+    def add_test_explosion(self, delta_time: float):
+        self.timer += delta_time
+        if self.timer > 10:
+            self.timer = 0
+            Explosion(scene=self.scene,
+                      world=self.world,
+                      camera=self.game_camera,
+                      mass=50,
+                      scale=0.2 * SCALING,
+                      radius_initial=int(self.lander.height) // 2,
+                      radius_final=int(self.lander.height) * 8,
+                      lifetime=4,  # seconds
+                      # Force here is what's applied to airborne objects that are
+                      # within the explosion (and presumably shielded!).
+                      # Say gravity is 100, lander mass is 20, so gravitational force
+                      # is f = ma -> 2000.
+                      # So trying to get a feel for what the right value should be,
+                      # but 4000 is double the kind of average gravitational pull
+                      force=4000,  # was 20
+                      velocity_x=0,
+                      velocity_y=0,
+                      center_x=3000,
+                      center_y=1000,
+                      owner=None)
+
+    def update_hud_text(self):
+        self.right_hud_text[0].text = f"FUEL: {self.lander.engine.fuel:.0f}"
+        self.right_hud_text[1].text = f"SHIELD: {self.lander.shield.charge:.0f}"
+        self.right_hud_text[2].text = f"EMPs: {self.lander.EMP_count}"
+        self.right_hud_text[3].text = f"HOSTAGES: {len(self.scene['Hostages'])}"
+        self.left_hud_text[0].text = f"LEVEL: {self.level:.0f}"
+        self.left_hud_text[1].text = f"SCORE: {constants.GAME_OBJECTS['score']:.0f}"
+        self.left_hud_text[2].text = f"GRAVITY: {self.world.gravity:.0f}"
+        self.left_hud_text[3].text = f"FPS: {arcade.get_fps():.0f}"
+        # Might want to reactivate these at some point:
+        #self.pos_text.text = f"Pos: {self.lander.center_x:.0f}, {self.lander.center_y:.0f}"
+
+    def apply_world_wrap_to_sprites(self, screen_width: int):
         # If the Lander (or its explosion) flies off the edge of the world, I want to wrap it around instantly,
         # so the user doesn't notice.
         # I have crafted the World so that the first two window.widths are the same as the last two.
@@ -278,14 +342,11 @@ class GameView(arcade.View):
         # - when this boundary is crossed, the user is flipped to the other side (along with all the sprites!).
         # I wrap other sprites in the same way, ensuring they are always (when relevant) on the same side of
         # the world as the lander
-
         # First, just deal with sprite positions.  Then consider the camera.
         # Landing pad is effectively terrain.  Shields and Engines move themselves, as centred on owner
-
         non_terrain_spritelists = [self.scene[i] for i in constants.NON_TERRAIN_SPRITELISTS]
         non_terrain_sprites = [s for i in non_terrain_spritelists for s in i]
         # Flip all sprites from one side to the other
-        screen_width = self.game_camera.viewport_width
         for s in non_terrain_sprites:
             if s.center_x < screen_width:
                 s.center_x += WORLD_WIDTH - 2 * screen_width
@@ -300,7 +361,9 @@ class GameView(arcade.View):
             for s in [i for i in non_terrain_sprites
                       if 2 * screen_width >= i.center_x - i.width / 2]:
                 s.center_x += WORLD_WIDTH - 2 * screen_width
+        self.apply_world_wrap_to_camera(screen_width)
 
+    def apply_world_wrap_to_camera(self, screen_width):
         # If we've wrapped the lander to the other side of the world, we move the camera instantly
         if abs(self.lander.center_x - self.game_camera.position[0]) > WORLD_WIDTH - 4 * screen_width:
             if self.lander.center_x > self.game_camera.position[0]:
@@ -313,58 +376,6 @@ class GameView(arcade.View):
         else:
             # Gently pan the camera around after the lander
             self.pan_camera_to_lander(panning_fraction=0.04)
-
-        # Check to see if the level's been completed!
-        if self.lander.landed and len(self.scene['Hostages']) == 0:
-            arcade.play_sound(self.level_complete)
-            self.window.show_view(NextLevelView(level=self.level, score=self.score))
-
-        # Update the minimap
-        self.update_minimap()
-
-        self.right_hud_text[0].text = f"FUEL: {self.lander.engine.fuel:.0f}"
-        self.right_hud_text[1].text = f"SHIELD: {self.lander.shield.charge:.0f}"
-        self.right_hud_text[2].text = f"EMPs: {self.lander.EMP_count}"
-        self.right_hud_text[3].text = f"HOSTAGES: {len(self.scene['Hostages'])}"
-        self.left_hud_text[0].text = f"LEVEL: {self.level:.0f}"
-        self.left_hud_text[1].text = f"SCORE: {self.score:.0f}"
-        self.left_hud_text[2].text = f"GRAVITY: {self.world.gravity:.0f}"
-        self.left_hud_text[3].text = f"FPS: {arcade.get_fps():.0f}"
-        # Might want to reactivate these at some point:
-        #self.pos_text.text = f"Pos: {self.lander.center_x:.0f}, {self.lander.center_y:.0f}"
-
-        # Check for collisions
-        collisions.check_for_collisions(self.scene, self.game_camera, self.world)
-
-        # Parallax scrolling of the backgrounds
-        # I find the updating the backgrounds in the on_update() function causes a slight flicker as you cross the
-        # camera_width boundary - but that goes away if I move the update to the on_draw() function!
-        # I've not worked out why, but there you go.  Parallax background position updates are done alongside the draw().
-
-        # Just for testing - let's have a regular explosion
-        # self.timer += delta_time
-        # if self.timer > 10:
-        #     self.timer = 0
-        #     Explosion(scene=self.scene,
-        #               world=self.world,
-        #               camera=self.game_camera,
-        #               mass=50,
-        #               scale=0.2 * SCALING,
-        #               radius_initial=int(self.lander.height) // 2,
-        #               radius_final=int(self.lander.height) * 8,
-        #               lifetime=4,  # seconds
-        #               # Force here is what's applied to airborne objects that are
-        #               # within the explosion (and presumably shielded!).
-        #               # Say gravity is 100, lander mass is 20, so gravitational force
-        #               # is f = ma -> 2000.
-        #               # So trying to get a feel for what the right value should be,
-        #               # but 4000 is double the kind of average gravitational pull
-        #               force=4000,  # was 20
-        #               velocity_x=0,
-        #               velocity_y=0,
-        #               center_x=3000,
-        #               center_y=1000,
-        #               owner=None)
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.lander.engine.angle = self.lander.angle
@@ -392,6 +403,8 @@ class GameView(arcade.View):
             # eventually seem to run out of space.
             # Found this: https://stackoverflow.com/questions/71599404/python-arcade-caches-textures-when-requested-not-to
             # So hopefully this will be fixed in Arcade 2.7
+            # If we restart the level, the score is reset to 0
+            constants.GAME_OBJECTS["score"] = 0
             self.setup(level=self.level)
         if symbol == arcade.key.ESCAPE:
             # pass self, the current view, so we can return to it (ie. when we unpause)

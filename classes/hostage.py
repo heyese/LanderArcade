@@ -31,6 +31,7 @@ class Hostage(GameObject):
         self._current_timer = self.rescue_timer
         self.shield = Shield(scene=scene, owner=self, charge=9999)  # Effectively infinite
         self.disabled_shield = None
+        self.score_points = 60
         if collisions.place_on_world(self, world, scene):
             # If we can't place the object on the world, we never add it to a sprite list.
             # It's just forgotten about

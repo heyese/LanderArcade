@@ -114,6 +114,7 @@ class Lander(GameObject):
         if self.teleport_ongoing_sound_player and not self._hostages_being_rescued:
             self.teleport_ongoing_sound.stop(self.teleport_ongoing_sound_player)
         self.teleport_complete_sound_player = arcade.play_sound(sound=self.teleport_complete_sound, volume=self.max_volume)
+        constants.GAME_OBJECTS["score"] += hostage.score_points
 
     def determine_force_y(self, force_y):
         force_y = super().determine_force_y(force_y)

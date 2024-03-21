@@ -40,6 +40,8 @@ class MissileLauncher(GameObject):
             # It's just forgotten about
             self.scene.add_sprite("Ground Enemies", self)
 
+        self.score_points = 20 if self.shield else 10
+
     def on_update(self, delta_time: float = 1 / 60):
         self.current_interval -= delta_time
         # If there's a shield, we switch it off before firing and back on again afterwards
@@ -78,6 +80,7 @@ class SuperMissileLauncher(MissileLauncher):
                          missile_interval=missile_interval,
                          shield=True,
                          )
+        self.score_points = 30
 
     def fire_missile(self):
         missile = Missile(scene=self.scene, world=self.world, camera=self.camera,
