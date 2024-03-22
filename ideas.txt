@@ -18,6 +18,7 @@ Add an enemy aircraft
 Bomb thrower!  Parabolic curves, with bombs exploding on a timer.  Flashing rate can indicate how close it is to exploding
 Enemy weapons that temporarily disable the shield
 SmartMissileLauncher: missiles that solve equations rather than simply accelerate to the lander's position
+Could have a low fuel / low shield warning?
 
 Think better to change to the shield continuous sound - might have changed my mind about this now!
 Maybe add a sound for switching shield off?
@@ -31,7 +32,7 @@ I think the doppler effect idea - whilst very cool - is over ambitious.  I don't
 a sound whilst it is actually playing (whereas I can with the volume).  So for missiles that zip past the lander, where
 there wouldn't actually be that many repeats in the sound, I don't think it would work.
 Actually, I can stop a sound, recording at what point I was at, and start again from that point at a different speed.
-Just need to test out whether that works seemlessly or ends up being a mess.
+Just need to test out whether that works seamlessly or ends up being a mess.
 Would be easy to test - just try stopping and starting the existing engine sounds on every update, say.
 
 https://learn.arcade.academy/en/latest/chapters/20_sounds/sounds.html
