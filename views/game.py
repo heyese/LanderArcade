@@ -361,6 +361,7 @@ class GameView(arcade.View):
             for s in [i for i in non_terrain_sprites
                       if 2 * screen_width >= i.center_x - i.width / 2]:
                 s.center_x += WORLD_WIDTH - 2 * screen_width
+
         self.apply_world_wrap_to_camera(screen_width)
 
     def apply_world_wrap_to_camera(self, screen_width):
@@ -479,7 +480,7 @@ class GameView(arcade.View):
 
         # This draws all the hit boxes.
         # Slows things down, but can be used to work out what's going on with collisions!
-        # for rect in self.scene["EMPs"]:
+        # for rect in self.scene["Lander"]:
         #     rect.draw_hit_box((100, 100, 100, 255), 10)
 
         # Draw the overlay - minimap, fuel, shield, etc.
@@ -487,3 +488,4 @@ class GameView(arcade.View):
         self.minimap_sprite_list.draw()
         for text in [*self.left_hud_text, *self.right_hud_text]:
             text.draw()
+

@@ -95,8 +95,8 @@ class GameObject(arcade.Sprite):
 
         # Calculate changes in coordinates due to force
         # s = ut + (0.5)at^2
-        self.change_x = self.velocity_x * delta_time + 0.5 * (force_x / self.mass) * (delta_time ** 2)
-        self.change_y = self.velocity_y * delta_time + 0.5 * (force_y / self.mass) * (delta_time ** 2)
+        self.change_x += 0.5 * (force_x / self.mass) * (delta_time ** 2)
+        self.change_y += 0.5 * (force_y / self.mass) * (delta_time ** 2)
 
         self.center_x += self.change_x
         self.center_y += self.change_y
