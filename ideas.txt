@@ -70,3 +70,5 @@ for that, rather than trying to do it my own way.
 
 A few times my main machine has had a flicker of interruption (malware detection running in the background?  Noticed
 network traffic really spiked) and that caused my shield to switch off.  Pretty frustrating.
+
+There's a current bug where an engine sound plays all the time (once it's started).  Should look at and fix this
